@@ -1,67 +1,11 @@
 import { useState } from "react";
-
-type OpponentLevel = "lower" | "same" | "higher";
-type GoalResult = "pending" | "yes" | "partial" | "no";
-
-interface MatchGoal {
-  id: string;
-  index: number; // 1..N
-  opponentLevel: OpponentLevel;
-  goalText: string;
-  played: boolean;
-  result: GoalResult;
-}
-
-interface Profile {
-  ratingRange: string; // e.g. "3.0 – 3.5"
-  defaultOpponentLevel: OpponentLevel;
-}
-
-const GOAL_TEMPLATES: Record<OpponentLevel, string[]> = {
-  same: [
-    "No backspin allowed this match.",
-    "Every 3rd shot should be topspin.",
-    "Serve only to backhands.",
-    "Hit at least 3 dinks per rally before attacking.",
-    "No lobs this match.",
-    "Every return must land deep (past midcourt).",
-    "Target big cross-court angles, avoid line shots.",
-    "No backhand drives—only blocks or resets.",
-    "Always recover to center after every wide ball.",
-    "Call the target (middle, backhand, forehand) in your head before you hit.",
-  ],
-  lower: [
-    "Focus on high topspin drives, avoid lazy floaters.",
-    "Turn easy put-aways into controlled drops.",
-    "Serve wide, then attack the middle on the next ball.",
-    "Aim most balls to their backhand.",
-    "Hit at least one topspin roll at the kitchen line per rally opportunity.",
-    "Play longer rallies; avoid “crushing” winners on first chance.",
-    "Work on deep, heavy third-shot drops.",
-    "Mix in one lob per game in a smart situation.",
-    "No body slams—place to open court instead.",
-    "Practice soft hands: reset hard balls back to the kitchen.",
-  ],
-  higher: [
-    "Play 90% of balls safely down the middle.",
-    "No hero shots down the line.",
-    "Return every serve deep, even if it means slower.",
-    "If pulled wide, play a safe reset instead of a sharp angle.",
-    "No low-percentage backhand rips—block or dink instead.",
-    "Hit at least 3 dinks before attacking.",
-    "If you’re off balance, never attack—reset only.",
-    "Aim third shots to the middle player’s backhand.",
-    "Take 20% power off every swing—prioritize consistency.",
-    "Between every point, take one deep breath before serving/returning.",
-  ],
-};
-
-const DEFAULT_PROFILE: Profile = {
-  ratingRange: "3.0 – 3.5",
-  defaultOpponentLevel: "same",
-};
-
-const NUM_MATCHES_DEFAULT = 10;
+import { DEFAULT_PROFILE, GOAL_TEMPLATES, NUM_MATCHES_DEFAULT } from "./data";
+import type {
+  GoalResult,
+  MatchGoal,
+  OpponentLevel,
+  Profile,
+} from "./interfaces";
 
 function randomId() {
   return Math.random().toString(36).slice(2, 10);
