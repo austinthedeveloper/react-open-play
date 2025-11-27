@@ -186,6 +186,7 @@ export function App() {
                   key={match.id}
                   style={{
                     backgroundColor: match.played ? "#f8fff8" : "transparent",
+                    color: match.played ? "#1b2a16" : "inherit",
                   }}
                 >
                   <td
