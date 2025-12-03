@@ -26,6 +26,7 @@ function generateMatches(level: OpponentLevel, count: number): MatchGoal[] {
   });
 }
 
+// test
 export function App() {
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
   const [numMatches, setNumMatches] = useState(NUM_MATCHES_DEFAULT);
