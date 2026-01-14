@@ -51,16 +51,14 @@ export function App() {
     <div className="text-left">
       <header className="mb-6">
         <h1 className="text-[3.2em] leading-[1.1]">Open Play Goals</h1>
-        <p className="m-0 text-[#555]">
+        <p className="m-0 text-white/70">
           Profile: <strong>{profile.ratingRange}</strong> &middot; Default
           opponent level:{" "}
-          <strong className="capitalize">
-            {profile.defaultOpponentLevel}
-          </strong>
+          <strong className="capitalize">{profile.defaultOpponentLevel}</strong>
         </p>
 
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <label>
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-white/85">
+          <label className="flex items-center gap-2">
             Matches this session:{" "}
             <input
               type="number"
@@ -72,12 +70,12 @@ export function App() {
                   Math.min(20, Math.max(1, Number(e.target.value) || 1))
                 )
               }
-              className="w-[60px]"
+              className="w-[70px] rounded-md border border-white/20 bg-white/10 px-2 py-1 text-white/90 focus:border-white/60 focus:outline-none"
             />
           </label>
 
-          <label>
-            Opponent level:{" "}
+          <label className="flex items-center gap-2">
+            Opponent level:
             <select
               value={profile.defaultOpponentLevel}
               onChange={(e) =>
@@ -86,6 +84,7 @@ export function App() {
                   defaultOpponentLevel: e.target.value as OpponentLevel,
                 }))
               }
+              className="rounded-md border border-white/20 bg-white/10 px-2 py-1 text-white/90 focus:border-white/60 focus:outline-none"
             >
               <option value="lower">Lower</option>
               <option value="same">Same</option>
@@ -102,7 +101,7 @@ export function App() {
           </button>
         </div>
 
-        <div className="mt-3 text-[0.9rem] text-[#444]">
+        <div className="mt-3 text-[0.9rem] text-white/70">
           <span>
             Played: <strong>{playedCount}</strong> / {matches.length}
           </span>
@@ -120,16 +119,16 @@ export function App() {
           <table className="w-full border-collapse text-[0.95rem]">
             <thead>
               <tr>
-                <th className="border-b border-[#ccc] p-2 text-left">
+                <th className="border-b border-white/30 p-2 text-left text-white/80">
                   #
                 </th>
-                <th className="border-b border-[#ccc] p-2 text-left">
+                <th className="border-b border-white/30 p-2 text-left text-white/80">
                   Goal
                 </th>
-                <th className="border-b border-[#ccc] p-2 text-left">
+                <th className="border-b border-white/30 p-2 text-left text-white/80">
                   Played?
                 </th>
-                <th className="border-b border-[#ccc] p-2 text-left">
+                <th className="border-b border-white/30 p-2 text-left text-white/80">
                   Result
                 </th>
               </tr>
@@ -138,16 +137,10 @@ export function App() {
               {matches.map((match) => (
                 <tr
                   key={match.id}
-                  className={
-                    match.played ? "bg-[#f8fff8] text-[#1b2a16]" : ""
-                  }
+                  className={match.played ? "bg-[#f8fff8] text-[#1b2a16]" : ""}
                 >
-                  <td className="w-8 p-2 align-top">
-                    {match.index}
-                  </td>
-                  <td className="p-2 align-top">
-                    {match.goalText}
-                  </td>
+                  <td className="w-8 p-2 align-top">{match.index}</td>
+                  <td className="p-2 align-top">{match.goalText}</td>
                   <td className="p-2 align-top">
                     <label>
                       <input
