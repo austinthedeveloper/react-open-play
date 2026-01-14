@@ -146,8 +146,17 @@ function updateCounts(
   }
 }
 
-function buildSchedule(numPlayers: number, numMatches: number) {
-  const players = Array.from({ length: numPlayers }, (_, i) => `Player ${i + 1}`);
+function ensureUniqueNames(names: string[]) {
+  const seen = new Map<string, number>();
+  return names.map((raw, index) => {
+    const base = raw.trim() || `Player ${index + 1}`;
+    const count = (seen.get(base) ?? 0) + 1;
+    seen.set(base, count);
+    return count === 1 ? base : `${base} (${count})`;
+  });
+}
+
+function buildSchedule(players: string[], numMatches: number) {
   const playCounts = new Map(players.map((player) => [player, 0]));
   const teammateCounts = new Map<string, number>();
   const opponentCounts = new Map<string, number>();
@@ -177,16 +186,24 @@ function buildSchedule(numPlayers: number, numMatches: number) {
 }
 
 export default function MatchBuilderPage() {
-  const [numPlayers, setNumPlayers] = useState(DEFAULT_PLAYERS);
+  const [playerNames, setPlayerNames] = useState<string[]>(
+    Array.from({ length: DEFAULT_PLAYERS }, (_, i) => `Player ${i + 1}`)
+  );
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
   const [seed, setSeed] = useState(0);
+
+  const numPlayers = playerNames.length;
+  const normalizedNames = useMemo(
+    () => ensureUniqueNames(playerNames),
+    [playerNames]
+  );
 
   const schedule = useMemo(() => {
     if (numPlayers < 4) {
       return null;
     }
-    return buildSchedule(numPlayers, numMatches);
-  }, [numPlayers, numMatches, seed]);
+    return buildSchedule(normalizedNames, numMatches);
+  }, [normalizedNames, numPlayers, numMatches, seed]);
 
   const matches = schedule?.matches ?? [];
   const stats = schedule?.stats ?? [];
@@ -213,9 +230,23 @@ export default function MatchBuilderPage() {
             max={MAX_PLAYERS}
             value={numPlayers}
             onChange={(e) =>
-              setNumPlayers(
-                Math.min(MAX_PLAYERS, Math.max(4, Number(e.target.value) || 4))
-              )
+              setPlayerNames((prev) => {
+                const nextCount = Math.min(
+                  MAX_PLAYERS,
+                  Math.max(4, Number(e.target.value) || 4)
+                );
+                if (nextCount === prev.length) {
+                  return prev;
+                }
+                if (nextCount < prev.length) {
+                  return prev.slice(0, nextCount);
+                }
+                const extras = Array.from(
+                  { length: nextCount - prev.length },
+                  (_, i) => `Player ${prev.length + i + 1}`
+                );
+                return [...prev, ...extras];
+              })
             }
           />
         </label>
@@ -242,6 +273,65 @@ export default function MatchBuilderPage() {
         >
           Generate schedule
         </button>
+      </section>
+
+      <section className="table-panel">
+        <h2 className="panel-title">Roster</h2>
+        <p className="panel-subtitle">
+          Edit player names here. Names stay attached to the schedule below.
+        </p>
+        <div className="roster-grid">
+          {playerNames.map((name, index) => (
+            <div key={`player-${index}`} className="roster-row">
+              <span className="roster-label">Player {index + 1}</span>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) =>
+                  setPlayerNames((prev) =>
+                    prev.map((value, idx) =>
+                      idx === index ? e.target.value : value
+                    )
+                  )
+                }
+                placeholder={`Player ${index + 1}`}
+              />
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={() =>
+                  setPlayerNames((prev) =>
+                    prev.length <= 4
+                      ? prev
+                      : prev.filter((_, idx) => idx !== index)
+                  )
+                }
+                disabled={playerNames.length <= 4}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="roster-actions">
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={() =>
+              setPlayerNames((prev) =>
+                prev.length >= MAX_PLAYERS
+                  ? prev
+                  : [...prev, `Player ${prev.length + 1}`]
+              )
+            }
+            disabled={playerNames.length >= MAX_PLAYERS}
+          >
+            Add player
+          </button>
+          <span className="roster-note">
+            {playerNames.length} players
+          </span>
+        </div>
       </section>
 
       {numPlayers < 4 ? (
