@@ -308,6 +308,7 @@ export default function MatchBuilderPage() {
   const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isRosterOpen, setIsRosterOpen] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRound, setActiveRound] = useState(0);
   const fullscreenRef = useRef<HTMLDivElement | null>(null);
@@ -344,6 +345,7 @@ export default function MatchBuilderPage() {
         numMatches?: number;
         numCourts?: number;
         schedule?: Schedule | null;
+        isRosterOpen?: boolean;
       };
       if (Array.isArray(parsed.players)) {
         const sanitized = parsed.players.map((player, index) => ({
@@ -364,6 +366,9 @@ export default function MatchBuilderPage() {
       if (parsed.schedule && Array.isArray(parsed.schedule.matches)) {
         setSchedule({ matches: parsed.schedule.matches });
       }
+      if (typeof parsed.isRosterOpen === "boolean") {
+        setIsRosterOpen(parsed.isRosterOpen);
+      }
     } catch {
       // ignore storage parse errors
     } finally {
@@ -380,9 +385,15 @@ export default function MatchBuilderPage() {
     }
     window.localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ players, numMatches, numCourts, schedule })
+      JSON.stringify({
+        players,
+        numMatches,
+        numCourts,
+        schedule,
+        isRosterOpen,
+      })
     );
-  }, [players, numMatches, numCourts, schedule, isLoaded]);
+  }, [players, numMatches, numCourts, schedule, isRosterOpen, isLoaded]);
 
   useEffect(() => {
     setNumCourts((prev) => Math.min(Math.max(1, prev), maxCourts));
@@ -555,107 +566,125 @@ export default function MatchBuilderPage() {
       </section>
 
       <section className="table-panel">
-        <h2 className="panel-title">Roster</h2>
+        <div className="panel-header">
+          <h2 className="panel-title">Roster</h2>
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={() => setIsRosterOpen((prev) => !prev)}
+          >
+            {isRosterOpen ? "Collapse" : "Expand"}
+          </button>
+        </div>
         <p className="panel-subtitle">
           Edit player names here. Optionally set a color or gender for each
           player.
         </p>
-        <div className="roster-header">
-          <span className="roster-header-cell">Player</span>
-          <span className="roster-header-cell">Name</span>
-          <span className="roster-header-cell">Color</span>
-          <span className="roster-header-cell">Gender</span>
-          <span className="roster-header-cell">Actions</span>
-        </div>
-        <div className="roster-grid">
-          {players.map((player, index) => (
-            <div key={player.id} className="roster-row">
-              <span className="roster-label">Player {index + 1}</span>
-              <input
-                type="text"
-                value={player.name}
-                onChange={(e) =>
-                  setPlayers((prev) =>
-                    prev.map((entry, idx) =>
-                      idx === index ? { ...entry, name: e.target.value } : entry
-                    )
-                  )
-                }
-                placeholder={`Player ${index + 1}`}
-              />
-              <input
-                type="color"
-                className="color-input"
-                value={player.color || "#0b0d12"}
-                onChange={(e) =>
-                  setPlayers((prev) =>
-                    prev.map((entry, idx) =>
-                      idx === index
-                        ? { ...entry, color: e.target.value }
-                        : entry
-                    )
-                  )
-                }
-                aria-label={`Color for player ${index + 1}`}
-              />
-              <select
-                value={player.gender ?? ""}
-                onChange={(e) =>
-                  setPlayers((prev) =>
-                    prev.map((entry, idx) =>
-                      idx === index
-                        ? { ...entry, gender: e.target.value as GenderOption }
-                        : entry
-                    )
-                  )
-                }
-              >
-                <option value="">Unspecified</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
+        {isRosterOpen ? (
+          <>
+            <div className="roster-header">
+              <span className="roster-header-cell">Player</span>
+              <span className="roster-header-cell">Name</span>
+              <span className="roster-header-cell">Color</span>
+              <span className="roster-header-cell">Gender</span>
+              <span className="roster-header-cell">Actions</span>
+            </div>
+            <div className="roster-grid">
+              {players.map((player, index) => (
+                <div key={player.id} className="roster-row">
+                  <span className="roster-label">Player {index + 1}</span>
+                  <input
+                    type="text"
+                    value={player.name}
+                    onChange={(e) =>
+                      setPlayers((prev) =>
+                        prev.map((entry, idx) =>
+                          idx === index
+                            ? { ...entry, name: e.target.value }
+                            : entry
+                        )
+                      )
+                    }
+                    placeholder={`Player ${index + 1}`}
+                  />
+                  <input
+                    type="color"
+                    className="color-input"
+                    value={player.color || "#0b0d12"}
+                    onChange={(e) =>
+                      setPlayers((prev) =>
+                        prev.map((entry, idx) =>
+                          idx === index
+                            ? { ...entry, color: e.target.value }
+                            : entry
+                        )
+                      )
+                    }
+                    aria-label={`Color for player ${index + 1}`}
+                  />
+                  <select
+                    value={player.gender ?? ""}
+                    onChange={(e) =>
+                      setPlayers((prev) =>
+                        prev.map((entry, idx) =>
+                          idx === index
+                            ? {
+                                ...entry,
+                                gender: e.target.value as GenderOption,
+                              }
+                            : entry
+                        )
+                      )
+                    }
+                  >
+                    <option value="">Unspecified</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() =>
+                      setPlayers((prev) =>
+                        prev.length <= 4
+                          ? prev
+                          : prev.filter((_, idx) => idx !== index)
+                      )
+                    }
+                    disabled={players.length <= 4}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="roster-actions">
               <button
                 type="button"
                 className="ghost-button"
                 onClick={() =>
                   setPlayers((prev) =>
-                    prev.length <= 4
+                    prev.length >= MAX_PLAYERS
                       ? prev
-                      : prev.filter((_, idx) => idx !== index)
+                      : [
+                          ...prev,
+                          {
+                            id: randomId(),
+                            name: `Player ${prev.length + 1}`,
+                            color: pickNextColor(prev, prev.length),
+                            gender: "",
+                          },
+                        ]
                   )
                 }
-                disabled={players.length <= 4}
+                disabled={players.length >= MAX_PLAYERS}
               >
-                Remove
+                Add player
               </button>
+              <span className="roster-note">{players.length} players</span>
             </div>
-          ))}
-        </div>
-        <div className="roster-actions">
-          <button
-            type="button"
-            className="ghost-button"
-            onClick={() =>
-              setPlayers((prev) =>
-                prev.length >= MAX_PLAYERS
-                  ? prev
-                  : [
-                      ...prev,
-                      {
-                        id: randomId(),
-                        name: `Player ${prev.length + 1}`,
-                        color: pickNextColor(prev, prev.length),
-                        gender: "",
-                      },
-                    ]
-              )
-            }
-            disabled={players.length >= MAX_PLAYERS}
-          >
-            Add player
-          </button>
-          <span className="roster-note">{players.length} players</span>
-        </div>
+          </>
+        ) : null}
       </section>
 
       {numPlayers < 4 ? (
