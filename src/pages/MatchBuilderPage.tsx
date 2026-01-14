@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_PLAYERS = 8;
 const DEFAULT_MATCHES = 6;
@@ -303,6 +303,9 @@ export default function MatchBuilderPage() {
   const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeRound, setActiveRound] = useState(0);
+  const fullscreenRef = useRef<HTMLDivElement | null>(null);
 
   const numPlayers = players.length;
   const maxCourts = useMemo(
@@ -400,6 +403,29 @@ export default function MatchBuilderPage() {
   }, [normalizedPlayers, schedule]);
   const getPlayerName = (playerId: string) =>
     playerLookup.get(playerId)?.name ?? "Unknown";
+  const getPlayerColor = (playerId: string) =>
+    playerLookup.get(playerId)?.color ?? "transparent";
+
+  useEffect(() => {
+    if (activeRound > matchRounds.length - 1) {
+      setActiveRound(Math.max(0, matchRounds.length - 1));
+    }
+  }, [activeRound, matchRounds.length]);
+
+  const openFullscreen = () => {
+    setActiveRound(0);
+    setIsFullscreen(true);
+    if (fullscreenRef.current?.requestFullscreen) {
+      fullscreenRef.current.requestFullscreen().catch(() => undefined);
+    }
+  };
+
+  const closeFullscreen = () => {
+    setIsFullscreen(false);
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => undefined);
+    }
+  };
 
   return (
     <div className="builder-shell text-left">
@@ -624,7 +650,17 @@ export default function MatchBuilderPage() {
       ) : (
         <div className="builder-grid">
           <section className="table-panel">
-            <h2 className="panel-title">Matchups</h2>
+            <div className="panel-header">
+              <h2 className="panel-title">Matchups</h2>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={openFullscreen}
+                disabled={matches.length === 0}
+              >
+                Fullscreen view
+              </button>
+            </div>
             {matches.length === 0 ? (
               <p className="empty-state">No matchups yet.</p>
             ) : (
@@ -693,6 +729,94 @@ export default function MatchBuilderPage() {
           </section>
         </div>
       )}
+      {isFullscreen ? (
+        <div className="match-fullscreen" ref={fullscreenRef}>
+          <div className="match-fullscreen-backdrop" />
+          <div className="match-fullscreen-frame">
+            <header className="match-fullscreen-header">
+              <div>
+                <div className="fullscreen-eyebrow">Round</div>
+                <h2 className="fullscreen-title">
+                  {matchRounds.length === 0 ? 0 : activeRound + 1}
+                </h2>
+              </div>
+              <div className="fullscreen-actions">
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() =>
+                    setActiveRound((prev) => Math.max(0, prev - 1))
+                  }
+                  disabled={activeRound <= 0}
+                >
+                  Previous round
+                </button>
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() =>
+                    setActiveRound((prev) =>
+                      Math.min(matchRounds.length - 1, prev + 1)
+                    )
+                  }
+                  disabled={activeRound >= matchRounds.length - 1}
+                >
+                  Next round
+                </button>
+                <button
+                  type="button"
+                  className="glow-button"
+                  onClick={closeFullscreen}
+                >
+                  Exit fullscreen
+                </button>
+              </div>
+            </header>
+            <section className="fullscreen-round">
+              {matchRounds[activeRound]?.map((match, matchIndex) => (
+                <article key={match.id} className="fullscreen-match-card">
+                  <div className="match-index">
+                    Court {matchIndex + 1} • Match {match.index}
+                  </div>
+                  <div className="match-teams">
+                    <div>
+                      <span className="team-label">Team A</span>
+                      <div className="team-names">
+                        <span
+                          className="player-dot"
+                          style={{ backgroundColor: getPlayerColor(match.teams[0][0]) }}
+                        />
+                        {getPlayerName(match.teams[0][0])} &amp;{" "}
+                        <span
+                          className="player-dot"
+                          style={{ backgroundColor: getPlayerColor(match.teams[0][1]) }}
+                        />
+                        {getPlayerName(match.teams[0][1])}
+                      </div>
+                    </div>
+                    <div className="versus">vs</div>
+                    <div>
+                      <span className="team-label">Team B</span>
+                      <div className="team-names">
+                        <span
+                          className="player-dot"
+                          style={{ backgroundColor: getPlayerColor(match.teams[1][0]) }}
+                        />
+                        {getPlayerName(match.teams[1][0])} &amp;{" "}
+                        <span
+                          className="player-dot"
+                          style={{ backgroundColor: getPlayerColor(match.teams[1][1]) }}
+                        />
+                        {getPlayerName(match.teams[1][1])}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </section>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
