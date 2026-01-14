@@ -1,13 +1,49 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import MatchCard from "../components/MatchCard";
 
 const DEFAULT_PLAYERS = 8;
 const DEFAULT_MATCHES = 6;
+const DEFAULT_COURTS = 2;
 const MAX_PLAYERS = 24;
 const MAX_MATCHES = 20;
 
 const TEAMMATE_WEIGHT = 5;
 const OPPONENT_WEIGHT = 2;
 const BALANCE_WEIGHT = 1.5;
+
+const STORAGE_KEY = "matchBuilderState";
+
+const PLAYER_COLORS = [
+  "#4CF3FF",
+  "#F2A6FF",
+  "#FFB86B",
+  "#7EE787",
+  "#FFD166",
+  "#FF6B6B",
+  "#5BC0EB",
+  "#9D4EDD",
+  "#F72585",
+  "#FF9F1C",
+  "#2EC4B6",
+  "#E9C46A",
+  "#06D6A0",
+  "#EF476F",
+  "#A0C4FF",
+  "#BDB2FF",
+  "#FFC6FF",
+  "#CAFFBF",
+  "#FDFFB6",
+  "#83C5BE",
+];
+
+type GenderOption = "" | "male" | "female";
+
+type PlayerProfile = {
+  id: string;
+  name: string;
+  color?: string;
+  gender?: GenderOption;
+};
 
 type MatchTeam = [string, string];
 
@@ -17,13 +53,29 @@ type MatchCard = {
   teams: [MatchTeam, MatchTeam];
 };
 
+type Schedule = {
+  matches: MatchCard[];
+};
+
 type PlayerStat = {
+  id: string;
   name: string;
+  color?: string;
+  gender?: GenderOption;
   playCount: number;
 };
 
 function randomId() {
   return Math.random().toString(36).slice(2, 10);
+}
+
+function pickNextColor(players: PlayerProfile[], index: number) {
+  const used = new Set(players.map((player) => player.color).filter(Boolean));
+  const available = PLAYER_COLORS.filter((color) => !used.has(color));
+  if (available.length > 0) {
+    return available[0];
+  }
+  return PLAYER_COLORS[index % PLAYER_COLORS.length];
 }
 
 function pairKey(a: string, b: string) {
@@ -59,7 +111,7 @@ function scorePairing(
 ) {
   const [teamA, teamB] = teams;
   const players = [...teamA, ...teamB];
-  const plays = players.map((p) => playCounts.get(p) ?? 0);
+  const plays = players.map((playerId) => playCounts.get(playerId) ?? 0);
   const minPlays = Math.min(...plays);
   const maxPlays = Math.max(...plays);
   let score = plays.reduce((sum, value) => sum + value, 0);
@@ -69,9 +121,11 @@ function scorePairing(
   score += (teammateCounts.get(teammateKeyA) ?? 0) * TEAMMATE_WEIGHT;
   score += (teammateCounts.get(teammateKeyB) ?? 0) * TEAMMATE_WEIGHT;
 
-  for (const player of teamA) {
-    for (const opponent of teamB) {
-      score += (opponentCounts.get(pairKey(player, opponent)) ?? 0) * OPPONENT_WEIGHT;
+  for (const playerId of teamA) {
+    for (const opponentId of teamB) {
+      score +=
+        (opponentCounts.get(pairKey(playerId, opponentId)) ?? 0) *
+        OPPONENT_WEIGHT;
     }
   }
 
@@ -81,13 +135,14 @@ function scorePairing(
 }
 
 function pickBestMatch(
-  players: string[],
+  players: PlayerProfile[],
   playCounts: Map<string, number>,
   teammateCounts: Map<string, number>,
   opponentCounts: Map<string, number>
 ) {
   const sorted = [...players].sort((a, b) => {
-    const countDelta = (playCounts.get(a) ?? 0) - (playCounts.get(b) ?? 0);
+    const countDelta =
+      (playCounts.get(a.id) ?? 0) - (playCounts.get(b.id) ?? 0);
     return countDelta || Math.random() - 0.5;
   });
 
@@ -97,15 +152,29 @@ function pickBestMatch(
   let bestScore = Number.POSITIVE_INFINITY;
 
   for (const combo of combos) {
-    const [a, b, c, d] = combo;
+    const [a, b, c, d] = combo.map((player) => player.id);
     const pairings: [MatchTeam, MatchTeam][] = [
-      [[a, b], [c, d]],
-      [[a, c], [b, d]],
-      [[a, d], [b, c]],
+      [
+        [a, b],
+        [c, d],
+      ],
+      [
+        [a, c],
+        [b, d],
+      ],
+      [
+        [a, d],
+        [b, c],
+      ],
     ];
 
     for (const pairing of pairings) {
-      const score = scorePairing(pairing, playCounts, teammateCounts, opponentCounts);
+      const score = scorePairing(
+        pairing,
+        playCounts,
+        teammateCounts,
+        opponentCounts
+      );
       if (score < bestScore) {
         bestScore = score;
         bestTeams = pairing;
@@ -125,8 +194,8 @@ function updateCounts(
   const [teamA, teamB] = teams;
   const players = [...teamA, ...teamB];
 
-  for (const player of players) {
-    playCounts.set(player, (playCounts.get(player) ?? 0) + 1);
+  for (const playerId of players) {
+    playCounts.set(playerId, (playCounts.get(playerId) ?? 0) + 1);
   }
 
   teammateCounts.set(
@@ -138,75 +207,255 @@ function updateCounts(
     (teammateCounts.get(pairKey(teamB[0], teamB[1])) ?? 0) + 1
   );
 
-  for (const player of teamA) {
-    for (const opponent of teamB) {
-      const key = pairKey(player, opponent);
+  for (const playerId of teamA) {
+    for (const opponentId of teamB) {
+      const key = pairKey(playerId, opponentId);
       opponentCounts.set(key, (opponentCounts.get(key) ?? 0) + 1);
     }
   }
 }
 
-function ensureUniqueNames(names: string[]) {
-  const seen = new Map<string, number>();
-  return names.map((raw, index) => {
-    const base = raw.trim() || `Player ${index + 1}`;
-    const count = (seen.get(base) ?? 0) + 1;
-    seen.set(base, count);
-    return count === 1 ? base : `${base} (${count})`;
-  });
-}
-
-function buildSchedule(players: string[], numMatches: number) {
-  const playCounts = new Map(players.map((player) => [player, 0]));
+function buildSchedule(
+  players: PlayerProfile[],
+  numRounds: number,
+  numCourts: number
+) {
+  const playCounts = new Map(players.map((player) => [player.id, 0]));
   const teammateCounts = new Map<string, number>();
   const opponentCounts = new Map<string, number>();
   const matches: MatchCard[] = [];
+  const courts = Math.max(
+    1,
+    Math.min(numCourts, Math.floor(players.length / 4))
+  );
 
-  for (let i = 0; i < numMatches; i += 1) {
-    const teams = pickBestMatch(players, playCounts, teammateCounts, opponentCounts);
-    if (!teams) {
+  for (let round = 0; round < numRounds; round += 1) {
+    const usedThisRound = new Set<string>();
+    let matchesBuilt = 0;
+
+    for (let court = 0; court < courts; court += 1) {
+      const availablePlayers = players.filter(
+        (player) => !usedThisRound.has(player.id)
+      );
+      if (availablePlayers.length < 4) {
+        break;
+      }
+
+      const teams = pickBestMatch(
+        availablePlayers,
+        playCounts,
+        teammateCounts,
+        opponentCounts
+      );
+      if (!teams) {
+        return matches;
+      }
+      updateCounts(teams, playCounts, teammateCounts, opponentCounts);
+
+      for (const playerId of [...teams[0], ...teams[1]]) {
+        usedThisRound.add(playerId);
+      }
+
+      matches.push({
+        id: randomId(),
+        index: matches.length + 1,
+        teams,
+      });
+      matchesBuilt += 1;
+    }
+
+    if (matchesBuilt === 0) {
       break;
     }
-    updateCounts(teams, playCounts, teammateCounts, opponentCounts);
-    matches.push({
-      id: randomId(),
-      index: i + 1,
-      teams,
-    });
+  }
+  return matches;
+}
+
+function buildStats(players: PlayerProfile[], matches: MatchCard[]) {
+  const playCounts = new Map(players.map((player) => [player.id, 0]));
+  for (const match of matches) {
+    for (const playerId of [...match.teams[0], ...match.teams[1]]) {
+      if (playCounts.has(playerId)) {
+        playCounts.set(playerId, (playCounts.get(playerId) ?? 0) + 1);
+      }
+    }
   }
 
   const stats: PlayerStat[] = players.map((player) => ({
-    name: player,
-    playCount: playCounts.get(player) ?? 0,
+    id: player.id,
+    name: player.name,
+    color: player.color,
+    gender: player.gender,
+    playCount: playCounts.get(player.id) ?? 0,
   }));
 
   stats.sort((a, b) => a.name.localeCompare(b.name));
 
-  return { players, matches, stats };
+  return stats;
 }
 
 export default function MatchBuilderPage() {
-  const [playerNames, setPlayerNames] = useState<string[]>(
-    Array.from({ length: DEFAULT_PLAYERS }, (_, i) => `Player ${i + 1}`)
-  );
+  const buildDefaultPlayers = () =>
+    Array.from({ length: DEFAULT_PLAYERS }, (_, i) => ({
+      id: randomId(),
+      name: `Player ${i + 1}`,
+      color: PLAYER_COLORS[i % PLAYER_COLORS.length],
+      gender: "",
+    }));
+  const [players, setPlayers] = useState<PlayerProfile[]>(buildDefaultPlayers);
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
-  const [seed, setSeed] = useState(0);
+  const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
+  const [schedule, setSchedule] = useState<Schedule | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isRosterOpen, setIsRosterOpen] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeRound, setActiveRound] = useState(0);
+  const fullscreenRef = useRef<HTMLDivElement | null>(null);
 
-  const numPlayers = playerNames.length;
-  const normalizedNames = useMemo(
-    () => ensureUniqueNames(playerNames),
-    [playerNames]
+  const numPlayers = players.length;
+  const maxCourts = useMemo(
+    () => Math.max(1, Math.floor(numPlayers / 4)),
+    [numPlayers]
   );
+  const normalizedPlayers = useMemo(() => {
+    const seen = new Map<string, number>();
+    return players.map((player, index) => {
+      const base = player.name.trim() || `Player ${index + 1}`;
+      const count = (seen.get(base) ?? 0) + 1;
+      seen.set(base, count);
+      return {
+        ...player,
+        name: count === 1 ? base : `${base} (${count})`,
+      };
+    });
+  }, [players]);
 
-  const schedule = useMemo(() => {
-    if (numPlayers < 4) {
-      return null;
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
     }
-    return buildSchedule(normalizedNames, numMatches);
-  }, [normalizedNames, numPlayers, numMatches, seed]);
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (!stored) {
+        return;
+      }
+      const parsed = JSON.parse(stored) as {
+        players?: PlayerProfile[];
+        numMatches?: number;
+        numCourts?: number;
+        schedule?: Schedule | null;
+        isRosterOpen?: boolean;
+      };
+      if (Array.isArray(parsed.players)) {
+        const sanitized = parsed.players.map((player, index) => ({
+          id: player.id || randomId(),
+          name: player.name || `Player ${index + 1}`,
+          color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
+          gender: player.gender || "",
+        }));
+
+        setPlayers(sanitized);
+      }
+      if (typeof parsed.numMatches === "number") {
+        setNumMatches(parsed.numMatches);
+      }
+      if (typeof parsed.numCourts === "number") {
+        setNumCourts(parsed.numCourts);
+      }
+      if (parsed.schedule && Array.isArray(parsed.schedule.matches)) {
+        setSchedule({ matches: parsed.schedule.matches });
+      }
+      if (typeof parsed.isRosterOpen === "boolean") {
+        setIsRosterOpen(parsed.isRosterOpen);
+      }
+    } catch {
+      // ignore storage parse errors
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (!isLoaded) {
+      return;
+    }
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        players,
+        numMatches,
+        numCourts,
+        schedule,
+        isRosterOpen,
+      })
+    );
+  }, [players, numMatches, numCourts, schedule, isRosterOpen, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+    setNumCourts((prev) => (prev > maxCourts ? maxCourts : prev));
+  }, [maxCourts, isLoaded]);
 
   const matches = schedule?.matches ?? [];
-  const stats = schedule?.stats ?? [];
+  const playerLookup = useMemo(() => {
+    return new Map(normalizedPlayers.map((player) => [player.id, player]));
+  }, [normalizedPlayers]);
+  const matchRounds = useMemo(() => {
+    const perRound = Math.max(1, numCourts);
+    const rounds: MatchCard[][] = [];
+    for (let i = 0; i < matches.length; i += perRound) {
+      rounds.push(matches.slice(i, i + perRound));
+    }
+    return rounds;
+  }, [matches, numCourts]);
+  const stats = useMemo(() => {
+    if (!schedule) {
+      return [];
+    }
+    return buildStats(normalizedPlayers, schedule.matches);
+  }, [normalizedPlayers, schedule]);
+  const getPlayerName = (playerId: string) =>
+    playerLookup.get(playerId)?.name ?? "Unknown";
+  const getPlayerColor = (playerId: string) =>
+    playerLookup.get(playerId)?.color ?? "transparent";
+
+  useEffect(() => {
+    if (activeRound > matchRounds.length - 1) {
+      setActiveRound(Math.max(0, matchRounds.length - 1));
+    }
+  }, [activeRound, matchRounds.length]);
+
+  const openFullscreen = () => {
+    setActiveRound(0);
+    setIsFullscreen(true);
+    if (fullscreenRef.current?.requestFullscreen) {
+      fullscreenRef.current.requestFullscreen().catch(() => undefined);
+    }
+  };
+
+  const closeFullscreen = () => {
+    setIsFullscreen(false);
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => undefined);
+    }
+  };
+
+  const resetAll = () => {
+    setPlayers(buildDefaultPlayers());
+    setNumMatches(DEFAULT_MATCHES);
+    setNumCourts(DEFAULT_COURTS);
+    setSchedule(null);
+    setActiveRound(0);
+    closeFullscreen();
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  };
 
   return (
     <div className="builder-shell text-left">
@@ -215,8 +464,8 @@ export default function MatchBuilderPage() {
           <p className="eyebrow">Round Robin Lab</p>
           <h1 className="hero-title">Match Builder</h1>
           <p className="hero-subtitle">
-            Build a doubles schedule that keeps play time balanced and mixes teammates
-            and opponents across the group.
+            Build a doubles schedule that keeps play time balanced and mixes
+            teammates and opponents across the group.
           </p>
         </div>
       </header>
@@ -230,7 +479,7 @@ export default function MatchBuilderPage() {
             max={MAX_PLAYERS}
             value={numPlayers}
             onChange={(e) =>
-              setPlayerNames((prev) => {
+              setPlayers((prev) => {
                 const nextCount = Math.min(
                   MAX_PLAYERS,
                   Math.max(4, Number(e.target.value) || 4)
@@ -241,18 +490,23 @@ export default function MatchBuilderPage() {
                 if (nextCount < prev.length) {
                   return prev.slice(0, nextCount);
                 }
-                const extras = Array.from(
-                  { length: nextCount - prev.length },
-                  (_, i) => `Player ${prev.length + i + 1}`
-                );
-                return [...prev, ...extras];
+                const nextPlayers = [...prev];
+                for (let i = prev.length; i < nextCount; i += 1) {
+                  nextPlayers.push({
+                    id: randomId(),
+                    name: `Player ${i + 1}`,
+                    color: pickNextColor(nextPlayers, i),
+                    gender: "",
+                  });
+                }
+                return nextPlayers;
               })
             }
           />
         </label>
 
         <label className="control">
-          <span>Number of matches</span>
+          <span>Number of rounds</span>
           <input
             type="number"
             min={1}
@@ -265,73 +519,174 @@ export default function MatchBuilderPage() {
             }
           />
         </label>
+        <label className="control">
+          <span>Number of courts</span>
+          <input
+            type="number"
+            min={1}
+            max={maxCourts}
+            value={numCourts}
+            onChange={(e) =>
+              setNumCourts(
+                Math.min(maxCourts, Math.max(1, Number(e.target.value) || 1))
+              )
+            }
+          />
+        </label>
 
-        <button
-          type="button"
-          onClick={() => setSeed((value) => value + 1)}
-          className="glow-button"
-        >
-          Generate schedule
-        </button>
+        <div className="control-actions">
+          <button
+            type="button"
+            onClick={() => {
+              if (numPlayers < 4) {
+                setSchedule(null);
+                return;
+              }
+              const matchesList = buildSchedule(
+                normalizedPlayers,
+                numMatches,
+                numCourts
+              );
+              setSchedule({ matches: matchesList });
+            }}
+            className="glow-button"
+          >
+            Generate schedule
+          </button>
+          <button
+            type="button"
+            onClick={() => setSchedule(null)}
+            className="ghost-button"
+            disabled={!schedule || schedule.matches.length === 0}
+          >
+            Clear schedule
+          </button>
+          <button type="button" onClick={resetAll} className="ghost-button">
+            Reset all
+          </button>
+        </div>
       </section>
 
       <section className="table-panel">
-        <h2 className="panel-title">Roster</h2>
+        <div className="panel-header">
+          <h2 className="panel-title">Roster</h2>
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={() => setIsRosterOpen((prev) => !prev)}
+          >
+            {isRosterOpen ? "Collapse" : "Expand"}
+          </button>
+        </div>
         <p className="panel-subtitle">
-          Edit player names here. Names stay attached to the schedule below.
+          Edit player names here. Optionally set a color or gender for each
+          player.
         </p>
-        <div className="roster-grid">
-          {playerNames.map((name, index) => (
-            <div key={`player-${index}`} className="roster-row">
-              <span className="roster-label">Player {index + 1}</span>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) =>
-                  setPlayerNames((prev) =>
-                    prev.map((value, idx) =>
-                      idx === index ? e.target.value : value
-                    )
-                  )
-                }
-                placeholder={`Player ${index + 1}`}
-              />
+        {isRosterOpen ? (
+          <>
+            <div className="roster-header">
+              <span className="roster-header-cell">Player</span>
+              <span className="roster-header-cell">Name</span>
+              <span className="roster-header-cell">Color</span>
+              <span className="roster-header-cell">Gender</span>
+              <span className="roster-header-cell">Actions</span>
+            </div>
+            <div className="roster-grid">
+              {players.map((player, index) => (
+                <div key={player.id} className="roster-row">
+                  <span className="roster-label">Player {index + 1}</span>
+                  <input
+                    type="text"
+                    value={player.name}
+                    onChange={(e) =>
+                      setPlayers((prev) =>
+                        prev.map((entry, idx) =>
+                          idx === index
+                            ? { ...entry, name: e.target.value }
+                            : entry
+                        )
+                      )
+                    }
+                    placeholder={`Player ${index + 1}`}
+                  />
+                  <input
+                    type="color"
+                    className="color-input"
+                    value={player.color || "#0b0d12"}
+                    onChange={(e) =>
+                      setPlayers((prev) =>
+                        prev.map((entry, idx) =>
+                          idx === index
+                            ? { ...entry, color: e.target.value }
+                            : entry
+                        )
+                      )
+                    }
+                    aria-label={`Color for player ${index + 1}`}
+                  />
+                  <select
+                    value={player.gender ?? ""}
+                    onChange={(e) =>
+                      setPlayers((prev) =>
+                        prev.map((entry, idx) =>
+                          idx === index
+                            ? {
+                                ...entry,
+                                gender: e.target.value as GenderOption,
+                              }
+                            : entry
+                        )
+                      )
+                    }
+                  >
+                    <option value="">Unspecified</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() =>
+                      setPlayers((prev) =>
+                        prev.length <= 4
+                          ? prev
+                          : prev.filter((_, idx) => idx !== index)
+                      )
+                    }
+                    disabled={players.length <= 4}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="roster-actions">
               <button
                 type="button"
                 className="ghost-button"
                 onClick={() =>
-                  setPlayerNames((prev) =>
-                    prev.length <= 4
+                  setPlayers((prev) =>
+                    prev.length >= MAX_PLAYERS
                       ? prev
-                      : prev.filter((_, idx) => idx !== index)
+                      : [
+                          ...prev,
+                          {
+                            id: randomId(),
+                            name: `Player ${prev.length + 1}`,
+                            color: pickNextColor(prev, prev.length),
+                            gender: "",
+                          },
+                        ]
                   )
                 }
-                disabled={playerNames.length <= 4}
+                disabled={players.length >= MAX_PLAYERS}
               >
-                Remove
+                Add player
               </button>
+              <span className="roster-note">{players.length} players</span>
             </div>
-          ))}
-        </div>
-        <div className="roster-actions">
-          <button
-            type="button"
-            className="ghost-button"
-            onClick={() =>
-              setPlayerNames((prev) =>
-                prev.length >= MAX_PLAYERS
-                  ? prev
-                  : [...prev, `Player ${prev.length + 1}`]
-              )
-            }
-            disabled={playerNames.length >= MAX_PLAYERS}
-          >
-            Add player
-          </button>
-          <span className="roster-note">
-            {playerNames.length} players
-          </span>
-        </div>
+          </>
+        ) : null}
       </section>
 
       {numPlayers < 4 ? (
@@ -343,30 +698,55 @@ export default function MatchBuilderPage() {
       ) : (
         <div className="builder-grid">
           <section className="table-panel">
-            <h2 className="panel-title">Matchups</h2>
+            <div className="panel-header">
+              <h2 className="panel-title">Matchups</h2>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={openFullscreen}
+                disabled={matches.length === 0}
+              >
+                Fullscreen view
+              </button>
+            </div>
             {matches.length === 0 ? (
               <p className="empty-state">No matchups yet.</p>
             ) : (
               <div className="matches-list">
-                {matches.map((match) => (
-                  <article key={match.id} className="match-card">
-                    <div className="match-index">Match {match.index}</div>
-                    <div className="match-teams">
-                      <div>
-                        <span className="team-label">Team A</span>
-                        <div className="team-names">
-                          {match.teams[0][0]} &amp; {match.teams[0][1]}
-                        </div>
-                      </div>
-                      <div className="versus">vs</div>
-                      <div>
-                        <span className="team-label">Team B</span>
-                        <div className="team-names">
-                          {match.teams[1][0]} &amp; {match.teams[1][1]}
-                        </div>
-                      </div>
+                {matchRounds.map((roundMatches, roundIndex) => (
+                  <div key={`round-${roundIndex}`} className="round-block">
+                    <div className="round-header">Round {roundIndex + 1}</div>
+                    <div className="round-courts">
+                      {roundMatches.map((match, matchIndex) => (
+                        <MatchCard
+                          key={match.id}
+                          courtIndex={matchIndex + 1}
+                          matchIndex={match.index}
+                          size="compact"
+                          teamA={[
+                            {
+                              name: getPlayerName(match.teams[0][0]),
+                              color: getPlayerColor(match.teams[0][0]),
+                            },
+                            {
+                              name: getPlayerName(match.teams[0][1]),
+                              color: getPlayerColor(match.teams[0][1]),
+                            },
+                          ]}
+                          teamB={[
+                            {
+                              name: getPlayerName(match.teams[1][0]),
+                              color: getPlayerColor(match.teams[1][0]),
+                            },
+                            {
+                              name: getPlayerName(match.teams[1][1]),
+                              color: getPlayerColor(match.teams[1][1]),
+                            },
+                          ]}
+                        />
+                      ))}
                     </div>
-                  </article>
+                  </div>
                 ))}
               </div>
             )}
@@ -379,15 +759,104 @@ export default function MatchBuilderPage() {
             </p>
             <div className="stats-grid">
               {stats.map((player) => (
-                <div key={player.name} className="stat-card">
-                  <span className="stat-label">{player.name}</span>
+                <div key={player.id} className="stat-card">
+                  <span className="stat-card-label">
+                    <span
+                      className="stat-dot"
+                      style={{
+                        backgroundColor: player.color || "transparent",
+                      }}
+                    />
+                    {player.name}
+                  </span>
                   <span className="stat-value">{player.playCount}</span>
+                  {player.gender ? (
+                    <span className="stat-card-sub">
+                      {player.gender === "male" ? "Male" : "Female"}
+                    </span>
+                  ) : null}
                 </div>
               ))}
             </div>
           </section>
         </div>
       )}
+      {isFullscreen ? (
+        <div className="match-fullscreen" ref={fullscreenRef}>
+          <div className="match-fullscreen-backdrop" />
+          <div className="match-fullscreen-frame">
+            <header className="match-fullscreen-header">
+              <div>
+                <div className="fullscreen-eyebrow">Round</div>
+                <h2 className="fullscreen-title">
+                  {matchRounds.length === 0 ? 0 : activeRound + 1}
+                </h2>
+              </div>
+              <div className="fullscreen-actions">
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() =>
+                    setActiveRound((prev) => Math.max(0, prev - 1))
+                  }
+                  disabled={activeRound <= 0}
+                >
+                  Previous round
+                </button>
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() =>
+                    setActiveRound((prev) =>
+                      Math.min(matchRounds.length - 1, prev + 1)
+                    )
+                  }
+                  disabled={activeRound >= matchRounds.length - 1}
+                >
+                  Next round
+                </button>
+                <button
+                  type="button"
+                  className="glow-button"
+                  onClick={closeFullscreen}
+                >
+                  Exit fullscreen
+                </button>
+              </div>
+            </header>
+            <section className="fullscreen-round">
+              {matchRounds[activeRound]?.map((match, matchIndex) => (
+                <MatchCard
+                  key={match.id}
+                  courtIndex={matchIndex + 1}
+                  matchIndex={match.index}
+                  size="full"
+                  teamA={[
+                    {
+                      name: getPlayerName(match.teams[0][0]),
+                      color: getPlayerColor(match.teams[0][0]),
+                    },
+                    {
+                      name: getPlayerName(match.teams[0][1]),
+                      color: getPlayerColor(match.teams[0][1]),
+                    },
+                  ]}
+                  teamB={[
+                    {
+                      name: getPlayerName(match.teams[1][0]),
+                      color: getPlayerColor(match.teams[1][0]),
+                    },
+                    {
+                      name: getPlayerName(match.teams[1][1]),
+                      color: getPlayerColor(match.teams[1][1]),
+                    },
+                  ]}
+                />
+              ))}
+            </section>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
