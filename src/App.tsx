@@ -48,33 +48,18 @@ export function App() {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 800,
-        margin: "0 auto",
-        padding: "1rem",
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      }}
-    >
-      <header style={{ marginBottom: "1.5rem" }}>
-        <h1>Open Play Goals</h1>
-        <p style={{ margin: 0, color: "#555" }}>
+    <div className="text-left">
+      <header className="mb-6">
+        <h1 className="text-[3.2em] leading-[1.1]">Open Play Goals</h1>
+        <p className="m-0 text-[#555]">
           Profile: <strong>{profile.ratingRange}</strong> &middot; Default
           opponent level:{" "}
-          <strong style={{ textTransform: "capitalize" }}>
+          <strong className="capitalize">
             {profile.defaultOpponentLevel}
           </strong>
         </p>
 
-        <div
-          style={{
-            marginTop: "0.75rem",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "0.75rem",
-            alignItems: "center",
-          }}
-        >
+        <div className="mt-3 flex flex-wrap items-center gap-3">
           <label>
             Matches this session:{" "}
             <input
@@ -87,7 +72,7 @@ export function App() {
                   Math.min(20, Math.max(1, Number(e.target.value) || 1))
                 )
               }
-              style={{ width: 60 }}
+              className="w-[60px]"
             />
           </label>
 
@@ -108,18 +93,16 @@ export function App() {
             </select>
           </label>
 
-          <button type="button" onClick={regenerate}>
+          <button
+            type="button"
+            onClick={regenerate}
+            className="cursor-pointer rounded-lg border border-transparent bg-[#1a1a1a] px-5 py-2 text-base font-medium text-white transition-colors hover:border-[#646cff] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#646cff]"
+          >
             Generate goals
           </button>
         </div>
 
-        <div
-          style={{
-            marginTop: "0.75rem",
-            fontSize: "0.9rem",
-            color: "#444",
-          }}
-        >
+        <div className="mt-3 text-[0.9rem] text-[#444]">
           <span>
             Played: <strong>{playedCount}</strong> / {matches.length}
           </span>
@@ -134,49 +117,19 @@ export function App() {
         {matches.length === 0 ? (
           <p>No matches yet. Click &quot;Generate goals&quot;.</p>
         ) : (
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "0.95rem",
-            }}
-          >
+          <table className="w-full border-collapse text-[0.95rem]">
             <thead>
               <tr>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "0.5rem",
-                    borderBottom: "1px solid #ccc",
-                  }}
-                >
+                <th className="border-b border-[#ccc] p-2 text-left">
                   #
                 </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "0.5rem",
-                    borderBottom: "1px solid #ccc",
-                  }}
-                >
+                <th className="border-b border-[#ccc] p-2 text-left">
                   Goal
                 </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "0.5rem",
-                    borderBottom: "1px solid #ccc",
-                  }}
-                >
+                <th className="border-b border-[#ccc] p-2 text-left">
                   Played?
                 </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "0.5rem",
-                    borderBottom: "1px solid #ccc",
-                  }}
-                >
+                <th className="border-b border-[#ccc] p-2 text-left">
                   Result
                 </th>
               </tr>
@@ -185,34 +138,17 @@ export function App() {
               {matches.map((match) => (
                 <tr
                   key={match.id}
-                  style={{
-                    backgroundColor: match.played ? "#f8fff8" : "transparent",
-                    color: match.played ? "#1b2a16" : "inherit",
-                  }}
+                  className={
+                    match.played ? "bg-[#f8fff8] text-[#1b2a16]" : ""
+                  }
                 >
-                  <td
-                    style={{
-                      padding: "0.5rem",
-                      verticalAlign: "top",
-                      width: "2rem",
-                    }}
-                  >
+                  <td className="w-8 p-2 align-top">
                     {match.index}
                   </td>
-                  <td
-                    style={{
-                      padding: "0.5rem",
-                      verticalAlign: "top",
-                    }}
-                  >
+                  <td className="p-2 align-top">
                     {match.goalText}
                   </td>
-                  <td
-                    style={{
-                      padding: "0.5rem",
-                      verticalAlign: "top",
-                    }}
-                  >
+                  <td className="p-2 align-top">
                     <label>
                       <input
                         type="checkbox"
@@ -226,12 +162,7 @@ export function App() {
                       Played
                     </label>
                   </td>
-                  <td
-                    style={{
-                      padding: "0.5rem",
-                      verticalAlign: "top",
-                    }}
-                  >
+                  <td className="p-2 align-top">
                     <select
                       value={match.result}
                       onChange={(e) =>

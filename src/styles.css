@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply m-0 flex min-w-[320px] min-h-screen items-center justify-center bg-[#242424] text-white/90 font-sans antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    @apply mx-auto max-w-[800px] p-4;
+  }
+}
