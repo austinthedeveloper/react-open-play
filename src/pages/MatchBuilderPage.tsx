@@ -301,9 +301,7 @@ export default function MatchBuilderPage() {
       color: PLAYER_COLORS[i % PLAYER_COLORS.length],
       gender: "",
     }));
-  const [players, setPlayers] = useState<PlayerProfile[]>(
-    buildDefaultPlayers
-  );
+  const [players, setPlayers] = useState<PlayerProfile[]>(buildDefaultPlayers);
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
   const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
@@ -727,7 +725,7 @@ export default function MatchBuilderPage() {
                             <div>
                               <span className="team-label">Team A</span>
                               <div className="team-names">
-                                {getPlayerName(match.teams[0][0])} &amp;{" "}
+                                {getPlayerName(match.teams[0][0])} |{" "}
                                 {getPlayerName(match.teams[0][1])}
                               </div>
                             </div>
@@ -735,7 +733,7 @@ export default function MatchBuilderPage() {
                             <div>
                               <span className="team-label">Team B</span>
                               <div className="team-names">
-                                {getPlayerName(match.teams[1][0])} &amp;{" "}
+                                {getPlayerName(match.teams[1][0])} |{" "}
                                 {getPlayerName(match.teams[1][1])}
                               </div>
                             </div>
@@ -837,7 +835,7 @@ export default function MatchBuilderPage() {
                             backgroundColor: getPlayerColor(match.teams[0][0]),
                           }}
                         />
-                        {getPlayerName(match.teams[0][0])} &amp;{" "}
+                        {getPlayerName(match.teams[0][0])} |{" "}
                         <span
                           className="player-dot"
                           style={{
@@ -857,7 +855,7 @@ export default function MatchBuilderPage() {
                             backgroundColor: getPlayerColor(match.teams[1][0]),
                           }}
                         />
-                        {getPlayerName(match.teams[1][0])} &amp;{" "}
+                        {getPlayerName(match.teams[1][0])} |{" "}
                         <span
                           className="player-dot"
                           style={{

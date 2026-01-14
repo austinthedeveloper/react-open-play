@@ -242,6 +242,7 @@
     grid-template-rows: auto 1fr;
     gap: clamp(1.5rem, 2.5vw, 2.5rem);
     backdrop-filter: blur(12px);
+    min-height: 0;
   }
 
   .match-fullscreen-header {
@@ -275,6 +276,8 @@
   .fullscreen-round {
     display: grid;
     gap: clamp(1rem, 2.2vw, 2rem);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
   }
 
   .fullscreen-match-card {
@@ -345,6 +348,10 @@
 
     .fullscreen-match-card .versus {
       justify-self: start;
+    }
+
+    .fullscreen-round {
+      grid-template-columns: 1fr;
     }
   }
 
