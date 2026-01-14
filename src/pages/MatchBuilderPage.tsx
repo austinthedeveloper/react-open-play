@@ -249,12 +249,12 @@ function buildStats(
 }
 
 export default function MatchBuilderPage() {
-  const buildDefaultPlayers = () =>
+  const buildDefaultPlayers = (): PlayerProfile[] =>
     Array.from({ length: DEFAULT_PLAYERS }, (_, i) => ({
       id: randomId(),
       name: `Player ${i + 1}`,
       color: PLAYER_COLORS[i % PLAYER_COLORS.length],
-      gender: "",
+      gender: "" as GenderOption,
     }));
   const [players, setPlayers] = useState<PlayerProfile[]>(buildDefaultPlayers);
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
@@ -309,7 +309,7 @@ export default function MatchBuilderPage() {
           id: player.id || randomId(),
           name: player.name || `Player ${index + 1}`,
           color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
-          gender: player.gender || "",
+          gender: (player.gender ?? "") as GenderOption,
         }));
 
         setPlayers(sanitized);
@@ -514,7 +514,7 @@ export default function MatchBuilderPage() {
                     id: randomId(),
                     name: `Player ${i + 1}`,
                     color: pickNextColor(nextPlayers, i),
-                    gender: "",
+                    gender: "" as GenderOption,
                   });
                 }
                 return nextPlayers;
@@ -690,7 +690,7 @@ export default function MatchBuilderPage() {
                             idx === index
                               ? {
                                   ...entry,
-                                  gender: "",
+                                  gender: "" as GenderOption,
                                 }
                               : entry
                           )
@@ -758,7 +758,7 @@ export default function MatchBuilderPage() {
                             id: randomId(),
                             name: `Player ${prev.length + 1}`,
                             color: pickNextColor(prev, prev.length),
-                            gender: "",
+                            gender: "" as GenderOption,
                           },
                         ]
                   )
