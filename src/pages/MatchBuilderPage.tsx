@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import MatchCard from "../components/MatchCard";
 
 const DEFAULT_PLAYERS = 8;
 const DEFAULT_MATCHES = 6;
@@ -717,28 +718,32 @@ export default function MatchBuilderPage() {
                     <div className="round-header">Round {roundIndex + 1}</div>
                     <div className="round-courts">
                       {roundMatches.map((match, matchIndex) => (
-                        <article key={match.id} className="match-card">
-                          <div className="match-index">
-                            Court {matchIndex + 1} • Match {match.index}
-                          </div>
-                          <div className="match-teams">
-                            <div>
-                              <span className="team-label">Team A</span>
-                              <div className="team-names">
-                                {getPlayerName(match.teams[0][0])} |{" "}
-                                {getPlayerName(match.teams[0][1])}
-                              </div>
-                            </div>
-                            <div className="versus">vs</div>
-                            <div>
-                              <span className="team-label">Team B</span>
-                              <div className="team-names">
-                                {getPlayerName(match.teams[1][0])} |{" "}
-                                {getPlayerName(match.teams[1][1])}
-                              </div>
-                            </div>
-                          </div>
-                        </article>
+                        <MatchCard
+                          key={match.id}
+                          courtIndex={matchIndex + 1}
+                          matchIndex={match.index}
+                          size="compact"
+                          teamA={[
+                            {
+                              name: getPlayerName(match.teams[0][0]),
+                              color: getPlayerColor(match.teams[0][0]),
+                            },
+                            {
+                              name: getPlayerName(match.teams[0][1]),
+                              color: getPlayerColor(match.teams[0][1]),
+                            },
+                          ]}
+                          teamB={[
+                            {
+                              name: getPlayerName(match.teams[1][0]),
+                              color: getPlayerColor(match.teams[1][0]),
+                            },
+                            {
+                              name: getPlayerName(match.teams[1][1]),
+                              color: getPlayerColor(match.teams[1][1]),
+                            },
+                          ]}
+                        />
                       ))}
                     </div>
                   </div>
@@ -821,52 +826,32 @@ export default function MatchBuilderPage() {
             </header>
             <section className="fullscreen-round">
               {matchRounds[activeRound]?.map((match, matchIndex) => (
-                <article key={match.id} className="fullscreen-match-card">
-                  <div className="match-index">
-                    Court {matchIndex + 1} • Match {match.index}
-                  </div>
-                  <div className="match-teams">
-                    <div>
-                      <span className="team-label">Team A</span>
-                      <div className="team-names">
-                        <span
-                          className="player-dot"
-                          style={{
-                            backgroundColor: getPlayerColor(match.teams[0][0]),
-                          }}
-                        />
-                        {getPlayerName(match.teams[0][0])} |{" "}
-                        <span
-                          className="player-dot"
-                          style={{
-                            backgroundColor: getPlayerColor(match.teams[0][1]),
-                          }}
-                        />
-                        {getPlayerName(match.teams[0][1])}
-                      </div>
-                    </div>
-                    <div className="versus">vs</div>
-                    <div>
-                      <span className="team-label">Team B</span>
-                      <div className="team-names">
-                        <span
-                          className="player-dot"
-                          style={{
-                            backgroundColor: getPlayerColor(match.teams[1][0]),
-                          }}
-                        />
-                        {getPlayerName(match.teams[1][0])} |{" "}
-                        <span
-                          className="player-dot"
-                          style={{
-                            backgroundColor: getPlayerColor(match.teams[1][1]),
-                          }}
-                        />
-                        {getPlayerName(match.teams[1][1])}
-                      </div>
-                    </div>
-                  </div>
-                </article>
+                <MatchCard
+                  key={match.id}
+                  courtIndex={matchIndex + 1}
+                  matchIndex={match.index}
+                  size="full"
+                  teamA={[
+                    {
+                      name: getPlayerName(match.teams[0][0]),
+                      color: getPlayerColor(match.teams[0][0]),
+                    },
+                    {
+                      name: getPlayerName(match.teams[0][1]),
+                      color: getPlayerColor(match.teams[0][1]),
+                    },
+                  ]}
+                  teamB={[
+                    {
+                      name: getPlayerName(match.teams[1][0]),
+                      color: getPlayerColor(match.teams[1][0]),
+                    },
+                    {
+                      name: getPlayerName(match.teams[1][1]),
+                      color: getPlayerColor(match.teams[1][1]),
+                    },
+                  ]}
+                />
               ))}
             </section>
           </div>
