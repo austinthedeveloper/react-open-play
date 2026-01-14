@@ -1,69 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import MatchCard from "../components/MatchCard";
-
-const DEFAULT_PLAYERS = 8;
-const DEFAULT_MATCHES = 6;
-const DEFAULT_COURTS = 2;
-const MAX_PLAYERS = 24;
-const MAX_MATCHES = 20;
-
-const TEAMMATE_WEIGHT = 5;
-const OPPONENT_WEIGHT = 2;
-const BALANCE_WEIGHT = 1.5;
-
-const STORAGE_KEY = "matchBuilderState";
-
-const PLAYER_COLORS = [
-  "#4CF3FF",
-  "#F2A6FF",
-  "#FFB86B",
-  "#7EE787",
-  "#FFD166",
-  "#FF6B6B",
-  "#5BC0EB",
-  "#9D4EDD",
-  "#F72585",
-  "#FF9F1C",
-  "#2EC4B6",
-  "#E9C46A",
-  "#06D6A0",
-  "#EF476F",
-  "#A0C4FF",
-  "#BDB2FF",
-  "#FFC6FF",
-  "#CAFFBF",
-  "#FDFFB6",
-  "#83C5BE",
-];
-
-type GenderOption = "" | "male" | "female";
-
-type PlayerProfile = {
-  id: string;
-  name: string;
-  color?: string;
-  gender?: GenderOption;
-};
-
-type MatchTeam = [string, string];
-
-type MatchCard = {
-  id: string;
-  index: number;
-  teams: [MatchTeam, MatchTeam];
-};
-
-type Schedule = {
-  matches: MatchCard[];
-};
-
-type PlayerStat = {
-  id: string;
-  name: string;
-  color?: string;
-  gender?: GenderOption;
-  playCount: number;
-};
+import {
+  BALANCE_WEIGHT,
+  DEFAULT_COURTS,
+  DEFAULT_MATCHES,
+  DEFAULT_PLAYERS,
+  MAX_MATCHES,
+  MAX_PLAYERS,
+  OPPONENT_WEIGHT,
+  PLAYER_COLORS,
+  STORAGE_KEY,
+  TEAMMATE_WEIGHT,
+} from "../data";
+import type {
+  GenderOption,
+  MatchCard as MatchCardType,
+  MatchTeam,
+  PlayerProfile,
+  PlayerStat,
+  Schedule,
+} from "../interfaces";
 
 function randomId() {
   return Math.random().toString(36).slice(2, 10);
@@ -223,7 +179,7 @@ function buildSchedule(
   const playCounts = new Map(players.map((player) => [player.id, 0]));
   const teammateCounts = new Map<string, number>();
   const opponentCounts = new Map<string, number>();
-  const matches: MatchCard[] = [];
+  const matches: MatchCardType[] = [];
   const courts = Math.max(
     1,
     Math.min(numCourts, Math.floor(players.length / 4))
@@ -271,7 +227,7 @@ function buildSchedule(
   return matches;
 }
 
-function buildStats(players: PlayerProfile[], matches: MatchCard[]) {
+function buildStats(players: PlayerProfile[], matches: MatchCardType[]) {
   const playCounts = new Map(players.map((player) => [player.id, 0]));
   for (const match of matches) {
     for (const playerId of [...match.teams[0], ...match.teams[1]]) {
@@ -407,7 +363,7 @@ export default function MatchBuilderPage() {
   }, [normalizedPlayers]);
   const matchRounds = useMemo(() => {
     const perRound = Math.max(1, numCourts);
-    const rounds: MatchCard[][] = [];
+    const rounds: MatchCardType[][] = [];
     for (let i = 0; i < matches.length; i += perRound) {
       rounds.push(matches.slice(i, i + perRound));
     }

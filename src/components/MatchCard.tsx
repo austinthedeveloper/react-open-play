@@ -1,16 +1,4 @@
-type TeamMember = {
-  name: string;
-  color: string;
-};
-
-type MatchCardProps = {
-  courtIndex: number;
-  matchIndex: number;
-  teamA: [TeamMember, TeamMember];
-  teamB: [TeamMember, TeamMember];
-  size?: "full" | "compact";
-  className?: string;
-};
+import type { MatchCardProps } from "../interfaces";
 
 export default function MatchCard({
   courtIndex,
