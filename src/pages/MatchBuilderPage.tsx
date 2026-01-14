@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const DEFAULT_PLAYERS = 8;
 const DEFAULT_MATCHES = 6;
@@ -9,6 +9,8 @@ const TEAMMATE_WEIGHT = 5;
 const OPPONENT_WEIGHT = 2;
 const BALANCE_WEIGHT = 1.5;
 
+const STORAGE_KEY = "matchBuilderState";
+
 type GenderOption = "" | "male" | "female";
 
 type PlayerProfile = {
@@ -18,12 +20,16 @@ type PlayerProfile = {
   gender?: GenderOption;
 };
 
-type MatchTeam = [PlayerProfile, PlayerProfile];
+type MatchTeam = [string, string];
 
 type MatchCard = {
   id: string;
   index: number;
   teams: [MatchTeam, MatchTeam];
+};
+
+type Schedule = {
+  matches: MatchCard[];
 };
 
 type PlayerStat = {
@@ -38,8 +44,8 @@ function randomId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function pairKey(a: PlayerProfile, b: PlayerProfile) {
-  return [a.id, b.id].sort().join("|");
+function pairKey(a: string, b: string) {
+  return [a, b].sort().join("|");
 }
 
 function getCombinations<T>(items: T[], size: number): T[][] {
@@ -71,7 +77,7 @@ function scorePairing(
 ) {
   const [teamA, teamB] = teams;
   const players = [...teamA, ...teamB];
-  const plays = players.map((player) => playCounts.get(player.id) ?? 0);
+  const plays = players.map((playerId) => playCounts.get(playerId) ?? 0);
   const minPlays = Math.min(...plays);
   const maxPlays = Math.max(...plays);
   let score = plays.reduce((sum, value) => sum + value, 0);
@@ -81,10 +87,11 @@ function scorePairing(
   score += (teammateCounts.get(teammateKeyA) ?? 0) * TEAMMATE_WEIGHT;
   score += (teammateCounts.get(teammateKeyB) ?? 0) * TEAMMATE_WEIGHT;
 
-  for (const player of teamA) {
-    for (const opponent of teamB) {
+  for (const playerId of teamA) {
+    for (const opponentId of teamB) {
       score +=
-        (opponentCounts.get(pairKey(player, opponent)) ?? 0) * OPPONENT_WEIGHT;
+        (opponentCounts.get(pairKey(playerId, opponentId)) ?? 0) *
+        OPPONENT_WEIGHT;
     }
   }
 
@@ -111,7 +118,7 @@ function pickBestMatch(
   let bestScore = Number.POSITIVE_INFINITY;
 
   for (const combo of combos) {
-    const [a, b, c, d] = combo;
+    const [a, b, c, d] = combo.map((player) => player.id);
     const pairings: [MatchTeam, MatchTeam][] = [
       [
         [a, b],
@@ -153,8 +160,8 @@ function updateCounts(
   const [teamA, teamB] = teams;
   const players = [...teamA, ...teamB];
 
-  for (const player of players) {
-    playCounts.set(player.id, (playCounts.get(player.id) ?? 0) + 1);
+  for (const playerId of players) {
+    playCounts.set(playerId, (playCounts.get(playerId) ?? 0) + 1);
   }
 
   teammateCounts.set(
@@ -166,9 +173,9 @@ function updateCounts(
     (teammateCounts.get(pairKey(teamB[0], teamB[1])) ?? 0) + 1
   );
 
-  for (const player of teamA) {
-    for (const opponent of teamB) {
-      const key = pairKey(player, opponent);
+  for (const playerId of teamA) {
+    for (const opponentId of teamB) {
+      const key = pairKey(playerId, opponentId);
       opponentCounts.set(key, (opponentCounts.get(key) ?? 0) + 1);
     }
   }
@@ -197,6 +204,18 @@ function buildSchedule(players: PlayerProfile[], numMatches: number) {
       teams,
     });
   }
+  return matches;
+}
+
+function buildStats(players: PlayerProfile[], matches: MatchCard[]) {
+  const playCounts = new Map(players.map((player) => [player.id, 0]));
+  for (const match of matches) {
+    for (const playerId of [...match.teams[0], ...match.teams[1]]) {
+      if (playCounts.has(playerId)) {
+        playCounts.set(playerId, (playCounts.get(playerId) ?? 0) + 1);
+      }
+    }
+  }
 
   const stats: PlayerStat[] = players.map((player) => ({
     id: player.id,
@@ -208,7 +227,7 @@ function buildSchedule(players: PlayerProfile[], numMatches: number) {
 
   stats.sort((a, b) => a.name.localeCompare(b.name));
 
-  return { players, matches, stats };
+  return stats;
 }
 
 export default function MatchBuilderPage() {
@@ -221,7 +240,8 @@ export default function MatchBuilderPage() {
     }))
   );
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
-  const [seed, setSeed] = useState(0);
+  const [schedule, setSchedule] = useState<Schedule | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const numPlayers = players.length;
   const normalizedPlayers = useMemo(() => {
@@ -237,15 +257,67 @@ export default function MatchBuilderPage() {
     });
   }, [players]);
 
-  const schedule = useMemo(() => {
-    if (numPlayers < 4) {
-      return null;
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
     }
-    return buildSchedule(normalizedPlayers, numMatches);
-  }, [normalizedPlayers, numPlayers, numMatches, seed]);
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (!stored) {
+        return;
+      }
+      const parsed = JSON.parse(stored) as {
+        players?: PlayerProfile[];
+        numMatches?: number;
+        schedule?: Schedule | null;
+      };
+      if (Array.isArray(parsed.players)) {
+        const sanitized = parsed.players.map((player, index) => ({
+          id: player.id || randomId(),
+          name: player.name || `Player ${index + 1}`,
+          color: player.color || "",
+          gender: player.gender || "",
+        }));
+        setPlayers(sanitized);
+      }
+      if (typeof parsed.numMatches === "number") {
+        setNumMatches(parsed.numMatches);
+      }
+      if (parsed.schedule && Array.isArray(parsed.schedule.matches)) {
+        setSchedule({ matches: parsed.schedule.matches });
+      }
+    } catch {
+      // ignore storage parse errors
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (!isLoaded) {
+      return;
+    }
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ players, numMatches, schedule })
+    );
+  }, [players, numMatches, schedule, isLoaded]);
 
   const matches = schedule?.matches ?? [];
-  const stats = schedule?.stats ?? [];
+  const playerLookup = useMemo(() => {
+    return new Map(normalizedPlayers.map((player) => [player.id, player]));
+  }, [normalizedPlayers]);
+  const stats = useMemo(() => {
+    if (!schedule) {
+      return [];
+    }
+    return buildStats(normalizedPlayers, schedule.matches);
+  }, [normalizedPlayers, schedule]);
+  const getPlayerName = (playerId: string) =>
+    playerLookup.get(playerId)?.name ?? "Unknown";
 
   return (
     <div className="builder-shell text-left">
@@ -312,7 +384,14 @@ export default function MatchBuilderPage() {
 
         <button
           type="button"
-          onClick={() => setSeed((value) => value + 1)}
+          onClick={() => {
+            if (numPlayers < 4) {
+              setSchedule(null);
+              return;
+            }
+            const matchesList = buildSchedule(normalizedPlayers, numMatches);
+            setSchedule({ matches: matchesList });
+          }}
           className="glow-button"
         >
           Generate schedule
@@ -444,16 +523,16 @@ export default function MatchBuilderPage() {
                       <div>
                         <span className="team-label">Team A</span>
                         <div className="team-names">
-                          {match.teams[0][0].name} &amp;{" "}
-                          {match.teams[0][1].name}
+                          {getPlayerName(match.teams[0][0])} &amp;{" "}
+                          {getPlayerName(match.teams[0][1])}
                         </div>
                       </div>
                       <div className="versus">vs</div>
                       <div>
                         <span className="team-label">Team B</span>
                         <div className="team-names">
-                          {match.teams[1][0].name} &amp;{" "}
-                          {match.teams[1][1].name}
+                          {getPlayerName(match.teams[1][0])} &amp;{" "}
+                          {getPlayerName(match.teams[1][1])}
                         </div>
                       </div>
                     </div>
