@@ -1,73 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import MatchCard from "../components/MatchCard";
-
-const DEFAULT_PLAYERS = 8;
-const DEFAULT_MATCHES = 6;
-const DEFAULT_COURTS = 2;
-const MAX_PLAYERS = 24;
-const MAX_MATCHES = 20;
-
-const TEAMMATE_WEIGHT = 5;
-const OPPONENT_WEIGHT = 2;
-const BALANCE_WEIGHT = 1.5;
-
-const STORAGE_KEY = "matchBuilderState";
-
-const PLAYER_COLORS = [
-  "#4CF3FF",
-  "#F2A6FF",
-  "#FFB86B",
-  "#7EE787",
-  "#FFD166",
-  "#FF6B6B",
-  "#5BC0EB",
-  "#9D4EDD",
-  "#F72585",
-  "#FF9F1C",
-  "#2EC4B6",
-  "#E9C46A",
-  "#06D6A0",
-  "#EF476F",
-  "#A0C4FF",
-  "#BDB2FF",
-  "#FFC6FF",
-  "#CAFFBF",
-  "#FDFFB6",
-  "#83C5BE",
-];
-
-type GenderOption = "" | "male" | "female";
-
-type PlayerProfile = {
-  id: string;
-  name: string;
-  color?: string;
-  gender?: GenderOption;
-};
-
-type MatchTeam = [string, string];
-
-type MatchCard = {
-  id: string;
-  index: number;
-  teams: [MatchTeam, MatchTeam];
-};
-
-type Schedule = {
-  matches: MatchCard[];
-};
-
-type PlayerStat = {
-  id: string;
-  name: string;
-  color?: string;
-  gender?: GenderOption;
-  playCount: number;
-};
-
-function randomId() {
-  return Math.random().toString(36).slice(2, 10);
-}
+import {
+  BALANCE_WEIGHT,
+  DEFAULT_COURTS,
+  DEFAULT_MATCHES,
+  DEFAULT_PLAYERS,
+  MAX_MATCHES,
+  MAX_PLAYERS,
+  OPPONENT_WEIGHT,
+  PLAYER_COLORS,
+  STORAGE_KEY,
+  TEAMMATE_WEIGHT,
+} from "../data";
+import type {
+  GenderOption,
+  MatchCard as MatchCardType,
+  MatchTeam,
+  MatchWinner,
+  PlayerProfile,
+  PlayerStat,
+  Schedule,
+} from "../interfaces";
+import { getCombinations, pairKey, randomId } from "../utilities";
 
 function pickNextColor(players: PlayerProfile[], index: number) {
   const used = new Set(players.map((player) => player.color).filter(Boolean));
@@ -76,31 +30,6 @@ function pickNextColor(players: PlayerProfile[], index: number) {
     return available[0];
   }
   return PLAYER_COLORS[index % PLAYER_COLORS.length];
-}
-
-function pairKey(a: string, b: string) {
-  return [a, b].sort().join("|");
-}
-
-function getCombinations<T>(items: T[], size: number): T[][] {
-  const results: T[][] = [];
-  const combo: T[] = [];
-
-  const walk = (start: number, depth: number) => {
-    if (depth === size) {
-      results.push([...combo]);
-      return;
-    }
-
-    for (let i = start; i <= items.length - (size - depth); i += 1) {
-      combo.push(items[i]);
-      walk(i + 1, depth + 1);
-      combo.pop();
-    }
-  };
-
-  walk(0, 0);
-  return results;
 }
 
 function scorePairing(
@@ -223,7 +152,7 @@ function buildSchedule(
   const playCounts = new Map(players.map((player) => [player.id, 0]));
   const teammateCounts = new Map<string, number>();
   const opponentCounts = new Map<string, number>();
-  const matches: MatchCard[] = [];
+  const matches: MatchCardType[] = [];
   const courts = Math.max(
     1,
     Math.min(numCourts, Math.floor(players.length / 4))
@@ -271,12 +200,35 @@ function buildSchedule(
   return matches;
 }
 
-function buildStats(players: PlayerProfile[], matches: MatchCard[]) {
+function buildStats(
+  players: PlayerProfile[],
+  matches: MatchCardType[],
+  matchResults: Record<string, MatchWinner>
+) {
   const playCounts = new Map(players.map((player) => [player.id, 0]));
+  const winCounts = new Map(players.map((player) => [player.id, 0]));
+  const lossCounts = new Map(players.map((player) => [player.id, 0]));
   for (const match of matches) {
     for (const playerId of [...match.teams[0], ...match.teams[1]]) {
       if (playCounts.has(playerId)) {
         playCounts.set(playerId, (playCounts.get(playerId) ?? 0) + 1);
+      }
+    }
+
+    const winner = matchResults[match.id];
+    if (!winner) {
+      continue;
+    }
+    const winnerTeam = winner === "A" ? match.teams[0] : match.teams[1];
+    const loserTeam = winner === "A" ? match.teams[1] : match.teams[0];
+    for (const playerId of winnerTeam) {
+      if (winCounts.has(playerId)) {
+        winCounts.set(playerId, (winCounts.get(playerId) ?? 0) + 1);
+      }
+    }
+    for (const playerId of loserTeam) {
+      if (lossCounts.has(playerId)) {
+        lossCounts.set(playerId, (lossCounts.get(playerId) ?? 0) + 1);
       }
     }
   }
@@ -287,6 +239,8 @@ function buildStats(players: PlayerProfile[], matches: MatchCard[]) {
     color: player.color,
     gender: player.gender,
     playCount: playCounts.get(player.id) ?? 0,
+    wins: winCounts.get(player.id) ?? 0,
+    losses: lossCounts.get(player.id) ?? 0,
   }));
 
   stats.sort((a, b) => a.name.localeCompare(b.name));
@@ -306,6 +260,9 @@ export default function MatchBuilderPage() {
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
   const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
+  const [matchResults, setMatchResults] = useState<
+    Record<string, MatchWinner>
+  >({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [isRosterOpen, setIsRosterOpen] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -344,6 +301,7 @@ export default function MatchBuilderPage() {
         numMatches?: number;
         numCourts?: number;
         schedule?: Schedule | null;
+        matchResults?: Record<string, MatchWinner>;
         isRosterOpen?: boolean;
       };
       if (Array.isArray(parsed.players)) {
@@ -364,6 +322,9 @@ export default function MatchBuilderPage() {
       }
       if (parsed.schedule && Array.isArray(parsed.schedule.matches)) {
         setSchedule({ matches: parsed.schedule.matches });
+      }
+      if (parsed.matchResults && typeof parsed.matchResults === "object") {
+        setMatchResults(parsed.matchResults);
       }
       if (typeof parsed.isRosterOpen === "boolean") {
         setIsRosterOpen(parsed.isRosterOpen);
@@ -389,10 +350,19 @@ export default function MatchBuilderPage() {
         numMatches,
         numCourts,
         schedule,
+        matchResults,
         isRosterOpen,
       })
     );
-  }, [players, numMatches, numCourts, schedule, isRosterOpen, isLoaded]);
+  }, [
+    players,
+    numMatches,
+    numCourts,
+    schedule,
+    matchResults,
+    isRosterOpen,
+    isLoaded,
+  ]);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -407,7 +377,7 @@ export default function MatchBuilderPage() {
   }, [normalizedPlayers]);
   const matchRounds = useMemo(() => {
     const perRound = Math.max(1, numCourts);
-    const rounds: MatchCard[][] = [];
+    const rounds: MatchCardType[][] = [];
     for (let i = 0; i < matches.length; i += perRound) {
       rounds.push(matches.slice(i, i + perRound));
     }
@@ -417,12 +387,43 @@ export default function MatchBuilderPage() {
     if (!schedule) {
       return [];
     }
-    return buildStats(normalizedPlayers, schedule.matches);
-  }, [normalizedPlayers, schedule]);
+    return buildStats(normalizedPlayers, schedule.matches, matchResults);
+  }, [normalizedPlayers, schedule, matchResults]);
+  const statsByWins = useMemo(() => {
+    return [...stats].sort((a, b) => {
+      if (b.wins !== a.wins) {
+        return b.wins - a.wins;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [stats]);
   const getPlayerName = (playerId: string) =>
     playerLookup.get(playerId)?.name ?? "Unknown";
   const getPlayerColor = (playerId: string) =>
     playerLookup.get(playerId)?.color ?? "transparent";
+
+  useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+    if (!schedule) {
+      setMatchResults((prev) => (Object.keys(prev).length > 0 ? {} : prev));
+      return;
+    }
+    const matchIds = new Set(schedule.matches.map((match) => match.id));
+    setMatchResults((prev) => {
+      let changed = false;
+      const next: Record<string, MatchWinner> = {};
+      for (const [matchId, winner] of Object.entries(prev)) {
+        if (matchIds.has(matchId)) {
+          next[matchId] = winner;
+        } else {
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [isLoaded, schedule]);
 
   useEffect(() => {
     if (activeRound > matchRounds.length - 1) {
@@ -450,11 +451,28 @@ export default function MatchBuilderPage() {
     setNumMatches(DEFAULT_MATCHES);
     setNumCourts(DEFAULT_COURTS);
     setSchedule(null);
+    setMatchResults({});
     setActiveRound(0);
     closeFullscreen();
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(STORAGE_KEY);
     }
+  };
+
+  const handleSelectWinner = (matchId: string, winner: MatchWinner | null) => {
+    setMatchResults((prev) => {
+      if (!winner) {
+        if (!prev[matchId]) {
+          return prev;
+        }
+        const { [matchId]: _removed, ...rest } = prev;
+        return rest;
+      }
+      return {
+        ...prev,
+        [matchId]: winner,
+      };
+    });
   };
 
   return (
@@ -548,6 +566,7 @@ export default function MatchBuilderPage() {
                 numCourts
               );
               setSchedule({ matches: matchesList });
+              setMatchResults({});
             }}
             className="glow-button"
           >
@@ -555,7 +574,10 @@ export default function MatchBuilderPage() {
           </button>
           <button
             type="button"
-            onClick={() => setSchedule(null)}
+            onClick={() => {
+              setSchedule(null);
+              setMatchResults({});
+            }}
             className="ghost-button"
             disabled={!schedule || schedule.matches.length === 0}
           >
@@ -624,25 +646,87 @@ export default function MatchBuilderPage() {
                     }
                     aria-label={`Color for player ${index + 1}`}
                   />
-                  <select
-                    value={player.gender ?? ""}
-                    onChange={(e) =>
-                      setPlayers((prev) =>
-                        prev.map((entry, idx) =>
-                          idx === index
-                            ? {
-                                ...entry,
-                                gender: e.target.value as GenderOption,
-                              }
-                            : entry
-                        )
-                      )
-                    }
+                  <div
+                    className="gender-toggle"
+                    role="group"
+                    aria-label={`Gender for player ${index + 1}`}
                   >
-                    <option value="">Unspecified</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
+                    <button
+                      type="button"
+                      className={`gender-toggle-button ${
+                        player.gender === "male" ? "is-active" : ""
+                      }`}
+                      data-value="male"
+                      aria-pressed={player.gender === "male"}
+                      aria-label="Male"
+                      onClick={() =>
+                        setPlayers((prev) =>
+                          prev.map((entry, idx) =>
+                            idx === index
+                              ? {
+                                  ...entry,
+                                  gender: "male" as GenderOption,
+                                }
+                              : entry
+                          )
+                        )
+                      }
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        male
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`gender-toggle-button ${
+                        !player.gender ? "is-active" : ""
+                      }`}
+                      data-value=""
+                      aria-pressed={!player.gender}
+                      aria-label="Unspecified"
+                      onClick={() =>
+                        setPlayers((prev) =>
+                          prev.map((entry, idx) =>
+                            idx === index
+                              ? {
+                                  ...entry,
+                                  gender: "",
+                                }
+                              : entry
+                          )
+                        )
+                      }
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        remove
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`gender-toggle-button ${
+                        player.gender === "female" ? "is-active" : ""
+                      }`}
+                      data-value="female"
+                      aria-pressed={player.gender === "female"}
+                      aria-label="Female"
+                      onClick={() =>
+                        setPlayers((prev) =>
+                          prev.map((entry, idx) =>
+                            idx === index
+                              ? {
+                                  ...entry,
+                                  gender: "female" as GenderOption,
+                                }
+                              : entry
+                          )
+                        )
+                      }
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        female
+                      </span>
+                    </button>
+                  </div>
                   <button
                     type="button"
                     className="ghost-button"
@@ -723,6 +807,10 @@ export default function MatchBuilderPage() {
                           courtIndex={matchIndex + 1}
                           matchIndex={match.index}
                           size="compact"
+                          winner={matchResults[match.id] ?? null}
+                          onSelectWinner={(winner) =>
+                            handleSelectWinner(match.id, winner)
+                          }
                           teamA={[
                             {
                               name: getPlayerName(match.teams[0][0]),
@@ -769,10 +857,29 @@ export default function MatchBuilderPage() {
                     />
                     {player.name}
                   </span>
-                  <span className="stat-value">{player.playCount}</span>
+                  <span className="stat-value">
+                    {player.wins}W · {player.losses}L
+                  </span>
+                  <span className="stat-card-sub">
+                    Played {player.playCount}
+                  </span>
                   {player.gender ? (
-                    <span className="stat-card-sub">
-                      {player.gender === "male" ? "Male" : "Female"}
+                    <span
+                      className="stat-card-sub"
+                      aria-label={
+                        player.gender === "male" ? "Male" : "Female"
+                      }
+                    >
+                      <span
+                        className={`material-icons stat-gender-icon ${
+                          player.gender === "male"
+                            ? "stat-gender-icon--male"
+                            : "stat-gender-icon--female"
+                        }`}
+                        aria-hidden="true"
+                      >
+                        {player.gender === "male" ? "male" : "female"}
+                      </span>
                     </span>
                   ) : null}
                 </div>
@@ -824,36 +931,63 @@ export default function MatchBuilderPage() {
                 </button>
               </div>
             </header>
-            <section className="fullscreen-round">
-              {matchRounds[activeRound]?.map((match, matchIndex) => (
-                <MatchCard
-                  key={match.id}
-                  courtIndex={matchIndex + 1}
-                  matchIndex={match.index}
-                  size="full"
-                  teamA={[
-                    {
-                      name: getPlayerName(match.teams[0][0]),
-                      color: getPlayerColor(match.teams[0][0]),
-                    },
-                    {
-                      name: getPlayerName(match.teams[0][1]),
-                      color: getPlayerColor(match.teams[0][1]),
-                    },
-                  ]}
-                  teamB={[
-                    {
-                      name: getPlayerName(match.teams[1][0]),
-                      color: getPlayerColor(match.teams[1][0]),
-                    },
-                    {
-                      name: getPlayerName(match.teams[1][1]),
-                      color: getPlayerColor(match.teams[1][1]),
-                    },
-                  ]}
-                />
-              ))}
-            </section>
+            <div className="fullscreen-body">
+              <section className="fullscreen-round">
+                {matchRounds[activeRound]?.map((match, matchIndex) => (
+                  <MatchCard
+                    key={match.id}
+                    courtIndex={matchIndex + 1}
+                    matchIndex={match.index}
+                    size="full"
+                    winner={matchResults[match.id] ?? null}
+                    onSelectWinner={(winner) =>
+                      handleSelectWinner(match.id, winner)
+                    }
+                    teamA={[
+                      {
+                        name: getPlayerName(match.teams[0][0]),
+                        color: getPlayerColor(match.teams[0][0]),
+                      },
+                      {
+                        name: getPlayerName(match.teams[0][1]),
+                        color: getPlayerColor(match.teams[0][1]),
+                      },
+                    ]}
+                    teamB={[
+                      {
+                        name: getPlayerName(match.teams[1][0]),
+                        color: getPlayerColor(match.teams[1][0]),
+                      },
+                      {
+                        name: getPlayerName(match.teams[1][1]),
+                        color: getPlayerColor(match.teams[1][1]),
+                      },
+                    ]}
+                  />
+                ))}
+              </section>
+              <aside className="fullscreen-sidebar">
+                <h3 className="fullscreen-sidebar-title">Wins</h3>
+                <div className="fullscreen-player-list">
+                  {statsByWins.map((player) => (
+                    <div key={player.id} className="fullscreen-player-row">
+                      <span
+                        className="stat-dot"
+                        style={{
+                          backgroundColor: player.color || "transparent",
+                        }}
+                      />
+                      <span className="fullscreen-player-name">
+                        {player.name}
+                      </span>
+                      <span className="fullscreen-player-wins">
+                        {player.wins}W
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </aside>
+            </div>
           </div>
         </div>
       ) : null}

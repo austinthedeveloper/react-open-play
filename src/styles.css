@@ -280,6 +280,65 @@
     align-content: start;
   }
 
+  .fullscreen-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+    gap: clamp(1rem, 2.4vw, 2.2rem);
+    align-items: start;
+  }
+
+  .fullscreen-sidebar {
+    padding: 0.9rem 0.85rem;
+    border-radius: 18px;
+    background: rgba(12, 17, 31, 0.65);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    min-height: 0;
+  }
+
+  .fullscreen-sidebar-title {
+    margin: 0;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .fullscreen-player-list {
+    margin-top: 0.75rem;
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .fullscreen-player-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.45rem;
+    border-radius: 12px;
+    background: rgba(8, 12, 22, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+  }
+
+  .fullscreen-player-name {
+    font-size: 0.85rem;
+    color: rgba(248, 250, 252, 0.88);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .fullscreen-player-wins {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(76, 243, 255, 0.9);
+    padding: 0.15rem 0.4rem;
+    border-radius: 999px;
+    background: rgba(76, 243, 255, 0.12);
+    border: 1px solid rgba(76, 243, 255, 0.35);
+  }
+
   .player-dot {
     width: 0.7rem;
     height: 0.7rem;
@@ -299,6 +358,14 @@
     .match-fullscreen-header {
       flex-direction: column;
       align-items: flex-start;
+    }
+
+    .fullscreen-body {
+      grid-template-columns: 1fr;
+    }
+
+    .fullscreen-sidebar {
+      order: 2;
     }
 
     .match-teams {
@@ -459,6 +526,54 @@
     justify-content: space-between;
     margin-top: 1rem;
   }
+
+  .gender-toggle {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(12, 17, 31, 0.7);
+    overflow: hidden;
+  }
+
+  .gender-toggle-button {
+    border: 0;
+    background: transparent;
+    color: rgba(226, 232, 240, 0.75);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  .gender-toggle-button .material-icons {
+    font-size: 20px;
+  }
+
+  .gender-toggle-button:hover:not(.is-active) {
+    color: rgba(248, 250, 252, 0.9);
+    background: rgba(148, 163, 184, 0.1);
+  }
+
+  .gender-toggle-button.is-active {
+    background: rgba(76, 243, 255, 0.12);
+    color: rgba(248, 250, 252, 0.95);
+  }
+
+  .gender-toggle-button.is-active[data-value="male"] {
+    color: rgba(76, 243, 255, 0.95);
+  }
+
+  .gender-toggle-button.is-active[data-value="female"] {
+    color: rgba(242, 166, 255, 0.95);
+  }
+
+  .gender-toggle-button.is-active[data-value=""] {
+    color: rgba(226, 232, 240, 0.9);
+  }
   
   .color-input {
     padding: 0;
@@ -555,6 +670,46 @@
     gap: 1.5rem;
   }
 
+  .team-block {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.7rem 0.85rem;
+    border-radius: 18px;
+    background: rgba(10, 15, 26, 0.45);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    appearance: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .team-block:hover {
+    border-color: rgba(76, 243, 255, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .team-block:focus-visible {
+    outline: 2px solid rgba(76, 243, 255, 0.6);
+    outline-offset: 2px;
+  }
+
+  .team-block--winner {
+    background: linear-gradient(
+      120deg,
+      rgba(76, 243, 255, 0.24),
+      rgba(11, 15, 24, 0.6)
+    );
+    border-color: rgba(76, 243, 255, 0.6);
+    box-shadow: 0 18px 30px rgba(10, 15, 26, 0.35);
+  }
+
+  .team-block--loser {
+    opacity: 0.55;
+  }
+
   .team-label {
     display: block;
     font-size: 0.7rem;
@@ -613,6 +768,11 @@
     gap: 0.75rem;
   }
 
+  .match-card--compact .team-block {
+    padding: 0.5rem 0.6rem;
+    border-radius: 14px;
+  }
+
   .match-card--compact .team-names {
     margin-top: 0.35rem;
     font-size: 0.95rem;
@@ -651,6 +811,22 @@
     margin-top: 0.25rem;
     font-size: 0.75rem;
     color: rgba(148, 163, 184, 0.7);
+  }
+
+  .stat-card-sub + .stat-card-sub {
+    margin-top: 0.35rem;
+  }
+
+  .stat-card-sub .material-icons {
+    font-size: 16px;
+  }
+
+  .stat-gender-icon--male {
+    color: rgba(76, 243, 255, 0.95);
+  }
+
+  .stat-gender-icon--female {
+    color: rgba(242, 166, 255, 0.95);
   }
 
   .stat-dot {

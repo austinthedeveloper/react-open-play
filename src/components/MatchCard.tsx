@@ -1,25 +1,22 @@
-type TeamMember = {
-  name: string;
-  color: string;
-};
-
-type MatchCardProps = {
-  courtIndex: number;
-  matchIndex: number;
-  teamA: [TeamMember, TeamMember];
-  teamB: [TeamMember, TeamMember];
-  size?: "full" | "compact";
-  className?: string;
-};
+import type { MatchCardProps } from "../interfaces";
 
 export default function MatchCard({
   courtIndex,
   matchIndex,
   teamA,
   teamB,
+  winner = null,
+  onSelectWinner,
   size = "full",
   className = "",
 }: MatchCardProps) {
+  const handleSelect = (team: "A" | "B") => {
+    if (!onSelectWinner) {
+      return;
+    }
+    onSelectWinner(winner === team ? null : team);
+  };
+
   return (
     <article
       className={`match-card match-card--${size} ${className}`.trim()}
@@ -28,9 +25,21 @@ export default function MatchCard({
         Court {courtIndex} • Match {matchIndex}
       </div>
       <div className="match-teams">
-        <div>
+        <button
+          type="button"
+          className={`team-block ${
+            winner === "A"
+              ? "team-block--winner"
+              : winner
+                ? "team-block--loser"
+                : ""
+          }`.trim()}
+          onClick={() => handleSelect("A")}
+          aria-pressed={winner === "A"}
+          aria-label="Team A wins"
+        >
           <span className="team-label">Team A</span>
-          <div className="team-names">
+          <span className="team-names">
             <span className="player-chip">
               <span
                 className="player-dot"
@@ -46,12 +55,24 @@ export default function MatchCard({
               />
               <span className="player-name">{teamA[1].name}</span>
             </span>
-          </div>
-        </div>
+          </span>
+        </button>
         <div className="versus">vs</div>
-        <div>
+        <button
+          type="button"
+          className={`team-block ${
+            winner === "B"
+              ? "team-block--winner"
+              : winner
+                ? "team-block--loser"
+                : ""
+          }`.trim()}
+          onClick={() => handleSelect("B")}
+          aria-pressed={winner === "B"}
+          aria-label="Team B wins"
+        >
           <span className="team-label">Team B</span>
-          <div className="team-names">
+          <span className="team-names">
             <span className="player-chip">
               <span
                 className="player-dot"
@@ -67,8 +88,8 @@ export default function MatchCard({
               />
               <span className="player-name">{teamB[1].name}</span>
             </span>
-          </div>
-        </div>
+          </span>
+        </button>
       </div>
     </article>
   );
