@@ -216,7 +216,7 @@ function updateCounts(
 
 function buildSchedule(
   players: PlayerProfile[],
-  numMatches: number,
+  numRounds: number,
   numCourts: number
 ) {
   const playCounts = new Map(players.map((player) => [player.id, 0]));
@@ -225,11 +225,11 @@ function buildSchedule(
   const matches: MatchCard[] = [];
   const courts = Math.max(1, Math.min(numCourts, Math.floor(players.length / 4)));
 
-  while (matches.length < numMatches) {
+  for (let round = 0; round < numRounds; round += 1) {
     const usedThisRound = new Set<string>();
     let matchesBuilt = 0;
 
-    for (let court = 0; court < courts && matches.length < numMatches; court += 1) {
+    for (let court = 0; court < courts; court += 1) {
       const availablePlayers = players.filter(
         (player) => !usedThisRound.has(player.id)
       );
@@ -450,7 +450,7 @@ export default function MatchBuilderPage() {
         </label>
 
         <label className="control">
-          <span>Number of matches</span>
+          <span>Number of rounds</span>
           <input
             type="number"
             min={1}
