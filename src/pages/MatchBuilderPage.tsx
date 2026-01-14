@@ -13,7 +13,6 @@ import {
   TEAMMATE_WEIGHT,
 } from "../data";
 import type {
-  GenderOption,
   MatchCard as MatchCardType,
   MatchTeam,
   MatchWinner,
@@ -205,6 +204,8 @@ function buildStats(
   matches: MatchCardType[],
   matchResults: Record<string, MatchWinner>
 ) {
+  console.log("asldkfj", fasfasfsdf);
+
   const playCounts = new Map(players.map((player) => [player.id, 0]));
   const winCounts = new Map(players.map((player) => [player.id, 0]));
   const lossCounts = new Map(players.map((player) => [player.id, 0]));
@@ -254,15 +255,15 @@ export default function MatchBuilderPage() {
       id: randomId(),
       name: `Player ${i + 1}`,
       color: PLAYER_COLORS[i % PLAYER_COLORS.length],
-      gender: "" as GenderOption,
+      gender: "",
     }));
   const [players, setPlayers] = useState<PlayerProfile[]>(buildDefaultPlayers);
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
   const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
-  const [matchResults, setMatchResults] = useState<
-    Record<string, MatchWinner>
-  >({});
+  const [matchResults, setMatchResults] = useState<Record<string, MatchWinner>>(
+    {}
+  );
   const [isLoaded, setIsLoaded] = useState(false);
   const [isRosterOpen, setIsRosterOpen] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -309,7 +310,7 @@ export default function MatchBuilderPage() {
           id: player.id || randomId(),
           name: player.name || `Player ${index + 1}`,
           color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
-          gender: (player.gender ?? "") as GenderOption,
+          gender: player.gender ?? "",
         }));
 
         setPlayers(sanitized);
@@ -514,7 +515,7 @@ export default function MatchBuilderPage() {
                     id: randomId(),
                     name: `Player ${i + 1}`,
                     color: pickNextColor(nextPlayers, i),
-                    gender: "" as GenderOption,
+                    gender: "",
                   });
                 }
                 return nextPlayers;
@@ -665,7 +666,7 @@ export default function MatchBuilderPage() {
                             idx === index
                               ? {
                                   ...entry,
-                                  gender: "male" as GenderOption,
+                                  gender: "male",
                                 }
                               : entry
                           )
@@ -690,7 +691,7 @@ export default function MatchBuilderPage() {
                             idx === index
                               ? {
                                   ...entry,
-                                  gender: "" as GenderOption,
+                                  gender: "",
                                 }
                               : entry
                           )
@@ -715,7 +716,7 @@ export default function MatchBuilderPage() {
                             idx === index
                               ? {
                                   ...entry,
-                                  gender: "female" as GenderOption,
+                                  gender: "female",
                                 }
                               : entry
                           )
@@ -758,7 +759,7 @@ export default function MatchBuilderPage() {
                             id: randomId(),
                             name: `Player ${prev.length + 1}`,
                             color: pickNextColor(prev, prev.length),
-                            gender: "" as GenderOption,
+                            gender: "",
                           },
                         ]
                   )
@@ -866,9 +867,7 @@ export default function MatchBuilderPage() {
                   {player.gender ? (
                     <span
                       className="stat-card-sub"
-                      aria-label={
-                        player.gender === "male" ? "Male" : "Female"
-                      }
+                      aria-label={player.gender === "male" ? "Male" : "Female"}
                     >
                       <span
                         className={`material-icons stat-gender-icon ${
