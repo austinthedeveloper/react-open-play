@@ -389,6 +389,14 @@ export default function MatchBuilderPage() {
     }
     return buildStats(normalizedPlayers, schedule.matches, matchResults);
   }, [normalizedPlayers, schedule, matchResults]);
+  const statsByWins = useMemo(() => {
+    return [...stats].sort((a, b) => {
+      if (b.wins !== a.wins) {
+        return b.wins - a.wins;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [stats]);
   const getPlayerName = (playerId: string) =>
     playerLookup.get(playerId)?.name ?? "Unknown";
   const getPlayerColor = (playerId: string) =>
@@ -923,40 +931,63 @@ export default function MatchBuilderPage() {
                 </button>
               </div>
             </header>
-            <section className="fullscreen-round">
-              {matchRounds[activeRound]?.map((match, matchIndex) => (
-                <MatchCard
-                  key={match.id}
-                  courtIndex={matchIndex + 1}
-                  matchIndex={match.index}
-                  size="full"
-                  winner={matchResults[match.id] ?? null}
-                  onSelectWinner={(winner) =>
-                    handleSelectWinner(match.id, winner)
-                  }
-                  teamA={[
-                    {
-                      name: getPlayerName(match.teams[0][0]),
-                      color: getPlayerColor(match.teams[0][0]),
-                    },
-                    {
-                      name: getPlayerName(match.teams[0][1]),
-                      color: getPlayerColor(match.teams[0][1]),
-                    },
-                  ]}
-                  teamB={[
-                    {
-                      name: getPlayerName(match.teams[1][0]),
-                      color: getPlayerColor(match.teams[1][0]),
-                    },
-                    {
-                      name: getPlayerName(match.teams[1][1]),
-                      color: getPlayerColor(match.teams[1][1]),
-                    },
-                  ]}
-                />
-              ))}
-            </section>
+            <div className="fullscreen-body">
+              <section className="fullscreen-round">
+                {matchRounds[activeRound]?.map((match, matchIndex) => (
+                  <MatchCard
+                    key={match.id}
+                    courtIndex={matchIndex + 1}
+                    matchIndex={match.index}
+                    size="full"
+                    winner={matchResults[match.id] ?? null}
+                    onSelectWinner={(winner) =>
+                      handleSelectWinner(match.id, winner)
+                    }
+                    teamA={[
+                      {
+                        name: getPlayerName(match.teams[0][0]),
+                        color: getPlayerColor(match.teams[0][0]),
+                      },
+                      {
+                        name: getPlayerName(match.teams[0][1]),
+                        color: getPlayerColor(match.teams[0][1]),
+                      },
+                    ]}
+                    teamB={[
+                      {
+                        name: getPlayerName(match.teams[1][0]),
+                        color: getPlayerColor(match.teams[1][0]),
+                      },
+                      {
+                        name: getPlayerName(match.teams[1][1]),
+                        color: getPlayerColor(match.teams[1][1]),
+                      },
+                    ]}
+                  />
+                ))}
+              </section>
+              <aside className="fullscreen-sidebar">
+                <h3 className="fullscreen-sidebar-title">Wins</h3>
+                <div className="fullscreen-player-list">
+                  {statsByWins.map((player) => (
+                    <div key={player.id} className="fullscreen-player-row">
+                      <span
+                        className="stat-dot"
+                        style={{
+                          backgroundColor: player.color || "transparent",
+                        }}
+                      />
+                      <span className="fullscreen-player-name">
+                        {player.name}
+                      </span>
+                      <span className="fullscreen-player-wins">
+                        {player.wins}W
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </aside>
+            </div>
           </div>
         </div>
       ) : null}

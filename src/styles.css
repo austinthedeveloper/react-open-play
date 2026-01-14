@@ -280,6 +280,65 @@
     align-content: start;
   }
 
+  .fullscreen-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+    gap: clamp(1rem, 2.4vw, 2.2rem);
+    align-items: start;
+  }
+
+  .fullscreen-sidebar {
+    padding: 0.9rem 0.85rem;
+    border-radius: 18px;
+    background: rgba(12, 17, 31, 0.65);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    min-height: 0;
+  }
+
+  .fullscreen-sidebar-title {
+    margin: 0;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .fullscreen-player-list {
+    margin-top: 0.75rem;
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .fullscreen-player-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.45rem;
+    border-radius: 12px;
+    background: rgba(8, 12, 22, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+  }
+
+  .fullscreen-player-name {
+    font-size: 0.85rem;
+    color: rgba(248, 250, 252, 0.88);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .fullscreen-player-wins {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(76, 243, 255, 0.9);
+    padding: 0.15rem 0.4rem;
+    border-radius: 999px;
+    background: rgba(76, 243, 255, 0.12);
+    border: 1px solid rgba(76, 243, 255, 0.35);
+  }
+
   .player-dot {
     width: 0.7rem;
     height: 0.7rem;
@@ -299,6 +358,14 @@
     .match-fullscreen-header {
       flex-direction: column;
       align-items: flex-start;
+    }
+
+    .fullscreen-body {
+      grid-template-columns: 1fr;
+    }
+
+    .fullscreen-sidebar {
+      order: 2;
     }
 
     .match-teams {
