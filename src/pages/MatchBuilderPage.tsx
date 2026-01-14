@@ -415,20 +415,30 @@ export default function MatchBuilderPage() {
           />
         </label>
 
-        <button
-          type="button"
-          onClick={() => {
-            if (numPlayers < 4) {
-              setSchedule(null);
-              return;
-            }
-            const matchesList = buildSchedule(normalizedPlayers, numMatches);
-            setSchedule({ matches: matchesList });
-          }}
-          className="glow-button"
-        >
-          Generate schedule
-        </button>
+        <div className="control-actions">
+          <button
+            type="button"
+            onClick={() => {
+              if (numPlayers < 4) {
+                setSchedule(null);
+                return;
+              }
+              const matchesList = buildSchedule(normalizedPlayers, numMatches);
+              setSchedule({ matches: matchesList });
+            }}
+            className="glow-button"
+          >
+            Generate schedule
+          </button>
+          <button
+            type="button"
+            onClick={() => setSchedule(null)}
+            className="ghost-button"
+            disabled={!schedule || schedule.matches.length === 0}
+          >
+            Clear schedule
+          </button>
+        </div>
       </section>
 
       <section className="table-panel">
