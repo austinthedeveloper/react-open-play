@@ -6,10 +6,7 @@ import type {
   OpponentLevel,
   Profile,
 } from "../interfaces";
-
-function randomId() {
-  return Math.random().toString(36).slice(2, 10);
-}
+import { randomId } from "../utilities";
 
 function generateMatches(level: OpponentLevel, count: number): MatchGoal[] {
   const templates = GOAL_TEMPLATES[level];

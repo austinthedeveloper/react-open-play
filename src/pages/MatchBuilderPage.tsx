@@ -20,10 +20,7 @@ import type {
   PlayerStat,
   Schedule,
 } from "../interfaces";
-
-function randomId() {
-  return Math.random().toString(36).slice(2, 10);
-}
+import { getCombinations, pairKey, randomId } from "../utilities";
 
 function pickNextColor(players: PlayerProfile[], index: number) {
   const used = new Set(players.map((player) => player.color).filter(Boolean));
@@ -32,31 +29,6 @@ function pickNextColor(players: PlayerProfile[], index: number) {
     return available[0];
   }
   return PLAYER_COLORS[index % PLAYER_COLORS.length];
-}
-
-function pairKey(a: string, b: string) {
-  return [a, b].sort().join("|");
-}
-
-function getCombinations<T>(items: T[], size: number): T[][] {
-  const results: T[][] = [];
-  const combo: T[] = [];
-
-  const walk = (start: number, depth: number) => {
-    if (depth === size) {
-      results.push([...combo]);
-      return;
-    }
-
-    for (let i = start; i <= items.length - (size - depth); i += 1) {
-      combo.push(items[i]);
-      walk(i + 1, depth + 1);
-      combo.pop();
-    }
-  };
-
-  walk(0, 0);
-  return results;
 }
 
 function scorePairing(
