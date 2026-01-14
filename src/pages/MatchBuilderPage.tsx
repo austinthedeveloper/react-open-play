@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const DEFAULT_PLAYERS = 8;
 const DEFAULT_MATCHES = 6;
+const DEFAULT_COURTS = 2;
 const MAX_PLAYERS = 24;
 const MAX_MATCHES = 20;
 
@@ -213,28 +214,55 @@ function updateCounts(
   }
 }
 
-function buildSchedule(players: PlayerProfile[], numMatches: number) {
+function buildSchedule(
+  players: PlayerProfile[],
+  numMatches: number,
+  numCourts: number
+) {
   const playCounts = new Map(players.map((player) => [player.id, 0]));
   const teammateCounts = new Map<string, number>();
   const opponentCounts = new Map<string, number>();
   const matches: MatchCard[] = [];
+  const courts = Math.max(1, Math.min(numCourts, Math.floor(players.length / 4)));
 
-  for (let i = 0; i < numMatches; i += 1) {
-    const teams = pickBestMatch(
-      players,
-      playCounts,
-      teammateCounts,
-      opponentCounts
-    );
-    if (!teams) {
+  while (matches.length < numMatches) {
+    const usedThisRound = new Set<string>();
+    let matchesBuilt = 0;
+
+    for (let court = 0; court < courts && matches.length < numMatches; court += 1) {
+      const availablePlayers = players.filter(
+        (player) => !usedThisRound.has(player.id)
+      );
+      if (availablePlayers.length < 4) {
+        break;
+      }
+
+      const teams = pickBestMatch(
+        availablePlayers,
+        playCounts,
+        teammateCounts,
+        opponentCounts
+      );
+      if (!teams) {
+        return matches;
+      }
+      updateCounts(teams, playCounts, teammateCounts, opponentCounts);
+
+      for (const playerId of [...teams[0], ...teams[1]]) {
+        usedThisRound.add(playerId);
+      }
+
+      matches.push({
+        id: randomId(),
+        index: matches.length + 1,
+        teams,
+      });
+      matchesBuilt += 1;
+    }
+
+    if (matchesBuilt === 0) {
       break;
     }
-    updateCounts(teams, playCounts, teammateCounts, opponentCounts);
-    matches.push({
-      id: randomId(),
-      index: i + 1,
-      teams,
-    });
   }
   return matches;
 }
@@ -272,10 +300,15 @@ export default function MatchBuilderPage() {
     }))
   );
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
+  const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const numPlayers = players.length;
+  const maxCourts = useMemo(
+    () => Math.max(1, Math.floor(numPlayers / 4)),
+    [numPlayers]
+  );
   const normalizedPlayers = useMemo(() => {
     const seen = new Map<string, number>();
     return players.map((player, index) => {
@@ -301,6 +334,7 @@ export default function MatchBuilderPage() {
       const parsed = JSON.parse(stored) as {
         players?: PlayerProfile[];
         numMatches?: number;
+        numCourts?: number;
         schedule?: Schedule | null;
       };
       if (Array.isArray(parsed.players)) {
@@ -315,6 +349,9 @@ export default function MatchBuilderPage() {
       }
       if (typeof parsed.numMatches === "number") {
         setNumMatches(parsed.numMatches);
+      }
+      if (typeof parsed.numCourts === "number") {
+        setNumCourts(parsed.numCourts);
       }
       if (parsed.schedule && Array.isArray(parsed.schedule.matches)) {
         setSchedule({ matches: parsed.schedule.matches });
@@ -335,14 +372,26 @@ export default function MatchBuilderPage() {
     }
     window.localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ players, numMatches, schedule })
+      JSON.stringify({ players, numMatches, numCourts, schedule })
     );
-  }, [players, numMatches, schedule, isLoaded]);
+  }, [players, numMatches, numCourts, schedule, isLoaded]);
+
+  useEffect(() => {
+    setNumCourts((prev) => Math.min(Math.max(1, prev), maxCourts));
+  }, [maxCourts]);
 
   const matches = schedule?.matches ?? [];
   const playerLookup = useMemo(() => {
     return new Map(normalizedPlayers.map((player) => [player.id, player]));
   }, [normalizedPlayers]);
+  const matchRounds = useMemo(() => {
+    const perRound = Math.max(1, numCourts);
+    const rounds: MatchCard[][] = [];
+    for (let i = 0; i < matches.length; i += perRound) {
+      rounds.push(matches.slice(i, i + perRound));
+    }
+    return rounds;
+  }, [matches, numCourts]);
   const stats = useMemo(() => {
     if (!schedule) {
       return [];
@@ -414,6 +463,23 @@ export default function MatchBuilderPage() {
             }
           />
         </label>
+        <label className="control">
+          <span>Number of courts</span>
+          <input
+            type="number"
+            min={1}
+            max={maxCourts}
+            value={numCourts}
+            onChange={(e) =>
+              setNumCourts(
+                Math.min(
+                  maxCourts,
+                  Math.max(1, Number(e.target.value) || 1)
+                )
+              )
+            }
+          />
+        </label>
 
         <div className="control-actions">
           <button
@@ -423,7 +489,11 @@ export default function MatchBuilderPage() {
                 setSchedule(null);
                 return;
               }
-              const matchesList = buildSchedule(normalizedPlayers, numMatches);
+              const matchesList = buildSchedule(
+                normalizedPlayers,
+                numMatches,
+                numCourts
+              );
               setSchedule({ matches: matchesList });
             }}
             className="glow-button"
@@ -559,27 +629,36 @@ export default function MatchBuilderPage() {
               <p className="empty-state">No matchups yet.</p>
             ) : (
               <div className="matches-list">
-                {matches.map((match) => (
-                  <article key={match.id} className="match-card">
-                    <div className="match-index">Match {match.index}</div>
-                    <div className="match-teams">
-                      <div>
-                        <span className="team-label">Team A</span>
-                        <div className="team-names">
-                          {getPlayerName(match.teams[0][0])} &amp;{" "}
-                          {getPlayerName(match.teams[0][1])}
-                        </div>
-                      </div>
-                      <div className="versus">vs</div>
-                      <div>
-                        <span className="team-label">Team B</span>
-                        <div className="team-names">
-                          {getPlayerName(match.teams[1][0])} &amp;{" "}
-                          {getPlayerName(match.teams[1][1])}
-                        </div>
-                      </div>
+                {matchRounds.map((roundMatches, roundIndex) => (
+                  <div key={`round-${roundIndex}`} className="round-block">
+                    <div className="round-header">Round {roundIndex + 1}</div>
+                    <div className="round-courts">
+                      {roundMatches.map((match, matchIndex) => (
+                        <article key={match.id} className="match-card">
+                          <div className="match-index">
+                            Court {matchIndex + 1} • Match {match.index}
+                          </div>
+                          <div className="match-teams">
+                            <div>
+                              <span className="team-label">Team A</span>
+                              <div className="team-names">
+                                {getPlayerName(match.teams[0][0])} &amp;{" "}
+                                {getPlayerName(match.teams[0][1])}
+                              </div>
+                            </div>
+                            <div className="versus">vs</div>
+                            <div>
+                              <span className="team-label">Team B</span>
+                              <div className="team-names">
+                                {getPlayerName(match.teams[1][0])} &amp;{" "}
+                                {getPlayerName(match.teams[1][1])}
+                              </div>
+                            </div>
+                          </div>
+                        </article>
+                      ))}
                     </div>
-                  </article>
+                  </div>
                 ))}
               </div>
             )}
