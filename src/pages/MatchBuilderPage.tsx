@@ -9,7 +9,16 @@ const TEAMMATE_WEIGHT = 5;
 const OPPONENT_WEIGHT = 2;
 const BALANCE_WEIGHT = 1.5;
 
-type MatchTeam = [string, string];
+type GenderOption = "" | "male" | "female";
+
+type PlayerProfile = {
+  id: string;
+  name: string;
+  color?: string;
+  gender?: GenderOption;
+};
+
+type MatchTeam = [PlayerProfile, PlayerProfile];
 
 type MatchCard = {
   id: string;
@@ -18,7 +27,10 @@ type MatchCard = {
 };
 
 type PlayerStat = {
+  id: string;
   name: string;
+  color?: string;
+  gender?: GenderOption;
   playCount: number;
 };
 
@@ -26,8 +38,8 @@ function randomId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function pairKey(a: string, b: string) {
-  return [a, b].sort().join("|");
+function pairKey(a: PlayerProfile, b: PlayerProfile) {
+  return [a.id, b.id].sort().join("|");
 }
 
 function getCombinations<T>(items: T[], size: number): T[][] {
@@ -59,7 +71,7 @@ function scorePairing(
 ) {
   const [teamA, teamB] = teams;
   const players = [...teamA, ...teamB];
-  const plays = players.map((p) => playCounts.get(p) ?? 0);
+  const plays = players.map((player) => playCounts.get(player.id) ?? 0);
   const minPlays = Math.min(...plays);
   const maxPlays = Math.max(...plays);
   let score = plays.reduce((sum, value) => sum + value, 0);
@@ -71,7 +83,8 @@ function scorePairing(
 
   for (const player of teamA) {
     for (const opponent of teamB) {
-      score += (opponentCounts.get(pairKey(player, opponent)) ?? 0) * OPPONENT_WEIGHT;
+      score +=
+        (opponentCounts.get(pairKey(player, opponent)) ?? 0) * OPPONENT_WEIGHT;
     }
   }
 
@@ -81,13 +94,14 @@ function scorePairing(
 }
 
 function pickBestMatch(
-  players: string[],
+  players: PlayerProfile[],
   playCounts: Map<string, number>,
   teammateCounts: Map<string, number>,
   opponentCounts: Map<string, number>
 ) {
   const sorted = [...players].sort((a, b) => {
-    const countDelta = (playCounts.get(a) ?? 0) - (playCounts.get(b) ?? 0);
+    const countDelta =
+      (playCounts.get(a.id) ?? 0) - (playCounts.get(b.id) ?? 0);
     return countDelta || Math.random() - 0.5;
   });
 
@@ -99,13 +113,27 @@ function pickBestMatch(
   for (const combo of combos) {
     const [a, b, c, d] = combo;
     const pairings: [MatchTeam, MatchTeam][] = [
-      [[a, b], [c, d]],
-      [[a, c], [b, d]],
-      [[a, d], [b, c]],
+      [
+        [a, b],
+        [c, d],
+      ],
+      [
+        [a, c],
+        [b, d],
+      ],
+      [
+        [a, d],
+        [b, c],
+      ],
     ];
 
     for (const pairing of pairings) {
-      const score = scorePairing(pairing, playCounts, teammateCounts, opponentCounts);
+      const score = scorePairing(
+        pairing,
+        playCounts,
+        teammateCounts,
+        opponentCounts
+      );
       if (score < bestScore) {
         bestScore = score;
         bestTeams = pairing;
@@ -126,7 +154,7 @@ function updateCounts(
   const players = [...teamA, ...teamB];
 
   for (const player of players) {
-    playCounts.set(player, (playCounts.get(player) ?? 0) + 1);
+    playCounts.set(player.id, (playCounts.get(player.id) ?? 0) + 1);
   }
 
   teammateCounts.set(
@@ -146,24 +174,19 @@ function updateCounts(
   }
 }
 
-function ensureUniqueNames(names: string[]) {
-  const seen = new Map<string, number>();
-  return names.map((raw, index) => {
-    const base = raw.trim() || `Player ${index + 1}`;
-    const count = (seen.get(base) ?? 0) + 1;
-    seen.set(base, count);
-    return count === 1 ? base : `${base} (${count})`;
-  });
-}
-
-function buildSchedule(players: string[], numMatches: number) {
-  const playCounts = new Map(players.map((player) => [player, 0]));
+function buildSchedule(players: PlayerProfile[], numMatches: number) {
+  const playCounts = new Map(players.map((player) => [player.id, 0]));
   const teammateCounts = new Map<string, number>();
   const opponentCounts = new Map<string, number>();
   const matches: MatchCard[] = [];
 
   for (let i = 0; i < numMatches; i += 1) {
-    const teams = pickBestMatch(players, playCounts, teammateCounts, opponentCounts);
+    const teams = pickBestMatch(
+      players,
+      playCounts,
+      teammateCounts,
+      opponentCounts
+    );
     if (!teams) {
       break;
     }
@@ -176,8 +199,11 @@ function buildSchedule(players: string[], numMatches: number) {
   }
 
   const stats: PlayerStat[] = players.map((player) => ({
-    name: player,
-    playCount: playCounts.get(player) ?? 0,
+    id: player.id,
+    name: player.name,
+    color: player.color,
+    gender: player.gender,
+    playCount: playCounts.get(player.id) ?? 0,
   }));
 
   stats.sort((a, b) => a.name.localeCompare(b.name));
@@ -186,24 +212,37 @@ function buildSchedule(players: string[], numMatches: number) {
 }
 
 export default function MatchBuilderPage() {
-  const [playerNames, setPlayerNames] = useState<string[]>(
-    Array.from({ length: DEFAULT_PLAYERS }, (_, i) => `Player ${i + 1}`)
+  const [players, setPlayers] = useState<PlayerProfile[]>(
+    Array.from({ length: DEFAULT_PLAYERS }, (_, i) => ({
+      id: randomId(),
+      name: `Player ${i + 1}`,
+      color: "",
+      gender: "",
+    }))
   );
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
   const [seed, setSeed] = useState(0);
 
-  const numPlayers = playerNames.length;
-  const normalizedNames = useMemo(
-    () => ensureUniqueNames(playerNames),
-    [playerNames]
-  );
+  const numPlayers = players.length;
+  const normalizedPlayers = useMemo(() => {
+    const seen = new Map<string, number>();
+    return players.map((player, index) => {
+      const base = player.name.trim() || `Player ${index + 1}`;
+      const count = (seen.get(base) ?? 0) + 1;
+      seen.set(base, count);
+      return {
+        ...player,
+        name: count === 1 ? base : `${base} (${count})`,
+      };
+    });
+  }, [players]);
 
   const schedule = useMemo(() => {
     if (numPlayers < 4) {
       return null;
     }
-    return buildSchedule(normalizedNames, numMatches);
-  }, [normalizedNames, numPlayers, numMatches, seed]);
+    return buildSchedule(normalizedPlayers, numMatches);
+  }, [normalizedPlayers, numPlayers, numMatches, seed]);
 
   const matches = schedule?.matches ?? [];
   const stats = schedule?.stats ?? [];
@@ -215,8 +254,8 @@ export default function MatchBuilderPage() {
           <p className="eyebrow">Round Robin Lab</p>
           <h1 className="hero-title">Match Builder</h1>
           <p className="hero-subtitle">
-            Build a doubles schedule that keeps play time balanced and mixes teammates
-            and opponents across the group.
+            Build a doubles schedule that keeps play time balanced and mixes
+            teammates and opponents across the group.
           </p>
         </div>
       </header>
@@ -230,7 +269,7 @@ export default function MatchBuilderPage() {
             max={MAX_PLAYERS}
             value={numPlayers}
             onChange={(e) =>
-              setPlayerNames((prev) => {
+              setPlayers((prev) => {
                 const nextCount = Math.min(
                   MAX_PLAYERS,
                   Math.max(4, Number(e.target.value) || 4)
@@ -243,7 +282,12 @@ export default function MatchBuilderPage() {
                 }
                 const extras = Array.from(
                   { length: nextCount - prev.length },
-                  (_, i) => `Player ${prev.length + i + 1}`
+                  (_, i) => ({
+                    id: randomId(),
+                    name: `Player ${prev.length + i + 1}`,
+                    color: "",
+                    gender: "",
+                  })
                 );
                 return [...prev, ...extras];
               })
@@ -278,35 +322,74 @@ export default function MatchBuilderPage() {
       <section className="table-panel">
         <h2 className="panel-title">Roster</h2>
         <p className="panel-subtitle">
-          Edit player names here. Names stay attached to the schedule below.
+          Edit player names here. Optionally set a color or gender for each
+          player.
         </p>
+        <div className="roster-header">
+          <span className="roster-header-cell">Player</span>
+          <span className="roster-header-cell">Name</span>
+          <span className="roster-header-cell">Color</span>
+          <span className="roster-header-cell">Gender</span>
+          <span className="roster-header-cell">Actions</span>
+        </div>
         <div className="roster-grid">
-          {playerNames.map((name, index) => (
-            <div key={`player-${index}`} className="roster-row">
+          {players.map((player, index) => (
+            <div key={player.id} className="roster-row">
               <span className="roster-label">Player {index + 1}</span>
               <input
                 type="text"
-                value={name}
+                value={player.name}
                 onChange={(e) =>
-                  setPlayerNames((prev) =>
-                    prev.map((value, idx) =>
-                      idx === index ? e.target.value : value
+                  setPlayers((prev) =>
+                    prev.map((entry, idx) =>
+                      idx === index ? { ...entry, name: e.target.value } : entry
                     )
                   )
                 }
                 placeholder={`Player ${index + 1}`}
               />
+              <input
+                type="color"
+                className="color-input"
+                value={player.color || "#0b0d12"}
+                onChange={(e) =>
+                  setPlayers((prev) =>
+                    prev.map((entry, idx) =>
+                      idx === index
+                        ? { ...entry, color: e.target.value }
+                        : entry
+                    )
+                  )
+                }
+                aria-label={`Color for player ${index + 1}`}
+              />
+              <select
+                value={player.gender ?? ""}
+                onChange={(e) =>
+                  setPlayers((prev) =>
+                    prev.map((entry, idx) =>
+                      idx === index
+                        ? { ...entry, gender: e.target.value as GenderOption }
+                        : entry
+                    )
+                  )
+                }
+              >
+                <option value="">Unspecified</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
               <button
                 type="button"
                 className="ghost-button"
                 onClick={() =>
-                  setPlayerNames((prev) =>
+                  setPlayers((prev) =>
                     prev.length <= 4
                       ? prev
                       : prev.filter((_, idx) => idx !== index)
                   )
                 }
-                disabled={playerNames.length <= 4}
+                disabled={players.length <= 4}
               >
                 Remove
               </button>
@@ -318,19 +401,25 @@ export default function MatchBuilderPage() {
             type="button"
             className="ghost-button"
             onClick={() =>
-              setPlayerNames((prev) =>
+              setPlayers((prev) =>
                 prev.length >= MAX_PLAYERS
                   ? prev
-                  : [...prev, `Player ${prev.length + 1}`]
+                  : [
+                      ...prev,
+                      {
+                        id: randomId(),
+                        name: `Player ${prev.length + 1}`,
+                        color: "",
+                        gender: "",
+                      },
+                    ]
               )
             }
-            disabled={playerNames.length >= MAX_PLAYERS}
+            disabled={players.length >= MAX_PLAYERS}
           >
             Add player
           </button>
-          <span className="roster-note">
-            {playerNames.length} players
-          </span>
+          <span className="roster-note">{players.length} players</span>
         </div>
       </section>
 
@@ -355,14 +444,16 @@ export default function MatchBuilderPage() {
                       <div>
                         <span className="team-label">Team A</span>
                         <div className="team-names">
-                          {match.teams[0][0]} &amp; {match.teams[0][1]}
+                          {match.teams[0][0].name} &amp;{" "}
+                          {match.teams[0][1].name}
                         </div>
                       </div>
                       <div className="versus">vs</div>
                       <div>
                         <span className="team-label">Team B</span>
                         <div className="team-names">
-                          {match.teams[1][0]} &amp; {match.teams[1][1]}
+                          {match.teams[1][0].name} &amp;{" "}
+                          {match.teams[1][1].name}
                         </div>
                       </div>
                     </div>
@@ -379,9 +470,22 @@ export default function MatchBuilderPage() {
             </p>
             <div className="stats-grid">
               {stats.map((player) => (
-                <div key={player.name} className="stat-card">
-                  <span className="stat-label">{player.name}</span>
+                <div key={player.id} className="stat-card">
+                  <span className="stat-card-label">
+                    <span
+                      className="stat-dot"
+                      style={{
+                        backgroundColor: player.color || "transparent",
+                      }}
+                    />
+                    {player.name}
+                  </span>
                   <span className="stat-value">{player.playCount}</span>
+                  {player.gender ? (
+                    <span className="stat-card-sub">
+                      {player.gender === "male" ? "Male" : "Female"}
+                    </span>
+                  ) : null}
                 </div>
               ))}
             </div>

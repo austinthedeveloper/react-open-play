@@ -300,10 +300,25 @@
     gap: 0.75rem;
   }
 
+  .roster-header {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(100px, 140px) minmax(180px, 1fr) 64px minmax(140px, 1fr) auto;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .roster-header-cell {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: rgba(148, 163, 184, 0.6);
+  }
+
   .roster-row {
     display: grid;
     gap: 0.75rem;
-    grid-template-columns: minmax(100px, 140px) minmax(180px, 1fr) auto;
+    grid-template-columns: minmax(100px, 140px) minmax(180px, 1fr) 64px minmax(140px, 1fr) auto;
     align-items: center;
   }
 
@@ -319,6 +334,13 @@
     align-items: center;
     justify-content: space-between;
     margin-top: 1rem;
+  }
+
+  .color-input {
+    padding: 0;
+    height: 42px;
+    width: 64px;
+    border-radius: 12px;
   }
 
   .roster-note {
@@ -407,6 +429,30 @@
     border: 1px solid rgba(148, 163, 184, 0.15);
     text-align: center;
   }
+
+  .stat-card-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .stat-card-sub {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .stat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+  }
 }
 
 @keyframes pulseGlow {
@@ -432,6 +478,11 @@
 
   .builder-grid {
     grid-template-columns: 1fr;
+  }
+
+  .roster-header {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
   }
 
   .roster-row {
