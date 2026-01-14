@@ -1,17 +1,230 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
 @import "tailwindcss";
 
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: dark;
+    --bg: #0b0d12;
+    --bg-secondary: #121726;
+    --panel: #111624;
+    --panel-soft: #151b2b;
+    --line: rgba(148, 163, 184, 0.2);
+    --text: rgba(248, 250, 252, 0.92);
+    --muted: rgba(226, 232, 240, 0.62);
+    --accent: #4cf3ff;
+    --accent-2: #f2a6ff;
+    --accent-3: #ffb86b;
+    --glow: 0 20px 60px rgba(76, 243, 255, 0.15);
   }
 
   body {
-    @apply m-0 flex min-w-[320px] min-h-screen items-center justify-center bg-[#242424] text-white/90 font-sans antialiased;
+    @apply m-0 flex min-w-[320px] min-h-screen items-center justify-center text-white/90 antialiased;
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(1200px 600px at 15% -10%, rgba(76, 243, 255, 0.18), transparent 60%),
+      radial-gradient(900px 500px at 90% 10%, rgba(242, 166, 255, 0.16), transparent 55%),
+      radial-gradient(700px 500px at 35% 85%, rgba(255, 184, 107, 0.12), transparent 60%),
+      linear-gradient(140deg, rgba(21, 27, 43, 0.9), rgba(9, 12, 20, 0.95));
     text-rendering: optimizeLegibility;
     -moz-osx-font-smoothing: grayscale;
   }
 
   #root {
-    @apply mx-auto max-w-[800px] p-4;
+    @apply mx-auto w-full max-w-[960px] p-4;
+  }
+
+  input,
+  select {
+    color: var(--text);
+    font-family: "Space Mono", "SFMono-Regular", monospace;
+    background-color: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 12px;
+    padding: 0.55rem 0.75rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  input:focus,
+  select:focus {
+    outline: none;
+    border-color: rgba(76, 243, 255, 0.7);
+    box-shadow: 0 0 0 3px rgba(76, 243, 255, 0.12);
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  thead th {
+    font-weight: 600;
+    color: rgba(226, 232, 240, 0.8);
+  }
+}
+
+@layer components {
+  .app-shell {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .hero-panel {
+    display: grid;
+    gap: 1rem;
+    padding: 1.75rem 1.75rem;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(21, 27, 43, 0.95), rgba(10, 15, 26, 0.85));
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: var(--glow);
+    animation: pulseGlow 7s ease-in-out infinite;
+  }
+
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    font-size: 0.72rem;
+    color: rgba(148, 163, 184, 0.7);
+    margin-bottom: 0.35rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2.4rem, 4vw, 3.5rem);
+    line-height: 1.05;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(120deg, #ffffff 0%, #7ae7ff 40%, #f2a6ff 70%, #ffb86b 100%);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .hero-subtitle {
+    margin: 0.35rem 0 0;
+    color: var(--muted);
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    padding-top: 0.5rem;
+  }
+
+  .stat-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .stat-value {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .controls-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: end;
+    padding: 1.25rem 1.5rem;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    backdrop-filter: blur(10px);
+  }
+
+  .control {
+    display: grid;
+    gap: 0.4rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .control span {
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 0.7rem;
+  }
+
+  .glow-button {
+    padding: 0.65rem 1.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #0b0d12;
+    background: linear-gradient(120deg, #4cf3ff, #f2a6ff 60%, #ffb86b);
+    border: none;
+    box-shadow: 0 16px 35px rgba(76, 243, 255, 0.22);
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .glow-button:hover {
+    transform: translateY(-1px) scale(1.01);
+    box-shadow: 0 18px 45px rgba(242, 166, 255, 0.25);
+  }
+
+  .glow-button:focus-visible {
+    outline: 3px solid rgba(255, 184, 107, 0.6);
+    outline-offset: 4px;
+  }
+
+  .table-panel {
+    padding: 1.5rem;
+    border-radius: 24px;
+    background: var(--panel);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.55);
+  }
+
+  .goals-table {
+    width: 100%;
+    font-size: 0.95rem;
+  }
+
+  .goals-table th,
+  .goals-table td {
+    padding: 0.85rem 0.9rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  }
+
+  .goals-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .index-cell {
+    width: 52px;
+    color: rgba(148, 163, 184, 0.8);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .row-default {
+    color: var(--text);
+  }
+
+  .row-played {
+    background: linear-gradient(90deg, rgba(76, 243, 255, 0.12), rgba(21, 27, 43, 0.2));
+    color: rgba(226, 232, 240, 0.9);
+  }
+
+  .empty-state {
+    color: var(--muted);
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 20px 60px rgba(76, 243, 255, 0.15);
+  }
+  50% {
+    box-shadow: 0 25px 80px rgba(242, 166, 255, 0.22);
   }
 }

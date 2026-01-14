@@ -48,101 +48,95 @@ export function App() {
   };
 
   return (
-    <div className="text-left">
-      <header className="mb-6">
-        <h1 className="text-[3.2em] leading-[1.1]">Open Play Goals</h1>
-        <p className="m-0 text-white/70">
-          Profile: <strong>{profile.ratingRange}</strong> &middot; Default
-          opponent level:{" "}
-          <strong className="capitalize">{profile.defaultOpponentLevel}</strong>
-        </p>
-
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-white/85">
-          <label className="flex items-center gap-2">
-            Matches this session:{" "}
-            <input
-              type="number"
-              min={1}
-              max={20}
-              value={numMatches}
-              onChange={(e) =>
-                setNumMatches(
-                  Math.min(20, Math.max(1, Number(e.target.value) || 1))
-                )
-              }
-              className="w-[70px] rounded-md border border-white/20 bg-white/10 px-2 py-1 text-white/90 focus:border-white/60 focus:outline-none"
-            />
-          </label>
-
-          <label className="flex items-center gap-2">
-            Opponent level:
-            <select
-              value={profile.defaultOpponentLevel}
-              onChange={(e) =>
-                setProfile((p) => ({
-                  ...p,
-                  defaultOpponentLevel: e.target.value as OpponentLevel,
-                }))
-              }
-              className="rounded-md border border-white/20 bg-white/10 px-2 py-1 text-white/90 focus:border-white/60 focus:outline-none"
-            >
-              <option value="lower">Lower</option>
-              <option value="same">Same</option>
-              <option value="higher">Higher</option>
-            </select>
-          </label>
-
-          <button
-            type="button"
-            onClick={regenerate}
-            className="cursor-pointer rounded-lg border border-transparent bg-[#1a1a1a] px-5 py-2 text-base font-medium text-white transition-colors hover:border-[#646cff] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#646cff]"
-          >
-            Generate goals
-          </button>
+    <div className="app-shell text-left">
+      <header className="hero-panel">
+        <div>
+          <p className="eyebrow">Open Play Lab</p>
+          <h1 className="hero-title">Open Play Goals</h1>
+          <p className="hero-subtitle">
+            Profile: <strong>{profile.ratingRange}</strong> &middot; Default
+            opponent level:{" "}
+            <strong className="capitalize">{profile.defaultOpponentLevel}</strong>
+          </p>
         </div>
 
-        <div className="mt-3 text-[0.9rem] text-white/70">
-          <span>
-            Played: <strong>{playedCount}</strong> / {matches.length}
-          </span>
-          {" · "}
-          <span>
-            Goals completed: <strong>{completedCount}</strong>
-          </span>
+        <div className="hero-stats">
+          <div>
+            <span className="stat-label">Played</span>
+            <span className="stat-value">
+              {playedCount} / {matches.length}
+            </span>
+          </div>
+          <div>
+            <span className="stat-label">Goals completed</span>
+            <span className="stat-value">{completedCount}</span>
+          </div>
         </div>
       </header>
 
-      <main>
+      <section className="controls-panel">
+        <label className="control">
+          <span>Matches this session</span>
+          <input
+            type="number"
+            min={1}
+            max={20}
+            value={numMatches}
+            onChange={(e) =>
+              setNumMatches(
+                Math.min(20, Math.max(1, Number(e.target.value) || 1))
+              )
+            }
+          />
+        </label>
+
+        <label className="control">
+          <span>Opponent level</span>
+          <select
+            value={profile.defaultOpponentLevel}
+            onChange={(e) =>
+              setProfile((p) => ({
+                ...p,
+                defaultOpponentLevel: e.target.value as OpponentLevel,
+              }))
+            }
+          >
+            <option value="lower">Lower</option>
+            <option value="same">Same</option>
+            <option value="higher">Higher</option>
+          </select>
+        </label>
+
+        <button type="button" onClick={regenerate} className="glow-button">
+          Generate goals
+        </button>
+      </section>
+
+      <main className="table-panel">
         {matches.length === 0 ? (
-          <p>No matches yet. Click &quot;Generate goals&quot;.</p>
+          <p className="empty-state">
+            No matches yet. Click &quot;Generate goals&quot;.
+          </p>
         ) : (
-          <table className="w-full border-collapse text-[0.95rem]">
+          <table className="goals-table">
             <thead>
               <tr>
-                <th className="border-b border-white/30 p-2 text-left text-white/80">
-                  #
-                </th>
-                <th className="border-b border-white/30 p-2 text-left text-white/80">
-                  Goal
-                </th>
-                <th className="border-b border-white/30 p-2 text-left text-white/80">
-                  Played?
-                </th>
-                <th className="border-b border-white/30 p-2 text-left text-white/80">
-                  Result
-                </th>
+                <th>#</th>
+                <th>Goal</th>
+                <th>Played?</th>
+                <th>Result</th>
               </tr>
             </thead>
             <tbody>
               {matches.map((match) => (
                 <tr
                   key={match.id}
-                  className={match.played ? "bg-[#f8fff8] text-[#1b2a16]" : ""}
+                  className={match.played ? "row-played" : "row-default"}
                 >
-                  <td className="w-8 p-2 align-top">{match.index}</td>
-                  <td className="p-2 align-top">{match.goalText}</td>
-                  <td className="p-2 align-top">
-                    <label>
+                  <td className="index-cell">{match.index}</td>
+                  <td>{match.goalText}</td>
+                  <td>
+                    <label className="inline-flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={match.played}
@@ -151,11 +145,11 @@ export function App() {
                             played: e.target.checked,
                           })
                         }
-                      />{" "}
+                      />
                       Played
                     </label>
                   </td>
-                  <td className="p-2 align-top">
+                  <td>
                     <select
                       value={match.result}
                       onChange={(e) =>
