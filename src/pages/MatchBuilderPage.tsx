@@ -552,25 +552,87 @@ export default function MatchBuilderPage() {
                     }
                     aria-label={`Color for player ${index + 1}`}
                   />
-                  <select
-                    value={player.gender ?? ""}
-                    onChange={(e) =>
-                      setPlayers((prev) =>
-                        prev.map((entry, idx) =>
-                          idx === index
-                            ? {
-                                ...entry,
-                                gender: e.target.value as GenderOption,
-                              }
-                            : entry
-                        )
-                      )
-                    }
+                  <div
+                    className="gender-toggle"
+                    role="group"
+                    aria-label={`Gender for player ${index + 1}`}
                   >
-                    <option value="">Unspecified</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
+                    <button
+                      type="button"
+                      className={`gender-toggle-button ${
+                        player.gender === "male" ? "is-active" : ""
+                      }`}
+                      data-value="male"
+                      aria-pressed={player.gender === "male"}
+                      aria-label="Male"
+                      onClick={() =>
+                        setPlayers((prev) =>
+                          prev.map((entry, idx) =>
+                            idx === index
+                              ? {
+                                  ...entry,
+                                  gender: "male" as GenderOption,
+                                }
+                              : entry
+                          )
+                        )
+                      }
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        male
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`gender-toggle-button ${
+                        !player.gender ? "is-active" : ""
+                      }`}
+                      data-value=""
+                      aria-pressed={!player.gender}
+                      aria-label="Unspecified"
+                      onClick={() =>
+                        setPlayers((prev) =>
+                          prev.map((entry, idx) =>
+                            idx === index
+                              ? {
+                                  ...entry,
+                                  gender: "",
+                                }
+                              : entry
+                          )
+                        )
+                      }
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        remove
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`gender-toggle-button ${
+                        player.gender === "female" ? "is-active" : ""
+                      }`}
+                      data-value="female"
+                      aria-pressed={player.gender === "female"}
+                      aria-label="Female"
+                      onClick={() =>
+                        setPlayers((prev) =>
+                          prev.map((entry, idx) =>
+                            idx === index
+                              ? {
+                                  ...entry,
+                                  gender: "female" as GenderOption,
+                                }
+                              : entry
+                          )
+                        )
+                      }
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        female
+                      </span>
+                    </button>
+                  </div>
                   <button
                     type="button"
                     className="ghost-button"
@@ -699,8 +761,22 @@ export default function MatchBuilderPage() {
                   </span>
                   <span className="stat-value">{player.playCount}</span>
                   {player.gender ? (
-                    <span className="stat-card-sub">
-                      {player.gender === "male" ? "Male" : "Female"}
+                    <span
+                      className="stat-card-sub"
+                      aria-label={
+                        player.gender === "male" ? "Male" : "Female"
+                      }
+                    >
+                      <span
+                        className={`material-icons stat-gender-icon ${
+                          player.gender === "male"
+                            ? "stat-gender-icon--male"
+                            : "stat-gender-icon--female"
+                        }`}
+                        aria-hidden="true"
+                      >
+                        {player.gender === "male" ? "male" : "female"}
+                      </span>
                     </span>
                   ) : null}
                 </div>
