@@ -396,8 +396,11 @@ export default function MatchBuilderPage() {
   }, [players, numMatches, numCourts, schedule, isRosterOpen, isLoaded]);
 
   useEffect(() => {
-    setNumCourts((prev) => Math.min(Math.max(1, prev), maxCourts));
-  }, [maxCourts]);
+    if (!isLoaded) {
+      return;
+    }
+    setNumCourts((prev) => (prev > maxCourts ? maxCourts : prev));
+  }, [maxCourts, isLoaded]);
 
   const matches = schedule?.matches ?? [];
   const playerLookup = useMemo(() => {
