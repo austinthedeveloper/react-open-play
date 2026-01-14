@@ -9,6 +9,10 @@ export type PlayerProfile = {
 
 export type MatchTeam = [string, string];
 
+export type MatchWinner = "A" | "B";
+
+export type MatchResults = Record<string, MatchWinner>;
+
 export type MatchCard = {
   id: string;
   index: number;
@@ -25,4 +29,6 @@ export type PlayerStat = {
   color?: string;
   gender?: GenderOption;
   playCount: number;
+  wins: number;
+  losses: number;
 };

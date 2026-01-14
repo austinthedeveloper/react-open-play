@@ -16,6 +16,7 @@ import type {
   GenderOption,
   MatchCard as MatchCardType,
   MatchTeam,
+  MatchWinner,
   PlayerProfile,
   PlayerStat,
   Schedule,
@@ -199,12 +200,35 @@ function buildSchedule(
   return matches;
 }
 
-function buildStats(players: PlayerProfile[], matches: MatchCardType[]) {
+function buildStats(
+  players: PlayerProfile[],
+  matches: MatchCardType[],
+  matchResults: Record<string, MatchWinner>
+) {
   const playCounts = new Map(players.map((player) => [player.id, 0]));
+  const winCounts = new Map(players.map((player) => [player.id, 0]));
+  const lossCounts = new Map(players.map((player) => [player.id, 0]));
   for (const match of matches) {
     for (const playerId of [...match.teams[0], ...match.teams[1]]) {
       if (playCounts.has(playerId)) {
         playCounts.set(playerId, (playCounts.get(playerId) ?? 0) + 1);
+      }
+    }
+
+    const winner = matchResults[match.id];
+    if (!winner) {
+      continue;
+    }
+    const winnerTeam = winner === "A" ? match.teams[0] : match.teams[1];
+    const loserTeam = winner === "A" ? match.teams[1] : match.teams[0];
+    for (const playerId of winnerTeam) {
+      if (winCounts.has(playerId)) {
+        winCounts.set(playerId, (winCounts.get(playerId) ?? 0) + 1);
+      }
+    }
+    for (const playerId of loserTeam) {
+      if (lossCounts.has(playerId)) {
+        lossCounts.set(playerId, (lossCounts.get(playerId) ?? 0) + 1);
       }
     }
   }
@@ -215,6 +239,8 @@ function buildStats(players: PlayerProfile[], matches: MatchCardType[]) {
     color: player.color,
     gender: player.gender,
     playCount: playCounts.get(player.id) ?? 0,
+    wins: winCounts.get(player.id) ?? 0,
+    losses: lossCounts.get(player.id) ?? 0,
   }));
 
   stats.sort((a, b) => a.name.localeCompare(b.name));
@@ -234,6 +260,9 @@ export default function MatchBuilderPage() {
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
   const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
+  const [matchResults, setMatchResults] = useState<
+    Record<string, MatchWinner>
+  >({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [isRosterOpen, setIsRosterOpen] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -272,6 +301,7 @@ export default function MatchBuilderPage() {
         numMatches?: number;
         numCourts?: number;
         schedule?: Schedule | null;
+        matchResults?: Record<string, MatchWinner>;
         isRosterOpen?: boolean;
       };
       if (Array.isArray(parsed.players)) {
@@ -292,6 +322,9 @@ export default function MatchBuilderPage() {
       }
       if (parsed.schedule && Array.isArray(parsed.schedule.matches)) {
         setSchedule({ matches: parsed.schedule.matches });
+      }
+      if (parsed.matchResults && typeof parsed.matchResults === "object") {
+        setMatchResults(parsed.matchResults);
       }
       if (typeof parsed.isRosterOpen === "boolean") {
         setIsRosterOpen(parsed.isRosterOpen);
@@ -317,10 +350,19 @@ export default function MatchBuilderPage() {
         numMatches,
         numCourts,
         schedule,
+        matchResults,
         isRosterOpen,
       })
     );
-  }, [players, numMatches, numCourts, schedule, isRosterOpen, isLoaded]);
+  }, [
+    players,
+    numMatches,
+    numCourts,
+    schedule,
+    matchResults,
+    isRosterOpen,
+    isLoaded,
+  ]);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -345,12 +387,35 @@ export default function MatchBuilderPage() {
     if (!schedule) {
       return [];
     }
-    return buildStats(normalizedPlayers, schedule.matches);
-  }, [normalizedPlayers, schedule]);
+    return buildStats(normalizedPlayers, schedule.matches, matchResults);
+  }, [normalizedPlayers, schedule, matchResults]);
   const getPlayerName = (playerId: string) =>
     playerLookup.get(playerId)?.name ?? "Unknown";
   const getPlayerColor = (playerId: string) =>
     playerLookup.get(playerId)?.color ?? "transparent";
+
+  useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+    if (!schedule) {
+      setMatchResults((prev) => (Object.keys(prev).length > 0 ? {} : prev));
+      return;
+    }
+    const matchIds = new Set(schedule.matches.map((match) => match.id));
+    setMatchResults((prev) => {
+      let changed = false;
+      const next: Record<string, MatchWinner> = {};
+      for (const [matchId, winner] of Object.entries(prev)) {
+        if (matchIds.has(matchId)) {
+          next[matchId] = winner;
+        } else {
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [isLoaded, schedule]);
 
   useEffect(() => {
     if (activeRound > matchRounds.length - 1) {
@@ -378,11 +443,28 @@ export default function MatchBuilderPage() {
     setNumMatches(DEFAULT_MATCHES);
     setNumCourts(DEFAULT_COURTS);
     setSchedule(null);
+    setMatchResults({});
     setActiveRound(0);
     closeFullscreen();
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(STORAGE_KEY);
     }
+  };
+
+  const handleSelectWinner = (matchId: string, winner: MatchWinner | null) => {
+    setMatchResults((prev) => {
+      if (!winner) {
+        if (!prev[matchId]) {
+          return prev;
+        }
+        const { [matchId]: _removed, ...rest } = prev;
+        return rest;
+      }
+      return {
+        ...prev,
+        [matchId]: winner,
+      };
+    });
   };
 
   return (
@@ -476,6 +558,7 @@ export default function MatchBuilderPage() {
                 numCourts
               );
               setSchedule({ matches: matchesList });
+              setMatchResults({});
             }}
             className="glow-button"
           >
@@ -483,7 +566,10 @@ export default function MatchBuilderPage() {
           </button>
           <button
             type="button"
-            onClick={() => setSchedule(null)}
+            onClick={() => {
+              setSchedule(null);
+              setMatchResults({});
+            }}
             className="ghost-button"
             disabled={!schedule || schedule.matches.length === 0}
           >
@@ -713,6 +799,10 @@ export default function MatchBuilderPage() {
                           courtIndex={matchIndex + 1}
                           matchIndex={match.index}
                           size="compact"
+                          winner={matchResults[match.id] ?? null}
+                          onSelectWinner={(winner) =>
+                            handleSelectWinner(match.id, winner)
+                          }
                           teamA={[
                             {
                               name: getPlayerName(match.teams[0][0]),
@@ -759,7 +849,12 @@ export default function MatchBuilderPage() {
                     />
                     {player.name}
                   </span>
-                  <span className="stat-value">{player.playCount}</span>
+                  <span className="stat-value">
+                    {player.wins}W · {player.losses}L
+                  </span>
+                  <span className="stat-card-sub">
+                    Played {player.playCount}
+                  </span>
                   {player.gender ? (
                     <span
                       className="stat-card-sub"
@@ -835,6 +930,10 @@ export default function MatchBuilderPage() {
                   courtIndex={matchIndex + 1}
                   matchIndex={match.index}
                   size="full"
+                  winner={matchResults[match.id] ?? null}
+                  onSelectWinner={(winner) =>
+                    handleSelectWinner(match.id, winner)
+                  }
                   teamA={[
                     {
                       name: getPlayerName(match.teams[0][0]),

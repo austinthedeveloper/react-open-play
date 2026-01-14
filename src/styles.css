@@ -603,6 +603,46 @@
     gap: 1.5rem;
   }
 
+  .team-block {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.7rem 0.85rem;
+    border-radius: 18px;
+    background: rgba(10, 15, 26, 0.45);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    appearance: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .team-block:hover {
+    border-color: rgba(76, 243, 255, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .team-block:focus-visible {
+    outline: 2px solid rgba(76, 243, 255, 0.6);
+    outline-offset: 2px;
+  }
+
+  .team-block--winner {
+    background: linear-gradient(
+      120deg,
+      rgba(76, 243, 255, 0.24),
+      rgba(11, 15, 24, 0.6)
+    );
+    border-color: rgba(76, 243, 255, 0.6);
+    box-shadow: 0 18px 30px rgba(10, 15, 26, 0.35);
+  }
+
+  .team-block--loser {
+    opacity: 0.55;
+  }
+
   .team-label {
     display: block;
     font-size: 0.7rem;
@@ -661,6 +701,11 @@
     gap: 0.75rem;
   }
 
+  .match-card--compact .team-block {
+    padding: 0.5rem 0.6rem;
+    border-radius: 14px;
+  }
+
   .match-card--compact .team-names {
     margin-top: 0.35rem;
     font-size: 0.95rem;
@@ -699,6 +744,10 @@
     margin-top: 0.25rem;
     font-size: 0.75rem;
     color: rgba(148, 163, 184, 0.7);
+  }
+
+  .stat-card-sub + .stat-card-sub {
+    margin-top: 0.35rem;
   }
 
   .stat-card-sub .material-icons {
