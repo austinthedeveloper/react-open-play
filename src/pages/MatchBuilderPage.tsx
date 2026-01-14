@@ -223,7 +223,10 @@ function buildSchedule(
   const teammateCounts = new Map<string, number>();
   const opponentCounts = new Map<string, number>();
   const matches: MatchCard[] = [];
-  const courts = Math.max(1, Math.min(numCourts, Math.floor(players.length / 4)));
+  const courts = Math.max(
+    1,
+    Math.min(numCourts, Math.floor(players.length / 4))
+  );
 
   for (let round = 0; round < numRounds; round += 1) {
     const usedThisRound = new Set<string>();
@@ -291,13 +294,15 @@ function buildStats(players: PlayerProfile[], matches: MatchCard[]) {
 }
 
 export default function MatchBuilderPage() {
-  const [players, setPlayers] = useState<PlayerProfile[]>(
+  const buildDefaultPlayers = () =>
     Array.from({ length: DEFAULT_PLAYERS }, (_, i) => ({
       id: randomId(),
       name: `Player ${i + 1}`,
       color: PLAYER_COLORS[i % PLAYER_COLORS.length],
       gender: "",
-    }))
+    }));
+  const [players, setPlayers] = useState<PlayerProfile[]>(
+    buildDefaultPlayers
   );
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
   const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
@@ -427,6 +432,18 @@ export default function MatchBuilderPage() {
     }
   };
 
+  const resetAll = () => {
+    setPlayers(buildDefaultPlayers());
+    setNumMatches(DEFAULT_MATCHES);
+    setNumCourts(DEFAULT_COURTS);
+    setSchedule(null);
+    setActiveRound(0);
+    closeFullscreen();
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  };
+
   return (
     <div className="builder-shell text-left">
       <header className="hero-panel">
@@ -460,16 +477,16 @@ export default function MatchBuilderPage() {
                 if (nextCount < prev.length) {
                   return prev.slice(0, nextCount);
                 }
-                const extras = Array.from(
-                  { length: nextCount - prev.length },
-                  (_, i) => ({
+                const nextPlayers = [...prev];
+                for (let i = prev.length; i < nextCount; i += 1) {
+                  nextPlayers.push({
                     id: randomId(),
-                    name: `Player ${prev.length + i + 1}`,
-                    color: pickNextColor(prev, prev.length + i),
+                    name: `Player ${i + 1}`,
+                    color: pickNextColor(nextPlayers, i),
                     gender: "",
-                  })
-                );
-                return [...prev, ...extras];
+                  });
+                }
+                return nextPlayers;
               })
             }
           />
@@ -498,10 +515,7 @@ export default function MatchBuilderPage() {
             value={numCourts}
             onChange={(e) =>
               setNumCourts(
-                Math.min(
-                  maxCourts,
-                  Math.max(1, Number(e.target.value) || 1)
-                )
+                Math.min(maxCourts, Math.max(1, Number(e.target.value) || 1))
               )
             }
           />
@@ -533,6 +547,9 @@ export default function MatchBuilderPage() {
             disabled={!schedule || schedule.matches.length === 0}
           >
             Clear schedule
+          </button>
+          <button type="button" onClick={resetAll} className="ghost-button">
+            Reset all
           </button>
         </div>
       </section>
@@ -784,12 +801,16 @@ export default function MatchBuilderPage() {
                       <div className="team-names">
                         <span
                           className="player-dot"
-                          style={{ backgroundColor: getPlayerColor(match.teams[0][0]) }}
+                          style={{
+                            backgroundColor: getPlayerColor(match.teams[0][0]),
+                          }}
                         />
                         {getPlayerName(match.teams[0][0])} &amp;{" "}
                         <span
                           className="player-dot"
-                          style={{ backgroundColor: getPlayerColor(match.teams[0][1]) }}
+                          style={{
+                            backgroundColor: getPlayerColor(match.teams[0][1]),
+                          }}
                         />
                         {getPlayerName(match.teams[0][1])}
                       </div>
@@ -800,12 +821,16 @@ export default function MatchBuilderPage() {
                       <div className="team-names">
                         <span
                           className="player-dot"
-                          style={{ backgroundColor: getPlayerColor(match.teams[1][0]) }}
+                          style={{
+                            backgroundColor: getPlayerColor(match.teams[1][0]),
+                          }}
                         />
                         {getPlayerName(match.teams[1][0])} &amp;{" "}
                         <span
                           className="player-dot"
-                          style={{ backgroundColor: getPlayerColor(match.teams[1][1]) }}
+                          style={{
+                            backgroundColor: getPlayerColor(match.teams[1][1]),
+                          }}
                         />
                         {getPlayerName(match.teams[1][1])}
                       </div>
