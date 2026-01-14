@@ -11,6 +11,29 @@ const BALANCE_WEIGHT = 1.5;
 
 const STORAGE_KEY = "matchBuilderState";
 
+const PLAYER_COLORS = [
+  "#4CF3FF",
+  "#F2A6FF",
+  "#FFB86B",
+  "#7EE787",
+  "#FFD166",
+  "#FF6B6B",
+  "#5BC0EB",
+  "#9D4EDD",
+  "#F72585",
+  "#FF9F1C",
+  "#2EC4B6",
+  "#E9C46A",
+  "#06D6A0",
+  "#EF476F",
+  "#A0C4FF",
+  "#BDB2FF",
+  "#FFC6FF",
+  "#CAFFBF",
+  "#FDFFB6",
+  "#83C5BE",
+];
+
 type GenderOption = "" | "male" | "female";
 
 type PlayerProfile = {
@@ -42,6 +65,15 @@ type PlayerStat = {
 
 function randomId() {
   return Math.random().toString(36).slice(2, 10);
+}
+
+function pickNextColor(players: PlayerProfile[], index: number) {
+  const used = new Set(players.map((player) => player.color).filter(Boolean));
+  const available = PLAYER_COLORS.filter((color) => !used.has(color));
+  if (available.length > 0) {
+    return available[0];
+  }
+  return PLAYER_COLORS[index % PLAYER_COLORS.length];
 }
 
 function pairKey(a: string, b: string) {
@@ -235,7 +267,7 @@ export default function MatchBuilderPage() {
     Array.from({ length: DEFAULT_PLAYERS }, (_, i) => ({
       id: randomId(),
       name: `Player ${i + 1}`,
-      color: "",
+      color: PLAYER_COLORS[i % PLAYER_COLORS.length],
       gender: "",
     }))
   );
@@ -275,9 +307,10 @@ export default function MatchBuilderPage() {
         const sanitized = parsed.players.map((player, index) => ({
           id: player.id || randomId(),
           name: player.name || `Player ${index + 1}`,
-          color: player.color || "",
+          color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
           gender: player.gender || "",
         }));
+
         setPlayers(sanitized);
       }
       if (typeof parsed.numMatches === "number") {
@@ -357,7 +390,7 @@ export default function MatchBuilderPage() {
                   (_, i) => ({
                     id: randomId(),
                     name: `Player ${prev.length + i + 1}`,
-                    color: "",
+                    color: pickNextColor(prev, prev.length + i),
                     gender: "",
                   })
                 );
@@ -488,7 +521,7 @@ export default function MatchBuilderPage() {
                       {
                         id: randomId(),
                         name: `Player ${prev.length + 1}`,
-                        color: "",
+                        color: pickNextColor(prev, prev.length),
                         gender: "",
                       },
                     ]

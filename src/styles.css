@@ -335,12 +335,26 @@
     justify-content: space-between;
     margin-top: 1rem;
   }
-
+  
   .color-input {
     padding: 0;
     height: 42px;
     width: 64px;
     border-radius: 12px;
+  }
+
+  .color-select {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .color-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.6);
   }
 
   .roster-note {
