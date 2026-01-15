@@ -15,6 +15,7 @@ import type {
   MatchWinner,
   PlayerProfile,
   Schedule,
+  TeamMember,
 } from "../interfaces";
 import {
   buildDefaultPlayers,
@@ -179,7 +180,7 @@ export default function MatchBuilderPage() {
     playerLookup.get(playerId)?.name ?? "Unknown";
   const getPlayerColor = (playerId: string) =>
     playerLookup.get(playerId)?.color ?? "transparent";
-  const resolveTeam = (team: MatchTeam) => [
+  const resolveTeam = (team: MatchTeam): [TeamMember, TeamMember] => [
     { name: getPlayerName(team[0]), color: getPlayerColor(team[0]) },
     { name: getPlayerName(team[1]), color: getPlayerColor(team[1]) },
   ];
@@ -247,8 +248,9 @@ export default function MatchBuilderPage() {
         if (!prev[matchId]) {
           return prev;
         }
-        const { [matchId]: _removed, ...rest } = prev;
-        return rest;
+        const next = { ...prev };
+        delete next[matchId];
+        return next;
       }
       return {
         ...prev,

@@ -12,7 +12,7 @@ import "./FullscreenOverlay.css";
 
 export type FullscreenOverlayProps = {
   isOpen: boolean;
-  fullscreenRef: RefObject<HTMLDivElement>;
+  fullscreenRef: RefObject<HTMLDivElement | null>;
   activeRound: number;
   matchRounds: MatchCardType[][];
   matchResults: Record<string, MatchWinner>;
@@ -101,9 +101,7 @@ export default function FullscreenOverlay({
                   <span className="fullscreen-player-name">
                     {shortenName(player.name)}
                   </span>
-                  <span className="fullscreen-player-wins">
-                    {player.wins}W
-                  </span>
+                  <span className="fullscreen-player-wins">{player.wins}W</span>
                 </div>
               ))}
             </div>
