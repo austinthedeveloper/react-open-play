@@ -3,7 +3,10 @@ import type { MatchType } from "../../interfaces";
 
 export type ControlsPanelProps = {
   matchType: MatchType;
-  matchTypeOptions: { value: MatchType; label: string }[];
+  matchTypeOptions: ReadonlyArray<{
+    value: MatchType;
+    label: string;
+  }>;
   numPlayers: number;
   numMatches: number;
   numCourts: number;
