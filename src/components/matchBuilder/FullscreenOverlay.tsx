@@ -12,11 +12,12 @@ import "./FullscreenOverlay.css";
 
 export type FullscreenOverlayProps = {
   isOpen: boolean;
-  fullscreenRef: RefObject<HTMLDivElement>;
+  fullscreenRef: RefObject<HTMLDivElement | null>;
   activeRound: number;
   matchRounds: MatchCardType[][];
   matchResults: Record<string, MatchWinner>;
   statsByWins: PlayerStat[];
+  courtNumbers: number[];
   onSelectWinner: (matchId: string, winner: MatchWinner | null) => void;
   onPreviousRound: () => void;
   onNextRound: () => void;
@@ -31,6 +32,7 @@ export default function FullscreenOverlay({
   matchRounds,
   matchResults,
   statsByWins,
+  courtNumbers,
   onSelectWinner,
   onPreviousRound,
   onNextRound,
@@ -79,7 +81,7 @@ export default function FullscreenOverlay({
             {matchRounds[activeRound]?.map((match, matchIndex) => (
               <MatchCard
                 key={match.id}
-                courtIndex={matchIndex + 1}
+                courtIndex={courtNumbers[matchIndex] ?? matchIndex + 1}
                 matchIndex={match.index}
                 size="full"
                 winner={matchResults[match.id] ?? null}
@@ -101,9 +103,7 @@ export default function FullscreenOverlay({
                   <span className="fullscreen-player-name">
                     {shortenName(player.name)}
                   </span>
-                  <span className="fullscreen-player-wins">
-                    {player.wins}W
-                  </span>
+                  <span className="fullscreen-player-wins">{player.wins}W</span>
                 </div>
               ))}
             </div>

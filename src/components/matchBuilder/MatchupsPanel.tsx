@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import MatchCard from "../MatchCard";
 import type {
   MatchCard as MatchCardType,
@@ -14,6 +15,7 @@ export type MatchupsPanelProps = {
   onOpenFullscreen: () => void;
   resolveTeam: (team: MatchTeam) => [TeamMember, TeamMember];
   matchesCount: number;
+  courtNumbers: number[];
 };
 
 export default function MatchupsPanel({
@@ -23,19 +25,43 @@ export default function MatchupsPanel({
   onOpenFullscreen,
   resolveTeam,
   matchesCount,
+  courtNumbers,
 }: MatchupsPanelProps) {
+  const [showFullscreenButton, setShowFullscreenButton] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const updateVisibility = () => {
+      setShowFullscreenButton(
+        window.innerHeight >= 900 && window.innerWidth >= 1650
+      );
+    };
+
+    updateVisibility();
+    window.addEventListener("resize", updateVisibility);
+
+    return () => {
+      window.removeEventListener("resize", updateVisibility);
+    };
+  }, []);
+
   return (
     <section className="table-panel">
       <div className="panel-header">
         <h2 className="panel-title">Matchups</h2>
-        <button
-          type="button"
-          className="ghost-button"
-          onClick={onOpenFullscreen}
-          disabled={matchesCount === 0}
-        >
-          Fullscreen view
-        </button>
+        {showFullscreenButton ? (
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={onOpenFullscreen}
+            disabled={matchesCount === 0}
+          >
+            Fullscreen view
+          </button>
+        ) : null}
       </div>
       {matchesCount === 0 ? (
         <p className="empty-state">No matchups yet.</p>
@@ -48,7 +74,7 @@ export default function MatchupsPanel({
                 {roundMatches.map((match, matchIndex) => (
                   <MatchCard
                     key={match.id}
-                    courtIndex={matchIndex + 1}
+                    courtIndex={courtNumbers[matchIndex] ?? matchIndex + 1}
                     matchIndex={match.index}
                     size="compact"
                     winner={matchResults[match.id] ?? null}

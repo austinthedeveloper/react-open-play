@@ -1,15 +1,21 @@
 import type { ReactNode } from "react";
+import type { MatchType } from "../../interfaces";
 
 export type ControlsPanelProps = {
+  matchType: MatchType;
+  matchTypeOptions: { value: MatchType; label: string }[];
   numPlayers: number;
   numMatches: number;
   numCourts: number;
   maxCourts: number;
   maxPlayers: number;
   maxMatches: number;
+  courtNumbers: string;
   onPlayerCountChange: (nextCount: number) => void;
   onMatchCountChange: (nextCount: number) => void;
   onCourtCountChange: (nextCount: number) => void;
+  onMatchTypeChange: (nextType: MatchType) => void;
+  onCourtNumbersChange: (nextNumbers: string) => void;
   onGenerateSchedule: () => void;
   onClearSchedule: () => void;
   onResetAll: () => void;
@@ -18,15 +24,20 @@ export type ControlsPanelProps = {
 };
 
 export default function ControlsPanel({
+  matchType,
+  matchTypeOptions,
   numPlayers,
   numMatches,
   numCourts,
   maxCourts,
   maxPlayers,
   maxMatches,
+  courtNumbers,
   onPlayerCountChange,
   onMatchCountChange,
   onCourtCountChange,
+  onMatchTypeChange,
+  onCourtNumbersChange,
   onGenerateSchedule,
   onClearSchedule,
   onResetAll,
@@ -35,6 +46,22 @@ export default function ControlsPanel({
 }: ControlsPanelProps) {
   return (
     <section className="controls-panel">
+      <label className="control">
+        <span>Match type</span>
+        <select
+          value={matchType}
+          onChange={(event) =>
+            onMatchTypeChange(event.target.value as MatchType)
+          }
+        >
+          {matchTypeOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <label className="control">
         <span>Number of players</span>
         <input
@@ -70,6 +97,17 @@ export default function ControlsPanel({
           onChange={(event) =>
             onCourtCountChange(Number(event.target.value) || 1)
           }
+        />
+      </label>
+
+      <label className="control">
+        <span>Court numbers (optional)</span>
+        <input
+          type="text"
+          inputMode="numeric"
+          placeholder="e.g. 3, 6"
+          value={courtNumbers}
+          onChange={(event) => onCourtNumbersChange(event.target.value)}
         />
       </label>
 
