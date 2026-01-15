@@ -21,7 +21,12 @@ import type {
   PlayerStat,
   Schedule,
 } from "../interfaces";
-import { getCombinations, pairKey, randomId } from "../utilities";
+import {
+  getCombinations,
+  pairKey,
+  randomId,
+  shortenName,
+} from "../utilities";
 
 function pickNextColor(players: PlayerProfile[], index: number) {
   const used = new Set(players.map((player) => player.color).filter(Boolean));
@@ -855,7 +860,7 @@ export default function MatchBuilderPage() {
                         backgroundColor: player.color || "transparent",
                       }}
                     />
-                    {player.name}
+                    {shortenName(player.name)}
                   </span>
                   <span className="stat-value">
                     {player.wins}W · {player.losses}L
@@ -978,7 +983,7 @@ export default function MatchBuilderPage() {
                         }}
                       />
                       <span className="fullscreen-player-name">
-                        {player.name}
+                        {shortenName(player.name)}
                       </span>
                       <span className="fullscreen-player-wins">
                         {player.wins}W

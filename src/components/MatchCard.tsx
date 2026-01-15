@@ -1,4 +1,5 @@
 import type { MatchCardProps } from "../interfaces";
+import { shortenName } from "../utilities";
 
 export default function MatchCard({
   courtIndex,
@@ -16,6 +17,8 @@ export default function MatchCard({
     }
     onSelectWinner(winner === team ? null : team);
   };
+
+  const maxNameLength = size === "compact" ? 10 : 12;
 
   return (
     <article
@@ -45,15 +48,18 @@ export default function MatchCard({
                 className="player-dot"
                 style={{ backgroundColor: teamA[0].color }}
               />
-              <span className="player-name">{teamA[0].name}</span>
+              <span className="player-name">
+                {shortenName(teamA[0].name, maxNameLength)}
+              </span>
             </span>
-            <span className="team-separator">|</span>
             <span className="player-chip">
               <span
                 className="player-dot"
                 style={{ backgroundColor: teamA[1].color }}
               />
-              <span className="player-name">{teamA[1].name}</span>
+              <span className="player-name">
+                {shortenName(teamA[1].name, maxNameLength)}
+              </span>
             </span>
           </span>
         </button>
@@ -78,15 +84,18 @@ export default function MatchCard({
                 className="player-dot"
                 style={{ backgroundColor: teamB[0].color }}
               />
-              <span className="player-name">{teamB[0].name}</span>
+              <span className="player-name">
+                {shortenName(teamB[0].name, maxNameLength)}
+              </span>
             </span>
-            <span className="team-separator">|</span>
             <span className="player-chip">
               <span
                 className="player-dot"
                 style={{ backgroundColor: teamB[1].color }}
               />
-              <span className="player-name">{teamB[1].name}</span>
+              <span className="player-name">
+                {shortenName(teamB[1].name, maxNameLength)}
+              </span>
             </span>
           </span>
         </button>
