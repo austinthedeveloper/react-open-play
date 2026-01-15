@@ -1,0 +1,18 @@
+@layer components {
+  .builder-shell {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .builder-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .builder-grid {
+    grid-template-columns: 1fr;
+  }
+}
