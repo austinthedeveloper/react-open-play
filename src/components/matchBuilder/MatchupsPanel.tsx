@@ -112,8 +112,13 @@ export default function MatchupsPanel({
       ) : (
         <div className="matches-list">
           {roundsToRender.map(({ roundMatches, roundIndex }) => (
-            <div key={`round-${roundIndex}`} className="round-block">
-              <div className="round-header">Round {roundIndex + 1}</div>
+            <div
+              key={`round-${roundIndex}`}
+              className={!isCompactView ? "round-block" : undefined}
+            >
+              {!isCompactView ? (
+                <div className="round-header">Round {roundIndex + 1}</div>
+              ) : null}
               <div className="round-courts">
                 {roundMatches.map((match, matchIndex) => (
                   <MatchCard
