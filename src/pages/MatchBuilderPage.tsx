@@ -204,8 +204,6 @@ function buildStats(
   matches: MatchCardType[],
   matchResults: Record<string, MatchWinner>
 ) {
-  console.log("asldkfj", fasfasfsdf);
-
   const playCounts = new Map(players.map((player) => [player.id, 0]));
   const winCounts = new Map(players.map((player) => [player.id, 0]));
   const lossCounts = new Map(players.map((player) => [player.id, 0]));
