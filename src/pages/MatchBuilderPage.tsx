@@ -3,8 +3,10 @@ import {
   DEFAULT_COURTS,
   DEFAULT_MATCHES,
   DEFAULT_PLAYERS,
+  DEFAULT_MATCH_TYPE,
   MAX_MATCHES,
   MAX_PLAYERS,
+  MATCH_TYPES,
   PLAYER_COLORS,
   STORAGE_KEY,
 } from "../data";
@@ -12,6 +14,7 @@ import type {
   GenderOption,
   MatchCard as MatchCardType,
   MatchTeam,
+  MatchType,
   MatchWinner,
   PlayerProfile,
   Schedule,
@@ -32,12 +35,43 @@ import RosterPanel from "../components/matchBuilder/RosterPanel";
 import StatsPanel from "../components/matchBuilder/StatsPanel";
 import "./MatchBuilderPage.css";
 
+const parseCourtNumbers = (value: string) => {
+  const numbers: number[] = [];
+  const seen = new Set<number>();
+  const tokens = value.split(/[^0-9]+/);
+  for (const token of tokens) {
+    if (!token) {
+      continue;
+    }
+    const parsed = Number(token);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      continue;
+    }
+    const normalized = Math.floor(parsed);
+    if (seen.has(normalized)) {
+      continue;
+    }
+    seen.add(normalized);
+    numbers.push(normalized);
+  }
+  return numbers;
+};
+
+const formatCourtNumbers = (values: number[]) => values.join(", ");
+
+const resolveMatchTypeLabel = (type: MatchType) =>
+  MATCH_TYPES.find((option) => option.value === type)?.label ?? "Round Robin";
+
 export default function MatchBuilderPage() {
   const [players, setPlayers] = useState<PlayerProfile[]>(() =>
     buildDefaultPlayers(DEFAULT_PLAYERS)
   );
+  const [matchType, setMatchType] =
+    useState<MatchType>(DEFAULT_MATCH_TYPE);
   const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
   const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
+  const [courtNumbers, setCourtNumbers] = useState<number[]>([]);
+  const [courtNumbersText, setCourtNumbersText] = useState("");
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [matchResults, setMatchResults] = useState<
     Record<string, MatchWinner>
@@ -76,13 +110,23 @@ export default function MatchBuilderPage() {
         return;
       }
       const parsed = JSON.parse(stored) as {
+        matchType?: MatchType;
         players?: PlayerProfile[];
         numMatches?: number;
         numCourts?: number;
+        courtNumbers?: number[] | string;
         schedule?: Schedule | null;
         matchResults?: Record<string, MatchWinner>;
         isRosterOpen?: boolean;
       };
+      if (parsed.matchType) {
+        const nextMatchType = MATCH_TYPES.some(
+          (option) => option.value === parsed.matchType
+        )
+          ? parsed.matchType
+          : DEFAULT_MATCH_TYPE;
+        setMatchType(nextMatchType);
+      }
       if (Array.isArray(parsed.players)) {
         const sanitized = parsed.players.map((player, index) => ({
           id: player.id || randomId(),
@@ -98,6 +142,18 @@ export default function MatchBuilderPage() {
       }
       if (typeof parsed.numCourts === "number") {
         setNumCourts(parsed.numCourts);
+      }
+      if (Array.isArray(parsed.courtNumbers)) {
+        const normalized = parsed.courtNumbers
+          .map((value) => Number(value))
+          .filter((value) => Number.isFinite(value) && value > 0)
+          .map((value) => Math.floor(value));
+        setCourtNumbers(normalized);
+        setCourtNumbersText(formatCourtNumbers(normalized));
+      } else if (typeof parsed.courtNumbers === "string") {
+        const normalized = parseCourtNumbers(parsed.courtNumbers);
+        setCourtNumbers(normalized);
+        setCourtNumbersText(parsed.courtNumbers);
       }
       if (parsed.schedule && Array.isArray(parsed.schedule.matches)) {
         setSchedule({ matches: parsed.schedule.matches });
@@ -125,18 +181,22 @@ export default function MatchBuilderPage() {
     window.localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
+        matchType,
         players,
         numMatches,
         numCourts,
+        courtNumbers,
         schedule,
         matchResults,
         isRosterOpen,
       })
     );
   }, [
+    matchType,
     players,
     numMatches,
     numCourts,
+    courtNumbers,
     schedule,
     matchResults,
     isRosterOpen,
@@ -150,18 +210,40 @@ export default function MatchBuilderPage() {
     setNumCourts((prev) => (prev > maxCourts ? maxCourts : prev));
   }, [maxCourts, isLoaded]);
 
+  useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+    if (courtNumbers.length <= maxCourts) {
+      return;
+    }
+    const trimmed = courtNumbers.slice(0, maxCourts);
+    setCourtNumbers(trimmed);
+    setCourtNumbersText(formatCourtNumbers(trimmed));
+  }, [courtNumbers, isLoaded, maxCourts]);
+
   const matches = schedule?.matches ?? [];
+  const activeCourtNumbers = useMemo(() => {
+    const fallback = Array.from(
+      { length: Math.max(1, numCourts) },
+      (_, index) => index + 1
+    );
+    const selected = courtNumbers.length > 0 ? courtNumbers : fallback;
+    return selected.slice(0, Math.max(1, maxCourts));
+  }, [courtNumbers, maxCourts, numCourts]);
+  const activeCourtCount = Math.max(1, activeCourtNumbers.length);
+  const matchTypeLabel = resolveMatchTypeLabel(matchType);
   const playerLookup = useMemo(() => {
     return new Map(normalizedPlayers.map((player) => [player.id, player]));
   }, [normalizedPlayers]);
   const matchRounds = useMemo(() => {
-    const perRound = Math.max(1, numCourts);
+    const perRound = Math.max(1, activeCourtCount);
     const rounds: MatchCardType[][] = [];
     for (let i = 0; i < matches.length; i += perRound) {
       rounds.push(matches.slice(i, i + perRound));
     }
     return rounds;
-  }, [matches, numCourts]);
+  }, [matches, activeCourtCount]);
   const stats = useMemo(() => {
     if (!schedule) {
       return [];
@@ -231,8 +313,11 @@ export default function MatchBuilderPage() {
 
   const resetAll = () => {
     setPlayers(buildDefaultPlayers(DEFAULT_PLAYERS));
+    setMatchType(DEFAULT_MATCH_TYPE);
     setNumMatches(DEFAULT_MATCHES);
     setNumCourts(DEFAULT_COURTS);
+    setCourtNumbers([]);
+    setCourtNumbersText("");
     setSchedule(null);
     setMatchResults({});
     setActiveRound(0);
@@ -316,15 +401,18 @@ export default function MatchBuilderPage() {
 
   return (
     <div className="builder-shell text-left">
-      <MatchBuilderHero />
+      <MatchBuilderHero matchTypeLabel={matchTypeLabel} />
 
       <ControlsPanel
+        matchType={matchType}
+        matchTypeOptions={MATCH_TYPES}
         numPlayers={numPlayers}
         numMatches={numMatches}
         numCourts={numCourts}
         maxCourts={maxCourts}
         maxPlayers={MAX_PLAYERS}
         maxMatches={MAX_MATCHES}
+        courtNumbers={courtNumbersText}
         onPlayerCountChange={handlePlayerCountChange}
         onMatchCountChange={(value) =>
           setNumMatches(Math.min(MAX_MATCHES, Math.max(1, value)))
@@ -332,6 +420,11 @@ export default function MatchBuilderPage() {
         onCourtCountChange={(value) =>
           setNumCourts(Math.min(maxCourts, Math.max(1, value)))
         }
+        onMatchTypeChange={setMatchType}
+        onCourtNumbersChange={(value) => {
+          setCourtNumbersText(value);
+          setCourtNumbers(parseCourtNumbers(value));
+        }}
         onGenerateSchedule={() => {
           if (numPlayers < 4) {
             setSchedule(null);
@@ -340,7 +433,7 @@ export default function MatchBuilderPage() {
           const matchesList = buildSchedule(
             normalizedPlayers,
             numMatches,
-            numCourts
+            activeCourtCount
           );
           setSchedule({ matches: matchesList });
           setMatchResults({});
@@ -387,6 +480,7 @@ export default function MatchBuilderPage() {
             onOpenFullscreen={openFullscreen}
             resolveTeam={resolveTeam}
             matchesCount={matches.length}
+            courtNumbers={activeCourtNumbers}
           />
 
           <StatsPanel stats={stats} />
@@ -400,6 +494,7 @@ export default function MatchBuilderPage() {
         matchRounds={matchRounds}
         matchResults={matchResults}
         statsByWins={statsByWins}
+        courtNumbers={activeCourtNumbers}
         onSelectWinner={handleSelectWinner}
         onPreviousRound={() => setActiveRound((prev) => Math.max(0, prev - 1))}
         onNextRound={() =>

@@ -3,6 +3,10 @@ export const DEFAULT_MATCHES = 6;
 export const DEFAULT_COURTS = 2;
 export const MAX_PLAYERS = 24;
 export const MAX_MATCHES = 20;
+export const MATCH_TYPES = [
+  { value: "round_robin", label: "Round Robin" },
+] as const;
+export const DEFAULT_MATCH_TYPE = MATCH_TYPES[0].value;
 
 export const TEAMMATE_WEIGHT = 5;
 export const OPPONENT_WEIGHT = 2;

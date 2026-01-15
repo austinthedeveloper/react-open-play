@@ -14,6 +14,7 @@ export type MatchupsPanelProps = {
   onOpenFullscreen: () => void;
   resolveTeam: (team: MatchTeam) => [TeamMember, TeamMember];
   matchesCount: number;
+  courtNumbers: number[];
 };
 
 export default function MatchupsPanel({
@@ -23,6 +24,7 @@ export default function MatchupsPanel({
   onOpenFullscreen,
   resolveTeam,
   matchesCount,
+  courtNumbers,
 }: MatchupsPanelProps) {
   return (
     <section className="table-panel">
@@ -48,7 +50,7 @@ export default function MatchupsPanel({
                 {roundMatches.map((match, matchIndex) => (
                   <MatchCard
                     key={match.id}
-                    courtIndex={matchIndex + 1}
+                    courtIndex={courtNumbers[matchIndex] ?? matchIndex + 1}
                     matchIndex={match.index}
                     size="compact"
                     winner={matchResults[match.id] ?? null}

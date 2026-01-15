@@ -17,6 +17,7 @@ export type FullscreenOverlayProps = {
   matchRounds: MatchCardType[][];
   matchResults: Record<string, MatchWinner>;
   statsByWins: PlayerStat[];
+  courtNumbers: number[];
   onSelectWinner: (matchId: string, winner: MatchWinner | null) => void;
   onPreviousRound: () => void;
   onNextRound: () => void;
@@ -31,6 +32,7 @@ export default function FullscreenOverlay({
   matchRounds,
   matchResults,
   statsByWins,
+  courtNumbers,
   onSelectWinner,
   onPreviousRound,
   onNextRound,
@@ -79,7 +81,7 @@ export default function FullscreenOverlay({
             {matchRounds[activeRound]?.map((match, matchIndex) => (
               <MatchCard
                 key={match.id}
-                courtIndex={matchIndex + 1}
+                courtIndex={courtNumbers[matchIndex] ?? matchIndex + 1}
                 matchIndex={match.index}
                 size="full"
                 winner={matchResults[match.id] ?? null}
