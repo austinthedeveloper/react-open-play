@@ -1,5 +1,6 @@
 import type { MatchCardProps } from "../interfaces";
 import { shortenName } from "../utilities";
+import "./MatchCard.css";
 
 export default function MatchCard({
   courtIndex,

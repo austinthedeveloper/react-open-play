@@ -1,0 +1,55 @@
+@layer components {
+  .stats-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .stat-card {
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    background: rgba(12, 17, 31, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    text-align: center;
+  }
+
+  .stat-card-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .stat-card-sub {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .stat-card-sub + .stat-card-sub {
+    margin-top: 0.35rem;
+  }
+
+  .stat-card-sub .material-icons {
+    font-size: 16px;
+  }
+
+  .stat-gender-icon--male {
+    color: rgba(76, 243, 255, 0.95);
+  }
+
+  .stat-gender-icon--female {
+    color: rgba(242, 166, 255, 0.95);
+  }
+
+  .stat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+  }
+}
