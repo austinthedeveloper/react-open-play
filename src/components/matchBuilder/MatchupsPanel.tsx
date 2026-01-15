@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import MatchCard from "../MatchCard";
 import type {
   MatchCard as MatchCardType,
@@ -26,18 +27,41 @@ export default function MatchupsPanel({
   matchesCount,
   courtNumbers,
 }: MatchupsPanelProps) {
+  const [showFullscreenButton, setShowFullscreenButton] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const updateVisibility = () => {
+      setShowFullscreenButton(
+        window.innerHeight >= 900 && window.innerWidth >= 1650
+      );
+    };
+
+    updateVisibility();
+    window.addEventListener("resize", updateVisibility);
+
+    return () => {
+      window.removeEventListener("resize", updateVisibility);
+    };
+  }, []);
+
   return (
     <section className="table-panel">
       <div className="panel-header">
         <h2 className="panel-title">Matchups</h2>
-        <button
-          type="button"
-          className="ghost-button"
-          onClick={onOpenFullscreen}
-          disabled={matchesCount === 0}
-        >
-          Fullscreen view
-        </button>
+        {showFullscreenButton ? (
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={onOpenFullscreen}
+            disabled={matchesCount === 0}
+          >
+            Fullscreen view
+          </button>
+        ) : null}
       </div>
       {matchesCount === 0 ? (
         <p className="empty-state">No matchups yet.</p>
