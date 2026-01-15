@@ -478,6 +478,15 @@ export default function MatchBuilderPage() {
             matchResults={matchResults}
             onSelectWinner={handleSelectWinner}
             onOpenFullscreen={openFullscreen}
+            activeRound={activeRound}
+            onPreviousRound={() =>
+              setActiveRound((prev) => Math.max(0, prev - 1))
+            }
+            onNextRound={() =>
+              setActiveRound((prev) =>
+                Math.min(matchRounds.length - 1, prev + 1)
+              )
+            }
             resolveTeam={resolveTeam}
             matchesCount={matches.length}
             courtNumbers={activeCourtNumbers}

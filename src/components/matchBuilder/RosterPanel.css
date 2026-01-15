@@ -117,12 +117,46 @@
 
 @media (max-width: 900px) {
   .roster-header {
-    grid-template-columns: 1fr;
-    gap: 0.35rem;
+    display: none;
   }
 
   .roster-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(56px, 80px) minmax(0, 1fr);
+    grid-template-areas:
+      "label label"
+      "name name"
+      "color gender"
+      "remove remove";
+    gap: 0.6rem;
+    padding: 0.75rem;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+  }
+
+  .roster-row:nth-child(even) {
+    background: rgba(15, 23, 42, 0.7);
+  }
+
+  .roster-label {
+    grid-area: label;
+  }
+
+  .roster-row > input[type="text"] {
+    grid-area: name;
+  }
+
+  .roster-row > .color-input {
+    grid-area: color;
+    justify-self: start;
+  }
+
+  .roster-row > .gender-toggle {
+    grid-area: gender;
+  }
+
+  .roster-row > .ghost-button {
+    grid-area: remove;
   }
 
   .roster-actions {

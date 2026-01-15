@@ -24,4 +24,25 @@
     display: grid;
     gap: 1rem;
   }
+
+  .round-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .round-nav-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .round-nav-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
 }

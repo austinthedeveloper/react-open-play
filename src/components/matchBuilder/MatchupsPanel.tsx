@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MatchCard from "../MatchCard";
 import type {
   MatchCard as MatchCardType,
@@ -13,6 +13,9 @@ export type MatchupsPanelProps = {
   matchResults: Record<string, MatchWinner>;
   onSelectWinner: (matchId: string, winner: MatchWinner | null) => void;
   onOpenFullscreen: () => void;
+  activeRound: number;
+  onPreviousRound: () => void;
+  onNextRound: () => void;
   resolveTeam: (team: MatchTeam) => [TeamMember, TeamMember];
   matchesCount: number;
   courtNumbers: number[];
@@ -23,11 +26,14 @@ export default function MatchupsPanel({
   matchResults,
   onSelectWinner,
   onOpenFullscreen,
+  activeRound,
+  onPreviousRound,
+  onNextRound,
   resolveTeam,
   matchesCount,
   courtNumbers,
 }: MatchupsPanelProps) {
-  const [showFullscreenButton, setShowFullscreenButton] = useState(false);
+  const [isCompactView, setIsCompactView] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -35,9 +41,7 @@ export default function MatchupsPanel({
     }
 
     const updateVisibility = () => {
-      setShowFullscreenButton(
-        window.innerHeight >= 900 && window.innerWidth >= 1650
-      );
+      setIsCompactView(window.innerHeight < 900 || window.innerWidth < 1650);
     };
 
     updateVisibility();
@@ -48,11 +52,26 @@ export default function MatchupsPanel({
     };
   }, []);
 
+  const roundsToRender = useMemo(() => {
+    if (!isCompactView) {
+      return matchRounds.map((roundMatches, roundIndex) => ({
+        roundMatches,
+        roundIndex,
+      }));
+    }
+    return [
+      {
+        roundMatches: matchRounds[activeRound] ?? [],
+        roundIndex: activeRound,
+      },
+    ];
+  }, [activeRound, isCompactView, matchRounds]);
+
   return (
     <section className="table-panel">
       <div className="panel-header">
         <h2 className="panel-title">Matchups</h2>
-        {showFullscreenButton ? (
+        {!isCompactView ? (
           <button
             type="button"
             className="ghost-button"
@@ -63,13 +82,43 @@ export default function MatchupsPanel({
           </button>
         ) : null}
       </div>
+      {isCompactView && matchesCount > 0 ? (
+        <div className="round-nav">
+          <div className="round-nav-label">
+            Round {matchRounds.length === 0 ? 0 : activeRound + 1}
+          </div>
+          <div className="round-nav-actions">
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={onPreviousRound}
+              disabled={activeRound <= 0}
+            >
+              Previous round
+            </button>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={onNextRound}
+              disabled={activeRound >= matchRounds.length - 1}
+            >
+              Next round
+            </button>
+          </div>
+        </div>
+      ) : null}
       {matchesCount === 0 ? (
         <p className="empty-state">No matchups yet.</p>
       ) : (
         <div className="matches-list">
-          {matchRounds.map((roundMatches, roundIndex) => (
-            <div key={`round-${roundIndex}`} className="round-block">
-              <div className="round-header">Round {roundIndex + 1}</div>
+          {roundsToRender.map(({ roundMatches, roundIndex }) => (
+            <div
+              key={`round-${roundIndex}`}
+              className={!isCompactView ? "round-block" : undefined}
+            >
+              {!isCompactView ? (
+                <div className="round-header">Round {roundIndex + 1}</div>
+              ) : null}
               <div className="round-courts">
                 {roundMatches.map((match, matchIndex) => (
                   <MatchCard
