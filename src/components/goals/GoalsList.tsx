@@ -1,17 +1,14 @@
-import type { Dispatch, SetStateAction } from "react";
 import type { GoalResult, MatchGoal } from "../../interfaces";
+import { goalsActions } from "../../store/goalsSlice";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import "./GoalsList.css";
 
-type GoalsListProps = {
-  matches: MatchGoal[];
-  setMatches: Dispatch<SetStateAction<MatchGoal[]>>;
-};
+export default function GoalsList() {
+  const dispatch = useAppDispatch();
+  const matches = useAppSelector((state) => state.goals.matches);
 
-export default function GoalsList({ matches, setMatches }: GoalsListProps) {
   const updateMatch = (id: string, patch: Partial<MatchGoal>) => {
-    setMatches((prev) =>
-      prev.map((match) => (match.id === id ? { ...match, ...patch } : match))
-    );
+    dispatch(goalsActions.updateMatch({ id, patch }));
   };
 
   const resultLabels: Record<GoalResult, string> = {

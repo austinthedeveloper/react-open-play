@@ -7,8 +7,6 @@ import {
   MAX_MATCHES,
   MAX_PLAYERS,
   MATCH_TYPES,
-  PLAYER_COLORS,
-  STORAGE_KEY,
 } from "../data";
 import type {
   GenderOption,
@@ -17,7 +15,6 @@ import type {
   MatchType,
   MatchWinner,
   PlayerProfile,
-  Schedule,
   TeamMember,
 } from "../interfaces";
 import {
@@ -27,6 +24,12 @@ import {
   pickNextColor,
   randomId,
 } from "../utilities";
+import { matchBuilderActions } from "../store/matchBuilderSlice";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import {
+  formatCourtNumbers,
+  parseCourtNumbers,
+} from "../store/matchBuilderStorage";
 import ControlsPanel from "../components/matchBuilder/ControlsPanel";
 import FullscreenOverlay from "../components/matchBuilder/FullscreenOverlay";
 import MatchBuilderHero from "../components/matchBuilder/MatchBuilderHero";
@@ -35,49 +38,28 @@ import RosterPanel from "../components/matchBuilder/RosterPanel";
 import StatsPanel from "../components/matchBuilder/StatsPanel";
 import "./MatchBuilderPage.css";
 
-const parseCourtNumbers = (value: string) => {
-  const numbers: number[] = [];
-  const seen = new Set<number>();
-  const tokens = value.split(/[^0-9]+/);
-  for (const token of tokens) {
-    if (!token) {
-      continue;
-    }
-    const parsed = Number(token);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      continue;
-    }
-    const normalized = Math.floor(parsed);
-    if (seen.has(normalized)) {
-      continue;
-    }
-    seen.add(normalized);
-    numbers.push(normalized);
-  }
-  return numbers;
-};
-
-const formatCourtNumbers = (values: number[]) => values.join(", ");
-
 const resolveMatchTypeLabel = (type: MatchType) =>
   MATCH_TYPES.find((option) => option.value === type)?.label ?? "Round Robin";
 
 export default function MatchBuilderPage() {
-  const [players, setPlayers] = useState<PlayerProfile[]>(() =>
-    buildDefaultPlayers(DEFAULT_PLAYERS)
+  const dispatch = useAppDispatch();
+  const players = useAppSelector((state) => state.matchBuilder.players);
+  const matchType = useAppSelector((state) => state.matchBuilder.matchType);
+  const numMatches = useAppSelector((state) => state.matchBuilder.numMatches);
+  const numCourts = useAppSelector((state) => state.matchBuilder.numCourts);
+  const courtNumbers = useAppSelector(
+    (state) => state.matchBuilder.courtNumbers
   );
-  const [matchType, setMatchType] =
-    useState<MatchType>(DEFAULT_MATCH_TYPE);
-  const [numMatches, setNumMatches] = useState(DEFAULT_MATCHES);
-  const [numCourts, setNumCourts] = useState(DEFAULT_COURTS);
-  const [courtNumbers, setCourtNumbers] = useState<number[]>([]);
-  const [courtNumbersText, setCourtNumbersText] = useState("");
-  const [schedule, setSchedule] = useState<Schedule | null>(null);
-  const [matchResults, setMatchResults] = useState<
-    Record<string, MatchWinner>
-  >({});
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isRosterOpen, setIsRosterOpen] = useState(true);
+  const courtNumbersText = useAppSelector(
+    (state) => state.matchBuilder.courtNumbersText
+  );
+  const schedule = useAppSelector((state) => state.matchBuilder.schedule);
+  const matchResults = useAppSelector(
+    (state) => state.matchBuilder.matchResults
+  );
+  const isRosterOpen = useAppSelector(
+    (state) => state.matchBuilder.isRosterOpen
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRound, setActiveRound] = useState(0);
   const fullscreenRef = useRef<HTMLDivElement | null>(null);
@@ -101,126 +83,21 @@ export default function MatchBuilderPage() {
   }, [players]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
+    if (numCourts > maxCourts) {
+      dispatch(matchBuilderActions.setNumCourts(maxCourts));
     }
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (!stored) {
-        return;
-      }
-      const parsed = JSON.parse(stored) as {
-        matchType?: MatchType;
-        players?: PlayerProfile[];
-        numMatches?: number;
-        numCourts?: number;
-        courtNumbers?: number[] | string;
-        schedule?: Schedule | null;
-        matchResults?: Record<string, MatchWinner>;
-        isRosterOpen?: boolean;
-      };
-      if (parsed.matchType) {
-        const nextMatchType = MATCH_TYPES.some(
-          (option) => option.value === parsed.matchType
-        )
-          ? parsed.matchType
-          : DEFAULT_MATCH_TYPE;
-        setMatchType(nextMatchType);
-      }
-      if (Array.isArray(parsed.players)) {
-        const sanitized = parsed.players.map((player, index) => ({
-          id: player.id || randomId(),
-          name: player.name || `Player ${index + 1}`,
-          color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
-          gender: (player.gender ?? "") as GenderOption,
-        }));
-
-        setPlayers(sanitized);
-      }
-      if (typeof parsed.numMatches === "number") {
-        setNumMatches(parsed.numMatches);
-      }
-      if (typeof parsed.numCourts === "number") {
-        setNumCourts(parsed.numCourts);
-      }
-      if (Array.isArray(parsed.courtNumbers)) {
-        const normalized = parsed.courtNumbers
-          .map((value) => Number(value))
-          .filter((value) => Number.isFinite(value) && value > 0)
-          .map((value) => Math.floor(value));
-        setCourtNumbers(normalized);
-        setCourtNumbersText(formatCourtNumbers(normalized));
-      } else if (typeof parsed.courtNumbers === "string") {
-        const normalized = parseCourtNumbers(parsed.courtNumbers);
-        setCourtNumbers(normalized);
-        setCourtNumbersText(parsed.courtNumbers);
-      }
-      if (parsed.schedule && Array.isArray(parsed.schedule.matches)) {
-        setSchedule({ matches: parsed.schedule.matches });
-      }
-      if (parsed.matchResults && typeof parsed.matchResults === "object") {
-        setMatchResults(parsed.matchResults);
-      }
-      if (typeof parsed.isRosterOpen === "boolean") {
-        setIsRosterOpen(parsed.isRosterOpen);
-      }
-    } catch {
-      // ignore storage parse errors
-    } finally {
-      setIsLoaded(true);
-    }
-  }, []);
+  }, [dispatch, maxCourts, numCourts]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    if (!isLoaded) {
-      return;
-    }
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        matchType,
-        players,
-        numMatches,
-        numCourts,
-        courtNumbers,
-        schedule,
-        matchResults,
-        isRosterOpen,
-      })
-    );
-  }, [
-    matchType,
-    players,
-    numMatches,
-    numCourts,
-    courtNumbers,
-    schedule,
-    matchResults,
-    isRosterOpen,
-    isLoaded,
-  ]);
-
-  useEffect(() => {
-    if (!isLoaded) {
-      return;
-    }
-    setNumCourts((prev) => (prev > maxCourts ? maxCourts : prev));
-  }, [maxCourts, isLoaded]);
-
-  useEffect(() => {
-    if (!isLoaded) {
-      return;
-    }
     if (courtNumbers.length <= maxCourts) {
       return;
     }
     const trimmed = courtNumbers.slice(0, maxCourts);
-    setCourtNumbers(trimmed);
-    setCourtNumbersText(formatCourtNumbers(trimmed));
-  }, [courtNumbers, isLoaded, maxCourts]);
+    dispatch(matchBuilderActions.setCourtNumbers(trimmed));
+    dispatch(
+      matchBuilderActions.setCourtNumbersText(formatCourtNumbers(trimmed))
+    );
+  }, [courtNumbers, dispatch, maxCourts]);
 
   const matches = schedule?.matches ?? [];
   const activeCourtNumbers = useMemo(() => {
@@ -268,27 +145,26 @@ export default function MatchBuilderPage() {
   ];
 
   useEffect(() => {
-    if (!isLoaded) {
-      return;
-    }
     if (!schedule) {
-      setMatchResults((prev) => (Object.keys(prev).length > 0 ? {} : prev));
+      if (Object.keys(matchResults).length > 0) {
+        dispatch(matchBuilderActions.setMatchResults({}));
+      }
       return;
     }
     const matchIds = new Set(schedule.matches.map((match) => match.id));
-    setMatchResults((prev) => {
-      let changed = false;
-      const next: Record<string, MatchWinner> = {};
-      for (const [matchId, winner] of Object.entries(prev)) {
-        if (matchIds.has(matchId)) {
-          next[matchId] = winner;
-        } else {
-          changed = true;
-        }
+    let changed = false;
+    const next: Record<string, MatchWinner> = {};
+    for (const [matchId, winner] of Object.entries(matchResults)) {
+      if (matchIds.has(matchId)) {
+        next[matchId] = winner;
+      } else {
+        changed = true;
       }
-      return changed ? next : prev;
-    });
-  }, [isLoaded, schedule]);
+    }
+    if (changed) {
+      dispatch(matchBuilderActions.setMatchResults(next));
+    }
+  }, [dispatch, matchResults, schedule]);
 
   useEffect(() => {
     if (activeRound > matchRounds.length - 1) {
@@ -312,90 +188,96 @@ export default function MatchBuilderPage() {
   };
 
   const resetAll = () => {
-    setPlayers(buildDefaultPlayers(DEFAULT_PLAYERS));
-    setMatchType(DEFAULT_MATCH_TYPE);
-    setNumMatches(DEFAULT_MATCHES);
-    setNumCourts(DEFAULT_COURTS);
-    setCourtNumbers([]);
-    setCourtNumbersText("");
-    setSchedule(null);
-    setMatchResults({});
+    dispatch(matchBuilderActions.setPlayers(buildDefaultPlayers(DEFAULT_PLAYERS)));
+    dispatch(matchBuilderActions.setMatchType(DEFAULT_MATCH_TYPE));
+    dispatch(matchBuilderActions.setNumMatches(DEFAULT_MATCHES));
+    dispatch(matchBuilderActions.setNumCourts(DEFAULT_COURTS));
+    dispatch(matchBuilderActions.setCourtNumbers([]));
+    dispatch(matchBuilderActions.setCourtNumbersText(""));
+    dispatch(matchBuilderActions.setSchedule(null));
+    dispatch(matchBuilderActions.setMatchResults({}));
+    dispatch(matchBuilderActions.setIsRosterOpen(true));
     setActiveRound(0);
     closeFullscreen();
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
   };
 
   const handleSelectWinner = (matchId: string, winner: MatchWinner | null) => {
-    setMatchResults((prev) => {
-      if (!winner) {
-        if (!prev[matchId]) {
-          return prev;
-        }
-        const next = { ...prev };
-        delete next[matchId];
-        return next;
+    if (!winner) {
+      if (!matchResults[matchId]) {
+        return;
       }
-      return {
-        ...prev,
+      const next = { ...matchResults };
+      delete next[matchId];
+      dispatch(matchBuilderActions.setMatchResults(next));
+      return;
+    }
+    dispatch(
+      matchBuilderActions.setMatchResults({
+        ...matchResults,
         [matchId]: winner,
-      };
-    });
+      })
+    );
   };
 
   const handlePlayerCountChange = (nextCount: number) => {
-    setPlayers((prev) => {
-      const clamped = Math.min(
-        MAX_PLAYERS,
-        Math.max(4, Number(nextCount) || 4)
-      );
-      if (clamped === prev.length) {
-        return prev;
-      }
-      if (clamped < prev.length) {
-        return prev.slice(0, clamped);
-      }
-      const nextPlayers = [...prev];
-      for (let i = prev.length; i < clamped; i += 1) {
-        nextPlayers.push({
-          id: randomId(),
-          name: `Player ${i + 1}`,
-          color: pickNextColor(nextPlayers, i),
-          gender: "" as GenderOption,
-        });
-      }
-      return nextPlayers;
-    });
+    const clamped = Math.min(
+      MAX_PLAYERS,
+      Math.max(4, Number(nextCount) || 4)
+    );
+    if (clamped === players.length) {
+      return;
+    }
+    if (clamped < players.length) {
+      dispatch(matchBuilderActions.setPlayers(players.slice(0, clamped)));
+      return;
+    }
+    const nextPlayers = [...players];
+    for (let i = players.length; i < clamped; i += 1) {
+      nextPlayers.push({
+        id: randomId(),
+        name: `Player ${i + 1}`,
+        color: pickNextColor(nextPlayers, i),
+        gender: "" as GenderOption,
+      });
+    }
+    dispatch(matchBuilderActions.setPlayers(nextPlayers));
   };
 
   const updatePlayer = (index: number, updates: Partial<PlayerProfile>) => {
-    setPlayers((prev) =>
-      prev.map((player, idx) =>
-        idx === index ? { ...player, ...updates } : player
+    dispatch(
+      matchBuilderActions.setPlayers(
+        players.map((player, idx) =>
+          idx === index ? { ...player, ...updates } : player
+        )
       )
     );
   };
 
   const removePlayer = (index: number) => {
-    setPlayers((prev) =>
-      prev.length <= 4 ? prev : prev.filter((_, idx) => idx !== index)
+    if (players.length <= 4) {
+      return;
+    }
+    dispatch(
+      matchBuilderActions.setPlayers(
+        players.filter((_, idx) => idx !== index)
+      )
     );
   };
 
   const addPlayer = () => {
-    setPlayers((prev) =>
-      prev.length >= MAX_PLAYERS
-        ? prev
-        : [
-            ...prev,
-            {
-              id: randomId(),
-              name: `Player ${prev.length + 1}`,
-              color: pickNextColor(prev, prev.length),
-              gender: "" as GenderOption,
-            },
-          ]
+    if (players.length >= MAX_PLAYERS) {
+      return;
+    }
+    dispatch(
+      matchBuilderActions.setPlayers([
+        ...players,
+        {
+          id: randomId(),
+          name: `Player ${players.length + 1}`,
+          color: pickNextColor(players, players.length),
+          gender: "" as GenderOption,
+        },
+      ])
     );
   };
 
@@ -415,19 +297,29 @@ export default function MatchBuilderPage() {
         courtNumbers={courtNumbersText}
         onPlayerCountChange={handlePlayerCountChange}
         onMatchCountChange={(value) =>
-          setNumMatches(Math.min(MAX_MATCHES, Math.max(1, value)))
+          dispatch(
+            matchBuilderActions.setNumMatches(
+              Math.min(MAX_MATCHES, Math.max(1, value))
+            )
+          )
         }
         onCourtCountChange={(value) =>
-          setNumCourts(Math.min(maxCourts, Math.max(1, value)))
+          dispatch(
+            matchBuilderActions.setNumCourts(
+              Math.min(maxCourts, Math.max(1, value))
+            )
+          )
         }
-        onMatchTypeChange={setMatchType}
+        onMatchTypeChange={(value) =>
+          dispatch(matchBuilderActions.setMatchType(value))
+        }
         onCourtNumbersChange={(value) => {
-          setCourtNumbersText(value);
-          setCourtNumbers(parseCourtNumbers(value));
+          dispatch(matchBuilderActions.setCourtNumbersText(value));
+          dispatch(matchBuilderActions.setCourtNumbers(parseCourtNumbers(value)));
         }}
         onGenerateSchedule={() => {
           if (numPlayers < 4) {
-            setSchedule(null);
+            dispatch(matchBuilderActions.setSchedule(null));
             return;
           }
           const matchesList = buildSchedule(
@@ -435,12 +327,12 @@ export default function MatchBuilderPage() {
             numMatches,
             activeCourtCount
           );
-          setSchedule({ matches: matchesList });
-          setMatchResults({});
+          dispatch(matchBuilderActions.setSchedule({ matches: matchesList }));
+          dispatch(matchBuilderActions.setMatchResults({}));
         }}
         onClearSchedule={() => {
-          setSchedule(null);
-          setMatchResults({});
+          dispatch(matchBuilderActions.setSchedule(null));
+          dispatch(matchBuilderActions.setMatchResults({}));
         }}
         onResetAll={resetAll}
         canClearSchedule={Boolean(schedule && schedule.matches.length > 0)}
@@ -449,7 +341,9 @@ export default function MatchBuilderPage() {
       <RosterPanel
         players={players}
         isOpen={isRosterOpen}
-        onToggleOpen={() => setIsRosterOpen((prev) => !prev)}
+        onToggleOpen={() =>
+          dispatch(matchBuilderActions.setIsRosterOpen(!isRosterOpen))
+        }
         onPlayerNameChange={(index, name) =>
           updatePlayer(index, { name })
         }
