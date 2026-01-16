@@ -14,6 +14,13 @@ export default function GoalsList({ matches, setMatches }: GoalsListProps) {
     );
   };
 
+  const resultLabels: Record<GoalResult, string> = {
+    pending: "Pending",
+    yes: "Yes",
+    partial: "Partially",
+    no: "No",
+  };
+
   return (
     <main className="table-panel">
       {matches.length === 0 ? (
@@ -21,57 +28,56 @@ export default function GoalsList({ matches, setMatches }: GoalsListProps) {
           No matches yet. Click &quot;Generate goals&quot;.
         </p>
       ) : (
-        <table className="goals-list">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Goal</th>
-              <th>Played?</th>
-              <th>Result</th>
-            </tr>
-          </thead>
-          <tbody>
-            {matches.map((match) => (
-              <tr
-                key={match.id}
-                className={match.played ? "row-played" : "row-default"}
-              >
-                <td className="index-cell">{match.index}</td>
-                <td>{match.goalText}</td>
-                <td>
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={match.played}
-                      onChange={(e) =>
-                        updateMatch(match.id, {
-                          played: e.target.checked,
-                        })
-                      }
-                    />
-                    Played
-                  </label>
-                </td>
-                <td>
-                  <select
-                    value={match.result}
+        <div className="goals-list">
+          {matches.map((match) => (
+            <article
+              key={match.id}
+              className={`goals-card ${match.played ? "is-played" : ""}`.trim()}
+            >
+              <header className="goals-card__header">
+                <span className="goals-card__index">
+                  Match {match.index}
+                </span>
+                <span
+                  className={`goals-card__status ${
+                    match.result !== "pending" ? "is-set" : ""
+                  }`.trim()}
+                >
+                  {resultLabels[match.result]}
+                </span>
+              </header>
+              <p className="goals-card__goal">{match.goalText}</p>
+              <div className="goals-card__controls">
+                <label className="goals-card__toggle">
+                  <input
+                    type="checkbox"
+                    checked={match.played}
                     onChange={(e) =>
                       updateMatch(match.id, {
-                        result: e.target.value as GoalResult,
-                        played: true,
+                        played: e.target.checked,
                       })
                     }
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="yes">Yes</option>
-                    <option value="partial">Partially</option>
-                    <option value="no">No</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  />
+                  Played
+                </label>
+                <select
+                  value={match.result}
+                  onChange={(e) =>
+                    updateMatch(match.id, {
+                      result: e.target.value as GoalResult,
+                      played: true,
+                    })
+                  }
+                >
+                  <option value="pending">Pending</option>
+                  <option value="yes">Yes</option>
+                  <option value="partial">Partially</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+            </article>
+          ))}
+        </div>
       )}
     </main>
   );
