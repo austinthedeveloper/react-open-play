@@ -253,38 +253,6 @@
     box-shadow: 0 20px 60px rgba(15, 23, 42, 0.55);
   }
 
-  .goals-table {
-    width: 100%;
-    font-size: 0.95rem;
-  }
-
-  .goals-table th,
-  .goals-table td {
-    padding: 0.85rem 0.9rem;
-    text-align: left;
-    vertical-align: top;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
-  }
-
-  .goals-table tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  .index-cell {
-    width: 52px;
-    color: rgba(148, 163, 184, 0.8);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .row-default {
-    color: var(--text);
-  }
-
-  .row-played {
-    background: linear-gradient(90deg, rgba(76, 243, 255, 0.12), rgba(21, 27, 43, 0.2));
-    color: rgba(226, 232, 240, 0.9);
-  }
-
   .empty-state {
     color: var(--muted);
     text-align: center;
