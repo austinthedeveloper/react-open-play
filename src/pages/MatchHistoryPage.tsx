@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { matchBuilderActions } from "../store/matchBuilderSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import "./MatchHistoryPage.css";
+import { getMatchType } from "../utilities";
 
 const formatTimestamp = (value: number) =>
   new Date(value).toLocaleString([], {
@@ -39,6 +40,7 @@ export default function MatchHistoryPage() {
             {orderedHistory.map((session, index) => {
               const matchesCount = session.schedule?.matches.length ?? 0;
               const courtsCount = session.numCourts;
+              const matchType = getMatchType(session.matchType);
 
               const isActive = session.id === activeMatchId;
               return (
@@ -48,7 +50,7 @@ export default function MatchHistoryPage() {
                 >
                   <div className="history-card__meta">
                     <div className="history-card__title">
-                      Match Set {index + 1}
+                      Match Set {index + 1}: {matchType}
                     </div>
                     <div className="history-card__details">
                       {formatTimestamp(session.createdAt)} -{" "}
