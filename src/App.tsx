@@ -40,6 +40,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<GoalsPage />} />
         <Route path="/match-builder" element={<MatchBuilderPage />} />
+        <Route path="/match-builder/:id" element={<MatchBuilderPage />} />
         <Route path="/match-history" element={<MatchHistoryPage />} />
       </Routes>
     </div>

@@ -60,12 +60,7 @@ export default function MatchHistoryPage() {
                     <button
                       type="button"
                       className="ghost-button"
-                      onClick={() => {
-                        dispatch(
-                          matchBuilderActions.loadMatchSession(session.id)
-                        );
-                        navigate("/match-builder");
-                      }}
+                      onClick={() => navigate(`/match-builder/${session.id}`)}
                     >
                       Load match
                     </button>

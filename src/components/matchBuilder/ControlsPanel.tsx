@@ -24,6 +24,7 @@ export type ControlsPanelProps = {
   onResetAll: () => void;
   canClearSchedule: boolean;
   actionsSlot?: ReactNode;
+  showActions?: boolean;
 };
 
 export default function ControlsPanel({
@@ -46,6 +47,7 @@ export default function ControlsPanel({
   onResetAll,
   canClearSchedule,
   actionsSlot,
+  showActions = true,
 }: ControlsPanelProps) {
   return (
     <section className="controls-panel">
@@ -114,23 +116,29 @@ export default function ControlsPanel({
         />
       </label>
 
-      <div className="control-actions">
-        <button type="button" onClick={onGenerateSchedule} className="glow-button">
-          Generate schedule
-        </button>
-        <button
-          type="button"
-          onClick={onClearSchedule}
-          className="ghost-button"
-          disabled={!canClearSchedule}
-        >
-          Clear schedule
-        </button>
-        <button type="button" onClick={onResetAll} className="ghost-button">
-          Reset all
-        </button>
-        {actionsSlot}
-      </div>
+      {showActions && (
+        <div className="control-actions">
+          <button
+            type="button"
+            onClick={onGenerateSchedule}
+            className="glow-button"
+          >
+            Generate schedule
+          </button>
+          <button
+            type="button"
+            onClick={onClearSchedule}
+            className="ghost-button"
+            disabled={!canClearSchedule}
+          >
+            Clear schedule
+          </button>
+          <button type="button" onClick={onResetAll} className="ghost-button">
+            Reset all
+          </button>
+          {actionsSlot}
+        </div>
+      )}
     </section>
   );
 }

@@ -7,7 +7,6 @@ import type {
   PlayerProfile,
   Schedule,
 } from "../interfaces";
-import { randomId } from "../utilities";
 import { formatCourtNumbers, loadMatchBuilderState } from "./matchBuilderStorage";
 
 const syncActiveSession = (state: ReturnType<typeof loadMatchBuilderState>) => {
@@ -67,8 +66,11 @@ const matchBuilderSlice = createSlice({
     setIsRosterOpen(state, action: PayloadAction<boolean>) {
       state.isRosterOpen = action.payload;
     },
-    createMatchSession(state, action: PayloadAction<{ schedule: Schedule }>) {
-      const id = randomId();
+    createMatchSession(
+      state,
+      action: PayloadAction<{ id: string; schedule: Schedule }>
+    ) {
+      const { id, schedule } = action.payload;
       const newSession: MatchSession = {
         id,
         createdAt: Date.now(),
@@ -77,12 +79,12 @@ const matchBuilderSlice = createSlice({
         numMatches: state.numMatches,
         numCourts: state.numCourts,
         courtNumbers: state.courtNumbers,
-        schedule: action.payload.schedule,
+        schedule,
         matchResults: {},
       };
       state.matchHistory = [newSession, ...state.matchHistory];
       state.activeMatchId = id;
-      state.schedule = action.payload.schedule;
+      state.schedule = schedule;
       state.matchResults = {};
     },
     loadMatchSession(state, action: PayloadAction<string>) {

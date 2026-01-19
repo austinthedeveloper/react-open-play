@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   DEFAULT_COURTS,
   DEFAULT_MATCHES,
@@ -43,6 +44,8 @@ const resolveMatchTypeLabel = (type: MatchType) =>
 
 export default function MatchBuilderPage() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { id: matchId } = useParams();
   const players = useAppSelector((state) => state.matchBuilder.players);
   const matchType = useAppSelector((state) => state.matchBuilder.matchType);
   const numMatches = useAppSelector((state) => state.matchBuilder.numMatches);
@@ -60,9 +63,13 @@ export default function MatchBuilderPage() {
   const isRosterOpen = useAppSelector(
     (state) => state.matchBuilder.isRosterOpen
   );
+  const activeMatchId = useAppSelector(
+    (state) => state.matchBuilder.activeMatchId
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRound, setActiveRound] = useState(0);
   const fullscreenRef = useRef<HTMLDivElement | null>(null);
+  const isSessionView = Boolean(matchId);
 
   const numPlayers = players.length;
   const maxCourts = useMemo(
@@ -180,14 +187,14 @@ export default function MatchBuilderPage() {
     }
   };
 
-  const closeFullscreen = () => {
+  const closeFullscreen = useCallback(() => {
     setIsFullscreen(false);
     if (document.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen().catch(() => undefined);
     }
-  };
+  }, []);
 
-  const resetAll = () => {
+  const resetAll = useCallback(() => {
     dispatch(matchBuilderActions.clearActiveMatch());
     dispatch(matchBuilderActions.setPlayers(buildDefaultPlayers(DEFAULT_PLAYERS)));
     dispatch(matchBuilderActions.setMatchType(DEFAULT_MATCH_TYPE));
@@ -200,7 +207,17 @@ export default function MatchBuilderPage() {
     dispatch(matchBuilderActions.setIsRosterOpen(true));
     setActiveRound(0);
     closeFullscreen();
-  };
+  }, [closeFullscreen, dispatch]);
+
+  useEffect(() => {
+    if (!matchId) {
+      resetAll();
+      return;
+    }
+    if (activeMatchId !== matchId) {
+      dispatch(matchBuilderActions.loadMatchSession(matchId));
+    }
+  }, [activeMatchId, dispatch, matchId, resetAll]);
 
   const handleSelectWinner = (matchId: string, winner: MatchWinner | null) => {
     if (!winner) {
@@ -328,11 +345,14 @@ export default function MatchBuilderPage() {
             numMatches,
             activeCourtCount
           );
+          const nextId = randomId();
           dispatch(
             matchBuilderActions.createMatchSession({
+              id: nextId,
               schedule: { matches: matchesList },
             })
           );
+          navigate(`/match-builder/${nextId}`);
         }}
         onClearSchedule={() => {
           dispatch(matchBuilderActions.setSchedule(null));
@@ -340,6 +360,7 @@ export default function MatchBuilderPage() {
         }}
         onResetAll={resetAll}
         canClearSchedule={Boolean(schedule && schedule.matches.length > 0)}
+        showActions={!isSessionView}
       />
 
       <RosterPanel
