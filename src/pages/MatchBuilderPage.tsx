@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   DEFAULT_COURTS,
   DEFAULT_MATCHES,
@@ -43,6 +44,8 @@ const resolveMatchTypeLabel = (type: MatchType) =>
 
 export default function MatchBuilderPage() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { id: matchId } = useParams();
   const players = useAppSelector((state) => state.matchBuilder.players);
   const matchType = useAppSelector((state) => state.matchBuilder.matchType);
   const numMatches = useAppSelector((state) => state.matchBuilder.numMatches);
@@ -57,12 +60,19 @@ export default function MatchBuilderPage() {
   const matchResults = useAppSelector(
     (state) => state.matchBuilder.matchResults
   );
+  const isControlsOpen = useAppSelector(
+    (state) => state.matchBuilder.isControlsOpen
+  );
   const isRosterOpen = useAppSelector(
     (state) => state.matchBuilder.isRosterOpen
+  );
+  const activeMatchId = useAppSelector(
+    (state) => state.matchBuilder.activeMatchId
   );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRound, setActiveRound] = useState(0);
   const fullscreenRef = useRef<HTMLDivElement | null>(null);
+  const isSessionView = Boolean(matchId);
 
   const numPlayers = players.length;
   const maxCourts = useMemo(
@@ -100,6 +110,7 @@ export default function MatchBuilderPage() {
   }, [courtNumbers, dispatch, maxCourts]);
 
   const matches = schedule?.matches ?? [];
+  const isScheduleGenerated = matches.length > 0;
   const activeCourtNumbers = useMemo(() => {
     const fallback = Array.from(
       { length: Math.max(1, numCourts) },
@@ -180,14 +191,15 @@ export default function MatchBuilderPage() {
     }
   };
 
-  const closeFullscreen = () => {
+  const closeFullscreen = useCallback(() => {
     setIsFullscreen(false);
     if (document.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen().catch(() => undefined);
     }
-  };
+  }, []);
 
-  const resetAll = () => {
+  const resetAll = useCallback(() => {
+    dispatch(matchBuilderActions.clearActiveMatch());
     dispatch(matchBuilderActions.setPlayers(buildDefaultPlayers(DEFAULT_PLAYERS)));
     dispatch(matchBuilderActions.setMatchType(DEFAULT_MATCH_TYPE));
     dispatch(matchBuilderActions.setNumMatches(DEFAULT_MATCHES));
@@ -196,10 +208,21 @@ export default function MatchBuilderPage() {
     dispatch(matchBuilderActions.setCourtNumbersText(""));
     dispatch(matchBuilderActions.setSchedule(null));
     dispatch(matchBuilderActions.setMatchResults({}));
+    dispatch(matchBuilderActions.setIsControlsOpen(true));
     dispatch(matchBuilderActions.setIsRosterOpen(true));
     setActiveRound(0);
     closeFullscreen();
-  };
+  }, [closeFullscreen, dispatch]);
+
+  useEffect(() => {
+    if (!matchId) {
+      resetAll();
+      return;
+    }
+    if (activeMatchId !== matchId) {
+      dispatch(matchBuilderActions.loadMatchSession(matchId));
+    }
+  }, [activeMatchId, dispatch, matchId, resetAll]);
 
   const handleSelectWinner = (matchId: string, winner: MatchWinner | null) => {
     if (!winner) {
@@ -288,6 +311,11 @@ export default function MatchBuilderPage() {
       <ControlsPanel
         matchType={matchType}
         matchTypeOptions={MATCH_TYPES}
+        isScheduleGenerated={isScheduleGenerated}
+        isOpen={isControlsOpen}
+        onToggleOpen={() =>
+          dispatch(matchBuilderActions.setIsControlsOpen(!isControlsOpen))
+        }
         numPlayers={numPlayers}
         numMatches={numMatches}
         numCourts={numCourts}
@@ -327,8 +355,14 @@ export default function MatchBuilderPage() {
             numMatches,
             activeCourtCount
           );
-          dispatch(matchBuilderActions.setSchedule({ matches: matchesList }));
-          dispatch(matchBuilderActions.setMatchResults({}));
+          const nextId = randomId();
+          dispatch(
+            matchBuilderActions.createMatchSession({
+              id: nextId,
+              schedule: { matches: matchesList },
+            })
+          );
+          navigate(`/match-builder/${nextId}`);
         }}
         onClearSchedule={() => {
           dispatch(matchBuilderActions.setSchedule(null));
@@ -336,6 +370,7 @@ export default function MatchBuilderPage() {
         }}
         onResetAll={resetAll}
         canClearSchedule={Boolean(schedule && schedule.matches.length > 0)}
+        showActions={!isSessionView}
       />
 
       <RosterPanel

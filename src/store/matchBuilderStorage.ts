@@ -9,6 +9,7 @@ import {
 } from "../data";
 import type {
   GenderOption,
+  MatchSession,
   MatchResults,
   MatchType,
   PlayerProfile,
@@ -41,6 +42,66 @@ export const parseCourtNumbers = (value: string) => {
 
 export const formatCourtNumbers = (values: number[]) => values.join(", ");
 
+const resolveMatchType = (value?: MatchType): MatchType =>
+  value && MATCH_TYPES.some((option) => option.value === value)
+    ? value
+    : DEFAULT_MATCH_TYPE;
+
+const normalizePlayers = (players?: PlayerProfile[]) => {
+  if (!Array.isArray(players)) {
+    return buildDefaultPlayers(DEFAULT_PLAYERS);
+  }
+  return players.map((player, index) => ({
+    id: player.id || randomId(),
+    name: player.name || `Player ${index + 1}`,
+    color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
+    gender: (player.gender ?? "") as GenderOption,
+  }));
+};
+
+const normalizeCourtNumbers = (input?: number[] | string) => {
+  if (Array.isArray(input)) {
+    const normalized = input
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value) && value > 0)
+      .map((value) => Math.floor(value));
+    return {
+      courtNumbers: normalized,
+      courtNumbersText: formatCourtNumbers(normalized),
+    };
+  }
+  if (typeof input === "string") {
+    return {
+      courtNumbers: parseCourtNumbers(input),
+      courtNumbersText: input,
+    };
+  }
+  return { courtNumbers: [], courtNumbersText: "" };
+};
+
+const normalizeSchedule = (schedule?: Schedule | null) =>
+  schedule && Array.isArray(schedule.matches)
+    ? { matches: schedule.matches }
+    : null;
+
+const normalizeMatchResults = (matchResults?: MatchResults) =>
+  matchResults && typeof matchResults === "object" ? matchResults : {};
+
+const resolveNumber = (value: unknown, fallback: number) =>
+  typeof value === "number" ? value : fallback;
+
+type StoredMatchSession = {
+  id?: string;
+  createdAt?: number;
+  matchType?: MatchType;
+  players?: PlayerProfile[];
+  numMatches?: number;
+  numCourts?: number;
+  courtNumbers?: number[] | string;
+  schedule?: Schedule | null;
+  matchResults?: MatchResults;
+};
+
 type StoredMatchBuilderState = {
   matchType?: MatchType;
   players?: PlayerProfile[];
@@ -49,7 +110,10 @@ type StoredMatchBuilderState = {
   courtNumbers?: number[] | string;
   schedule?: Schedule | null;
   matchResults?: MatchResults;
+  isControlsOpen?: boolean;
   isRosterOpen?: boolean;
+  matchHistory?: StoredMatchSession[];
+  activeMatchId?: string | null;
 };
 
 export type MatchBuilderState = {
@@ -61,7 +125,10 @@ export type MatchBuilderState = {
   courtNumbersText: string;
   schedule: Schedule | null;
   matchResults: MatchResults;
+  isControlsOpen: boolean;
   isRosterOpen: boolean;
+  matchHistory: MatchSession[];
+  activeMatchId: string | null;
 };
 
 export const loadMatchBuilderState = (): MatchBuilderState => {
@@ -73,58 +140,87 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
   let courtNumbersText = "";
   let schedule: Schedule | null = null;
   let matchResults: MatchResults = {};
+  let isControlsOpen = true;
   let isRosterOpen = true;
+  let matchHistory: MatchSession[] = [];
+  let activeMatchId: string | null = null;
 
   if (typeof window !== "undefined") {
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as StoredMatchBuilderState;
-        if (parsed.matchType) {
-          matchType = MATCH_TYPES.some(
-            (option) => option.value === parsed.matchType
-          )
-            ? parsed.matchType
-            : DEFAULT_MATCH_TYPE;
-        }
-        if (Array.isArray(parsed.players)) {
-          players = parsed.players.map((player, index) => ({
-            id: player.id || randomId(),
-            name: player.name || `Player ${index + 1}`,
-            color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
-            gender: (player.gender ?? "") as GenderOption,
-          }));
-        }
-        if (typeof parsed.numMatches === "number") {
-          numMatches = parsed.numMatches;
-        }
-        if (typeof parsed.numCourts === "number") {
-          numCourts = parsed.numCourts;
-        }
-        if (Array.isArray(parsed.courtNumbers)) {
-          const normalized = parsed.courtNumbers
-            .map((value) => Number(value))
-            .filter((value) => Number.isFinite(value) && value > 0)
-            .map((value) => Math.floor(value));
-          courtNumbers = normalized;
-          courtNumbersText = formatCourtNumbers(normalized);
-        } else if (typeof parsed.courtNumbers === "string") {
-          courtNumbers = parseCourtNumbers(parsed.courtNumbers);
-          courtNumbersText = parsed.courtNumbers;
-        }
-        if (parsed.schedule && Array.isArray(parsed.schedule.matches)) {
-          schedule = { matches: parsed.schedule.matches };
-        }
-        if (parsed.matchResults && typeof parsed.matchResults === "object") {
-          matchResults = parsed.matchResults;
+        matchType = resolveMatchType(parsed.matchType);
+        players = normalizePlayers(parsed.players);
+        numMatches = resolveNumber(parsed.numMatches, DEFAULT_MATCHES);
+        numCourts = resolveNumber(parsed.numCourts, DEFAULT_COURTS);
+        const normalizedCourts = normalizeCourtNumbers(parsed.courtNumbers);
+        courtNumbers = normalizedCourts.courtNumbers;
+        courtNumbersText = normalizedCourts.courtNumbersText;
+        schedule = normalizeSchedule(parsed.schedule);
+        matchResults = normalizeMatchResults(parsed.matchResults);
+        if (typeof parsed.isControlsOpen === "boolean") {
+          isControlsOpen = parsed.isControlsOpen;
         }
         if (typeof parsed.isRosterOpen === "boolean") {
           isRosterOpen = parsed.isRosterOpen;
+        }
+        if (Array.isArray(parsed.matchHistory)) {
+          matchHistory = parsed.matchHistory
+            .map((entry) => {
+              if (!entry || typeof entry !== "object") {
+                return null;
+              }
+              const sessionPlayers = normalizePlayers(entry.players);
+              const sessionCourts = normalizeCourtNumbers(entry.courtNumbers);
+              return {
+                id: typeof entry.id === "string" ? entry.id : randomId(),
+                createdAt:
+                  typeof entry.createdAt === "number"
+                    ? entry.createdAt
+                    : Date.now(),
+                matchType: resolveMatchType(entry.matchType),
+                players: sessionPlayers,
+                numMatches: resolveNumber(entry.numMatches, DEFAULT_MATCHES),
+                numCourts: resolveNumber(entry.numCourts, DEFAULT_COURTS),
+                courtNumbers: sessionCourts.courtNumbers,
+                schedule: normalizeSchedule(entry.schedule),
+                matchResults: normalizeMatchResults(entry.matchResults),
+              } satisfies MatchSession;
+            })
+            .filter((entry): entry is MatchSession => Boolean(entry));
+        }
+        if (typeof parsed.activeMatchId === "string") {
+          activeMatchId = parsed.activeMatchId;
         }
       }
     } catch {
       // ignore storage parse errors
     }
+  }
+
+  if (activeMatchId) {
+    const activeSession = matchHistory.find(
+      (session) => session.id === activeMatchId
+    );
+    if (activeSession) {
+      matchType = activeSession.matchType;
+      players = activeSession.players;
+      numMatches = activeSession.numMatches;
+      numCourts = activeSession.numCourts;
+      courtNumbers = activeSession.courtNumbers;
+      courtNumbersText = formatCourtNumbers(activeSession.courtNumbers);
+      schedule = activeSession.schedule;
+      matchResults = activeSession.matchResults;
+      isControlsOpen = false;
+      isRosterOpen = false;
+    } else {
+      activeMatchId = null;
+    }
+  }
+  if (!activeMatchId) {
+    isControlsOpen = true;
+    isRosterOpen = true;
   }
 
   return {
@@ -136,7 +232,10 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
     courtNumbersText,
     schedule,
     matchResults,
+    isControlsOpen,
     isRosterOpen,
+    matchHistory,
+    activeMatchId,
   };
 };
 
@@ -148,7 +247,10 @@ export const saveMatchBuilderState = ({
   courtNumbers,
   schedule,
   matchResults,
+  isControlsOpen,
   isRosterOpen,
+  matchHistory,
+  activeMatchId,
 }: MatchBuilderState) => {
   if (typeof window === "undefined") {
     return;
@@ -163,7 +265,10 @@ export const saveMatchBuilderState = ({
       courtNumbers,
       schedule,
       matchResults,
+      isControlsOpen,
       isRosterOpen,
+      matchHistory,
+      activeMatchId,
     })
   );
 };
