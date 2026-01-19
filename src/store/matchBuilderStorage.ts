@@ -42,8 +42,8 @@ export const parseCourtNumbers = (value: string) => {
 
 export const formatCourtNumbers = (values: number[]) => values.join(", ");
 
-const resolveMatchType = (value: MatchType | undefined) =>
-  MATCH_TYPES.some((option) => option.value === value)
+const resolveMatchType = (value?: MatchType): MatchType =>
+  value && MATCH_TYPES.some((option) => option.value === value)
     ? value
     : DEFAULT_MATCH_TYPE;
 
