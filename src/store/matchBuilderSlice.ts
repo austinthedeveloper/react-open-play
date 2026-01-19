@@ -102,6 +102,14 @@ const matchBuilderSlice = createSlice({
       state.schedule = session.schedule;
       state.matchResults = session.matchResults;
     },
+    removeMatchSession(state, action: PayloadAction<string>) {
+      state.matchHistory = state.matchHistory.filter(
+        (entry) => entry.id !== action.payload
+      );
+      if (state.activeMatchId === action.payload) {
+        state.activeMatchId = null;
+      }
+    },
     clearActiveMatch(state) {
       state.activeMatchId = null;
     },

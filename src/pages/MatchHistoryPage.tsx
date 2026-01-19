@@ -56,18 +56,31 @@ export default function MatchHistoryPage() {
                       - {courtsCount} courts
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className="ghost-button"
-                    onClick={() => {
-                      dispatch(
-                        matchBuilderActions.loadMatchSession(session.id)
-                      );
-                      navigate("/match-builder");
-                    }}
-                  >
-                    Load match
-                  </button>
+                  <div className="history-card__actions">
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => {
+                        dispatch(
+                          matchBuilderActions.loadMatchSession(session.id)
+                        );
+                        navigate("/match-builder");
+                      }}
+                    >
+                      Load match
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost-button history-card__remove"
+                      onClick={() =>
+                        dispatch(
+                          matchBuilderActions.removeMatchSession(session.id)
+                        )
+                      }
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </article>
               );
             })}

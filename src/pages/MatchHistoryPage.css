@@ -34,6 +34,21 @@
   color: var(--muted);
 }
 
+.history-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.history-card__remove {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.history-card__remove:hover:not(:disabled) {
+  border-color: rgba(239, 68, 68, 0.7);
+}
+
 @media (max-width: 720px) {
   .history-card {
     flex-direction: column;
