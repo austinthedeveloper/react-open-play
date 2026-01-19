@@ -188,6 +188,7 @@ export default function MatchBuilderPage() {
   };
 
   const resetAll = () => {
+    dispatch(matchBuilderActions.clearActiveMatch());
     dispatch(matchBuilderActions.setPlayers(buildDefaultPlayers(DEFAULT_PLAYERS)));
     dispatch(matchBuilderActions.setMatchType(DEFAULT_MATCH_TYPE));
     dispatch(matchBuilderActions.setNumMatches(DEFAULT_MATCHES));
@@ -327,8 +328,11 @@ export default function MatchBuilderPage() {
             numMatches,
             activeCourtCount
           );
-          dispatch(matchBuilderActions.setSchedule({ matches: matchesList }));
-          dispatch(matchBuilderActions.setMatchResults({}));
+          dispatch(
+            matchBuilderActions.createMatchSession({
+              schedule: { matches: matchesList },
+            })
+          );
         }}
         onClearSchedule={() => {
           dispatch(matchBuilderActions.setSchedule(null));

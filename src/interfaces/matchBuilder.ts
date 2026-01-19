@@ -14,6 +14,18 @@ export type MatchWinner = "A" | "B";
 
 export type MatchResults = Record<string, MatchWinner>;
 
+export type MatchSession = {
+  id: string;
+  createdAt: number;
+  matchType: MatchType;
+  players: PlayerProfile[];
+  numMatches: number;
+  numCourts: number;
+  courtNumbers: number[];
+  schedule: Schedule | null;
+  matchResults: MatchResults;
+};
+
 export type MatchCard = {
   id: string;
   index: number;
