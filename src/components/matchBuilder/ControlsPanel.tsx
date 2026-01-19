@@ -7,6 +7,7 @@ export type ControlsPanelProps = {
     value: MatchType;
     label: string;
   }>;
+  isScheduleGenerated?: boolean;
   numPlayers: number;
   numMatches: number;
   numCourts: number;
@@ -48,13 +49,23 @@ export default function ControlsPanel({
   canClearSchedule,
   actionsSlot,
   showActions = true,
+  isScheduleGenerated = false,
 }: ControlsPanelProps) {
+  const lockedMessage =
+    "Locked after schedule generation. Clear schedule to change.";
   return (
     <section className="controls-panel">
       <label className="control">
-        <span>Match type</span>
+        <span className="control-label">
+          Match type
+          {isScheduleGenerated ? (
+            <span className="control-lock">Locked</span>
+          ) : null}
+        </span>
         <select
           value={matchType}
+          disabled={isScheduleGenerated}
+          title={isScheduleGenerated ? lockedMessage : undefined}
           onChange={(event) =>
             onMatchTypeChange(event.target.value as MatchType)
           }
@@ -65,48 +76,81 @@ export default function ControlsPanel({
             </option>
           ))}
         </select>
+        {isScheduleGenerated ? (
+          <small className="control-helper">{lockedMessage}</small>
+        ) : null}
       </label>
 
       <label className="control">
-        <span>Number of players</span>
+        <span className="control-label">
+          Number of players
+          {isScheduleGenerated ? (
+            <span className="control-lock">Locked</span>
+          ) : null}
+        </span>
         <input
           type="number"
           min={4}
           max={maxPlayers}
           value={numPlayers}
+          disabled={isScheduleGenerated}
+          title={isScheduleGenerated ? lockedMessage : undefined}
           onChange={(event) =>
             onPlayerCountChange(Number(event.target.value) || 4)
           }
         />
+        {isScheduleGenerated ? (
+          <small className="control-helper">{lockedMessage}</small>
+        ) : null}
       </label>
 
       <label className="control">
-        <span>Number of rounds</span>
+        <span className="control-label">
+          Number of rounds
+          {isScheduleGenerated ? (
+            <span className="control-lock">Locked</span>
+          ) : null}
+        </span>
         <input
           type="number"
           min={1}
           max={maxMatches}
           value={numMatches}
+          disabled={isScheduleGenerated}
+          title={isScheduleGenerated ? lockedMessage : undefined}
           onChange={(event) =>
             onMatchCountChange(Number(event.target.value) || 1)
           }
         />
+        {isScheduleGenerated ? (
+          <small className="control-helper">{lockedMessage}</small>
+        ) : null}
       </label>
       <label className="control">
-        <span>Number of courts</span>
+        <span className="control-label">
+          Number of courts
+          {isScheduleGenerated ? (
+            <span className="control-lock">Locked</span>
+          ) : null}
+        </span>
         <input
           type="number"
           min={1}
           max={maxCourts}
           value={numCourts}
+          disabled={isScheduleGenerated}
+          title={isScheduleGenerated ? lockedMessage : undefined}
           onChange={(event) =>
             onCourtCountChange(Number(event.target.value) || 1)
           }
         />
+        {isScheduleGenerated ? (
+          <small className="control-helper">{lockedMessage}</small>
+        ) : null}
       </label>
 
       <label className="control">
-        <span>Court numbers (optional)</span>
+        <span className="control-label">Court numbers (optional)</span>
         <input
           type="text"
           inputMode="numeric"
@@ -122,6 +166,7 @@ export default function ControlsPanel({
             type="button"
             onClick={onGenerateSchedule}
             className="glow-button"
+            disabled={isScheduleGenerated}
           >
             Generate schedule
           </button>

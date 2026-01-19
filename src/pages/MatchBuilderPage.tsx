@@ -107,6 +107,7 @@ export default function MatchBuilderPage() {
   }, [courtNumbers, dispatch, maxCourts]);
 
   const matches = schedule?.matches ?? [];
+  const isScheduleGenerated = matches.length > 0;
   const activeCourtNumbers = useMemo(() => {
     const fallback = Array.from(
       { length: Math.max(1, numCourts) },
@@ -306,6 +307,7 @@ export default function MatchBuilderPage() {
       <ControlsPanel
         matchType={matchType}
         matchTypeOptions={MATCH_TYPES}
+        isScheduleGenerated={isScheduleGenerated}
         numPlayers={numPlayers}
         numMatches={numMatches}
         numCourts={numCourts}
