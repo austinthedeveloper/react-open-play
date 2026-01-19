@@ -21,7 +21,7 @@ export default function GoalsControls({
   return (
     <section className="controls-panel">
       <label className="control">
-        <span>Matches this session</span>
+        <span className="control-label">Matches this session</span>
         <input
           type="number"
           min={1}
@@ -34,7 +34,7 @@ export default function GoalsControls({
       </label>
 
       <label className="control">
-        <span>Opponent level</span>
+        <span className="control-label">Opponent level</span>
         <select
           value={defaultOpponentLevel}
           onChange={(e) =>

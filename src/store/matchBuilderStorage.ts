@@ -110,6 +110,7 @@ type StoredMatchBuilderState = {
   courtNumbers?: number[] | string;
   schedule?: Schedule | null;
   matchResults?: MatchResults;
+  isControlsOpen?: boolean;
   isRosterOpen?: boolean;
   matchHistory?: StoredMatchSession[];
   activeMatchId?: string | null;
@@ -124,6 +125,7 @@ export type MatchBuilderState = {
   courtNumbersText: string;
   schedule: Schedule | null;
   matchResults: MatchResults;
+  isControlsOpen: boolean;
   isRosterOpen: boolean;
   matchHistory: MatchSession[];
   activeMatchId: string | null;
@@ -138,6 +140,7 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
   let courtNumbersText = "";
   let schedule: Schedule | null = null;
   let matchResults: MatchResults = {};
+  let isControlsOpen = true;
   let isRosterOpen = true;
   let matchHistory: MatchSession[] = [];
   let activeMatchId: string | null = null;
@@ -156,6 +159,9 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
         courtNumbersText = normalizedCourts.courtNumbersText;
         schedule = normalizeSchedule(parsed.schedule);
         matchResults = normalizeMatchResults(parsed.matchResults);
+        if (typeof parsed.isControlsOpen === "boolean") {
+          isControlsOpen = parsed.isControlsOpen;
+        }
         if (typeof parsed.isRosterOpen === "boolean") {
           isRosterOpen = parsed.isRosterOpen;
         }
@@ -206,9 +212,13 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
       courtNumbersText = formatCourtNumbers(activeSession.courtNumbers);
       schedule = activeSession.schedule;
       matchResults = activeSession.matchResults;
+      isControlsOpen = false;
     } else {
       activeMatchId = null;
     }
+  }
+  if (!activeMatchId) {
+    isControlsOpen = true;
   }
 
   return {
@@ -220,6 +230,7 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
     courtNumbersText,
     schedule,
     matchResults,
+    isControlsOpen,
     isRosterOpen,
     matchHistory,
     activeMatchId,
@@ -234,6 +245,7 @@ export const saveMatchBuilderState = ({
   courtNumbers,
   schedule,
   matchResults,
+  isControlsOpen,
   isRosterOpen,
   matchHistory,
   activeMatchId,
@@ -251,6 +263,7 @@ export const saveMatchBuilderState = ({
       courtNumbers,
       schedule,
       matchResults,
+      isControlsOpen,
       isRosterOpen,
       matchHistory,
       activeMatchId,

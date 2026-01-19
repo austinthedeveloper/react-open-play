@@ -63,6 +63,9 @@ const matchBuilderSlice = createSlice({
       state.matchResults = action.payload;
       syncActiveSession(state);
     },
+    setIsControlsOpen(state, action: PayloadAction<boolean>) {
+      state.isControlsOpen = action.payload;
+    },
     setIsRosterOpen(state, action: PayloadAction<boolean>) {
       state.isRosterOpen = action.payload;
     },
@@ -103,6 +106,7 @@ const matchBuilderSlice = createSlice({
       state.courtNumbersText = formatCourtNumbers(session.courtNumbers);
       state.schedule = session.schedule;
       state.matchResults = session.matchResults;
+      state.isControlsOpen = false;
     },
     removeMatchSession(state, action: PayloadAction<string>) {
       state.matchHistory = state.matchHistory.filter(

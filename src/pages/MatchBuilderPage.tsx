@@ -60,6 +60,9 @@ export default function MatchBuilderPage() {
   const matchResults = useAppSelector(
     (state) => state.matchBuilder.matchResults
   );
+  const isControlsOpen = useAppSelector(
+    (state) => state.matchBuilder.isControlsOpen
+  );
   const isRosterOpen = useAppSelector(
     (state) => state.matchBuilder.isRosterOpen
   );
@@ -205,6 +208,7 @@ export default function MatchBuilderPage() {
     dispatch(matchBuilderActions.setCourtNumbersText(""));
     dispatch(matchBuilderActions.setSchedule(null));
     dispatch(matchBuilderActions.setMatchResults({}));
+    dispatch(matchBuilderActions.setIsControlsOpen(true));
     dispatch(matchBuilderActions.setIsRosterOpen(true));
     setActiveRound(0);
     closeFullscreen();
@@ -308,6 +312,10 @@ export default function MatchBuilderPage() {
         matchType={matchType}
         matchTypeOptions={MATCH_TYPES}
         isScheduleGenerated={isScheduleGenerated}
+        isOpen={isControlsOpen}
+        onToggleOpen={() =>
+          dispatch(matchBuilderActions.setIsControlsOpen(!isControlsOpen))
+        }
         numPlayers={numPlayers}
         numMatches={numMatches}
         numCourts={numCourts}

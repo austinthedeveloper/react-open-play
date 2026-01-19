@@ -191,6 +191,19 @@
     backdrop-filter: blur(10px);
   }
 
+  .controls-panel-card {
+    display: grid;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .controls-panel-body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: end;
+  }
+
   .panel-header {
     display: flex;
     align-items: center;

@@ -7,6 +7,8 @@ export type ControlsPanelProps = {
     value: MatchType;
     label: string;
   }>;
+  isOpen: boolean;
+  onToggleOpen: () => void;
   isScheduleGenerated?: boolean;
   numPlayers: number;
   numMatches: number;
@@ -31,6 +33,8 @@ export type ControlsPanelProps = {
 export default function ControlsPanel({
   matchType,
   matchTypeOptions,
+  isOpen,
+  onToggleOpen,
   numPlayers,
   numMatches,
   numCourts,
@@ -54,136 +58,152 @@ export default function ControlsPanel({
   const lockedMessage =
     "Locked after schedule generation. Clear schedule to change.";
   return (
-    <section className="controls-panel">
-      <label className="control">
-        <span className="control-label">
-          Match type
-          {isScheduleGenerated ? (
-            <span className="control-lock">Locked</span>
-          ) : null}
-        </span>
-        <select
-          value={matchType}
-          disabled={isScheduleGenerated}
-          title={isScheduleGenerated ? lockedMessage : undefined}
-          onChange={(event) =>
-            onMatchTypeChange(event.target.value as MatchType)
-          }
-        >
-          {matchTypeOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {isScheduleGenerated ? (
-          <small className="control-helper">{lockedMessage}</small>
-        ) : null}
-      </label>
+    <section className="controls-panel controls-panel-card">
+      <div className="panel-header">
+        <h2 className="panel-title">Match type</h2>
+        <button type="button" className="ghost-button" onClick={onToggleOpen}>
+          {isOpen ? "Collapse" : "Expand"}
+        </button>
+      </div>
+      {isOpen ? (
+        <>
+          <div className="controls-panel-body">
+            <label className="control">
+              <span className="control-label">
+                Match type
+                {isScheduleGenerated ? (
+                  <span className="control-lock">Locked</span>
+                ) : null}
+              </span>
+              <select
+                value={matchType}
+                disabled={isScheduleGenerated}
+                title={isScheduleGenerated ? lockedMessage : undefined}
+                onChange={(event) =>
+                  onMatchTypeChange(event.target.value as MatchType)
+                }
+              >
+                {matchTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {isScheduleGenerated ? (
+                <small className="control-helper">{lockedMessage}</small>
+              ) : null}
+            </label>
 
-      <label className="control">
-        <span className="control-label">
-          Number of players
-          {isScheduleGenerated ? (
-            <span className="control-lock">Locked</span>
-          ) : null}
-        </span>
-        <input
-          type="number"
-          min={4}
-          max={maxPlayers}
-          value={numPlayers}
-          disabled={isScheduleGenerated}
-          title={isScheduleGenerated ? lockedMessage : undefined}
-          onChange={(event) =>
-            onPlayerCountChange(Number(event.target.value) || 4)
-          }
-        />
-        {isScheduleGenerated ? (
-          <small className="control-helper">{lockedMessage}</small>
-        ) : null}
-      </label>
+            <label className="control">
+              <span className="control-label">
+                Number of players
+                {isScheduleGenerated ? (
+                  <span className="control-lock">Locked</span>
+                ) : null}
+              </span>
+              <input
+                type="number"
+                min={4}
+                max={maxPlayers}
+                value={numPlayers}
+                disabled={isScheduleGenerated}
+                title={isScheduleGenerated ? lockedMessage : undefined}
+                onChange={(event) =>
+                  onPlayerCountChange(Number(event.target.value) || 4)
+                }
+              />
+              {isScheduleGenerated ? (
+                <small className="control-helper">{lockedMessage}</small>
+              ) : null}
+            </label>
 
-      <label className="control">
-        <span className="control-label">
-          Number of rounds
-          {isScheduleGenerated ? (
-            <span className="control-lock">Locked</span>
-          ) : null}
-        </span>
-        <input
-          type="number"
-          min={1}
-          max={maxMatches}
-          value={numMatches}
-          disabled={isScheduleGenerated}
-          title={isScheduleGenerated ? lockedMessage : undefined}
-          onChange={(event) =>
-            onMatchCountChange(Number(event.target.value) || 1)
-          }
-        />
-        {isScheduleGenerated ? (
-          <small className="control-helper">{lockedMessage}</small>
-        ) : null}
-      </label>
-      <label className="control">
-        <span className="control-label">
-          Number of courts
-          {isScheduleGenerated ? (
-            <span className="control-lock">Locked</span>
-          ) : null}
-        </span>
-        <input
-          type="number"
-          min={1}
-          max={maxCourts}
-          value={numCourts}
-          disabled={isScheduleGenerated}
-          title={isScheduleGenerated ? lockedMessage : undefined}
-          onChange={(event) =>
-            onCourtCountChange(Number(event.target.value) || 1)
-          }
-        />
-        {isScheduleGenerated ? (
-          <small className="control-helper">{lockedMessage}</small>
-        ) : null}
-      </label>
+            <label className="control">
+              <span className="control-label">
+                Number of rounds
+                {isScheduleGenerated ? (
+                  <span className="control-lock">Locked</span>
+                ) : null}
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={maxMatches}
+                value={numMatches}
+                disabled={isScheduleGenerated}
+                title={isScheduleGenerated ? lockedMessage : undefined}
+                onChange={(event) =>
+                  onMatchCountChange(Number(event.target.value) || 1)
+                }
+              />
+              {isScheduleGenerated ? (
+                <small className="control-helper">{lockedMessage}</small>
+              ) : null}
+            </label>
+            <label className="control">
+              <span className="control-label">
+                Number of courts
+                {isScheduleGenerated ? (
+                  <span className="control-lock">Locked</span>
+                ) : null}
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={maxCourts}
+                value={numCourts}
+                disabled={isScheduleGenerated}
+                title={isScheduleGenerated ? lockedMessage : undefined}
+                onChange={(event) =>
+                  onCourtCountChange(Number(event.target.value) || 1)
+                }
+              />
+              {isScheduleGenerated ? (
+                <small className="control-helper">{lockedMessage}</small>
+              ) : null}
+            </label>
 
-      <label className="control">
-        <span className="control-label">Court numbers (optional)</span>
-        <input
-          type="text"
-          inputMode="numeric"
-          placeholder="e.g. 3, 6"
-          value={courtNumbers}
-          onChange={(event) => onCourtNumbersChange(event.target.value)}
-        />
-      </label>
+            <label className="control">
+              <span className="control-label">Court numbers (optional)</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="e.g. 3, 6"
+                value={courtNumbers}
+                onChange={(event) => onCourtNumbersChange(event.target.value)}
+              />
+            </label>
+          </div>
 
-      {showActions && (
-        <div className="control-actions">
-          <button
-            type="button"
-            onClick={onGenerateSchedule}
-            className="glow-button"
-            disabled={isScheduleGenerated}
-          >
-            Generate schedule
-          </button>
-          <button
-            type="button"
-            onClick={onClearSchedule}
-            className="ghost-button"
-            disabled={!canClearSchedule}
-          >
-            Clear schedule
-          </button>
-          <button type="button" onClick={onResetAll} className="ghost-button">
-            Reset all
-          </button>
-          {actionsSlot}
-        </div>
-      )}
+          {showActions && (
+            <div className="control-actions">
+              <button
+                type="button"
+                onClick={onGenerateSchedule}
+                className="glow-button"
+                disabled={isScheduleGenerated}
+              >
+                Generate schedule
+              </button>
+              <button
+                type="button"
+                onClick={onClearSchedule}
+                className="ghost-button"
+                disabled={!canClearSchedule}
+              >
+                Clear schedule
+              </button>
+              <button
+                type="button"
+                onClick={onResetAll}
+                className="ghost-button"
+              >
+                Reset all
+              </button>
+              {actionsSlot}
+            </div>
+          )}
+        </>
+      ) : null}
     </section>
   );
 }
