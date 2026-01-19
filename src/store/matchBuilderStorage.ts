@@ -213,12 +213,14 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
       schedule = activeSession.schedule;
       matchResults = activeSession.matchResults;
       isControlsOpen = false;
+      isRosterOpen = false;
     } else {
       activeMatchId = null;
     }
   }
   if (!activeMatchId) {
     isControlsOpen = true;
+    isRosterOpen = true;
   }
 
   return {

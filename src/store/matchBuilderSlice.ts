@@ -107,6 +107,7 @@ const matchBuilderSlice = createSlice({
       state.schedule = session.schedule;
       state.matchResults = session.matchResults;
       state.isControlsOpen = false;
+      state.isRosterOpen = false;
     },
     removeMatchSession(state, action: PayloadAction<string>) {
       state.matchHistory = state.matchHistory.filter(
