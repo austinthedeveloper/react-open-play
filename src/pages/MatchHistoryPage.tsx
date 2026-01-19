@@ -28,13 +28,28 @@ export default function MatchHistoryPage() {
 
   return (
     <div className="app-shell text-left">
+      <header className="hero-panel">
+        <div>
+          <p className="eyebrow">Match Builder Lab</p>
+          <h1 className="hero-title">Match History</h1>
+          <p className="hero-subtitle">
+            Review previous generations and reopen any saved schedule.
+          </p>
+        </div>
+      </header>
+
       <main className="table-panel">
-        <h2 className="panel-title">Match History</h2>
-        <p className="panel-subtitle">
-          Load a previous generation and review its matchups.
-        </p>
         {orderedHistory.length === 0 ? (
-          <p className="empty-state">No matches yet. Generate a schedule.</p>
+          <div className="empty-state history-empty">
+            <p>No matches yet. Generate a schedule.</p>
+            <button
+              type="button"
+              className="glow-button"
+              onClick={() => navigate("/match-builder")}
+            >
+              Build a match
+            </button>
+          </div>
         ) : (
           <div className="history-list">
             {orderedHistory.map((session, index) => {

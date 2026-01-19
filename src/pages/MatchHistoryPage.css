@@ -34,6 +34,12 @@
   color: var(--muted);
 }
 
+.history-empty {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
 .history-card__actions {
   display: flex;
   gap: 0.5rem;
