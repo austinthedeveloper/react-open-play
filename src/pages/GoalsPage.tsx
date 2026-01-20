@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { goalsActions } from "../store/goalsSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import GoalsControls from "../components/goals/GoalsControls";
@@ -8,6 +8,7 @@ import GoalsList from "../components/goals/GoalsList";
 export default function GoalsPage() {
   const dispatch = useAppDispatch();
   const [isControlsOpen, setIsControlsOpen] = useState(true);
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
   const profile = useAppSelector((state) => state.goals.profile);
   const numMatches = useAppSelector((state) => state.goals.numMatches);
   const matches = useAppSelector((state) => state.goals.matches);
@@ -18,6 +19,48 @@ export default function GoalsPage() {
   const regenerate = () => {
     dispatch(goalsActions.regenerateMatches());
   };
+
+  useEffect(() => {
+    if (!apiBaseUrl) {
+      console.warn("Missing VITE_API_BASE_URL");
+      return;
+    }
+
+    let isActive = true;
+    const controller = new AbortController();
+
+    const checkHealth = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/health`, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        const body = await response.text();
+
+        if (!response.ok) {
+          throw new Error(body || response.statusText);
+        }
+
+        if (isActive) {
+          console.log("Health check OK:", body || "Healthy");
+        }
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+        const message =
+          error instanceof Error ? error.message : "Health check failed";
+        console.error("Health check failed:", message);
+      }
+    };
+
+    checkHealth();
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
+  }, [apiBaseUrl]);
 
   return (
     <div className="app-shell text-left">
