@@ -7,6 +7,9 @@ const STORAGE_KEY = "pickle-goals:goals-page";
 const opponentLevels: OpponentLevel[] = ["lower", "same", "higher"];
 const isOpponentLevel = (value: unknown): value is OpponentLevel =>
   opponentLevels.includes(value as OpponentLevel);
+const ratingRanges = ["2-2.5", "3-3.5", "3.5-4", "4+"] as const;
+const isRatingRange = (value: unknown): value is (typeof ratingRanges)[number] =>
+  ratingRanges.includes(value as (typeof ratingRanges)[number]);
 
 function generateMatches(level: OpponentLevel, count: number): MatchGoal[] {
   const templates = GOAL_TEMPLATES[level];
@@ -27,6 +30,7 @@ type StoredGoalsState = {
   matches?: MatchGoal[];
   numMatches?: number;
   defaultOpponentLevel?: OpponentLevel;
+  ratingRange?: string;
 };
 
 export type GoalsState = {
@@ -38,6 +42,7 @@ export type GoalsState = {
 export const loadGoalsState = (): GoalsState => {
   let numMatches = NUM_MATCHES_DEFAULT;
   let defaultOpponentLevel = DEFAULT_PROFILE.defaultOpponentLevel;
+  let ratingRange = DEFAULT_PROFILE.ratingRange;
   let matches: MatchGoal[] | null = null;
 
   if (typeof window !== "undefined") {
@@ -51,6 +56,9 @@ export const loadGoalsState = (): GoalsState => {
         if (isOpponentLevel(parsed.defaultOpponentLevel)) {
           defaultOpponentLevel = parsed.defaultOpponentLevel;
         }
+        if (isRatingRange(parsed.ratingRange)) {
+          ratingRange = parsed.ratingRange;
+        }
         if (Array.isArray(parsed.matches)) {
           matches = parsed.matches;
         }
@@ -62,6 +70,7 @@ export const loadGoalsState = (): GoalsState => {
 
   const profile: Profile = {
     ...DEFAULT_PROFILE,
+    ratingRange,
     defaultOpponentLevel,
   };
 
@@ -86,6 +95,7 @@ export const saveGoalsState = ({
       matches,
       numMatches,
       defaultOpponentLevel: profile.defaultOpponentLevel,
+      ratingRange: profile.ratingRange,
     })
   );
 };

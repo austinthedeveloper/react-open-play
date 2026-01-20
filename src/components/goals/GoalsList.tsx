@@ -45,7 +45,7 @@ export default function GoalsList() {
               </header>
               <p className="goals-card__goal">{match.goalText}</p>
               <div className="goals-card__controls">
-                <label className="goals-card__toggle">
+                <label className="goals-card__switch">
                   <input
                     type="checkbox"
                     checked={match.played}
@@ -55,7 +55,10 @@ export default function GoalsList() {
                       })
                     }
                   />
-                  Played
+                  <span className="goals-card__switch-track">
+                    <span className="goals-card__switch-thumb" />
+                  </span>
+                  <span className="goals-card__switch-label">Played</span>
                 </label>
                 <select
                   value={match.result}
