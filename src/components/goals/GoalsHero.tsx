@@ -19,8 +19,8 @@ export default function GoalsHero({
         <p className="eyebrow">Open Play Lab</p>
         <h1 className="hero-title">Open Play Goals</h1>
         <p className="hero-subtitle">
-          Profile: <strong>{profile.ratingRange}</strong> &middot; Default
-          opponent level:{" "}
+          Level of play: <strong>{profile.ratingRange}</strong> &middot;
+          Default opponent level:{" "}
           <strong className="capitalize">
             {profile.defaultOpponentLevel}
           </strong>

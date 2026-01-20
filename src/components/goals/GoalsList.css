@@ -69,12 +69,63 @@
     gap: 0.75rem;
   }
 
-  .goals-card__toggle {
+  .goals-card__switch {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     font-size: 0.85rem;
     color: rgba(226, 232, 240, 0.7);
+    cursor: pointer;
+  }
+
+  .goals-card__switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .goals-card__switch-track {
+    width: 42px;
+    height: 22px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: rgba(15, 23, 42, 0.85);
+    padding: 2px;
+    display: inline-flex;
+    align-items: center;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .goals-card__switch-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 8px rgba(6, 8, 18, 0.35);
+    transform: translateX(0);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+
+  .goals-card__switch input:focus-visible + .goals-card__switch-track {
+    outline: 2px solid rgba(125, 211, 252, 0.9);
+    outline-offset: 2px;
+  }
+
+  .goals-card__switch input:checked + .goals-card__switch-track {
+    border-color: rgba(76, 243, 255, 0.7);
+    background: rgba(30, 64, 86, 0.9);
+  }
+
+  .goals-card__switch input:checked
+    + .goals-card__switch-track
+    .goals-card__switch-thumb {
+    transform: translateX(20px);
+    background: rgba(248, 250, 252, 0.95);
+  }
+
+  .goals-card__switch-label {
+    line-height: 1;
   }
 }
 
