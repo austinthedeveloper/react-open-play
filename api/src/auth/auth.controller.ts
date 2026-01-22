@@ -10,7 +10,7 @@ import type { AuthRequest } from "./models/auth-request.model";
 export class AuthController {
   constructor(
     private jwtService: JwtService,
-    private usersService: UsersService
+    private usersService: UsersService,
   ) {}
 
   @Get("google")
@@ -25,7 +25,7 @@ export class AuthController {
     const user = req.user;
     const payload = { sub: user._id, email: user.email };
     const accessToken = this.jwtService.sign(payload, { expiresIn: "10h" });
-    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4300";
+    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:5173";
     return res.redirect(`${frontendUrl}/auth/callback?token=${accessToken}`);
   }
 
