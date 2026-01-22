@@ -15,7 +15,7 @@ async function bootstrap() {
       }
       callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
-    methods: ["GET", "HEAD", "OPTIONS"],
+    methods: ["GET", "HEAD", "OPTIONS", "POST", "PATCH", "DELETE"],
   });
   app.getHttpAdapter().getInstance().disable("etag");
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
