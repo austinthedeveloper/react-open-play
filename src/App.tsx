@@ -1,11 +1,56 @@
-import { NavLink, Route, Routes } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import GoalsPage from "./pages/GoalsPage";
 import MatchBuilderPage from "./pages/MatchBuilderPage";
 import MatchHistoryPage from "./pages/MatchHistoryPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
-import { authService } from "./services/authService";
+import { authService, type AuthUser } from "./services/authService";
 
 export default function App() {
+  const location = useLocation();
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+    const token = authService.getToken();
+
+    if (!token) {
+      setUser(null);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    try {
+      authService
+        .getProfile()
+        .then((profile) => {
+          if (isActive) {
+            setUser(profile);
+          }
+        })
+        .catch((error) => {
+          const message =
+            error instanceof Error ? error.message : "Unable to load profile";
+          console.warn(message);
+          authService.clearToken();
+          if (isActive) {
+            setUser(null);
+          }
+        });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to load profile";
+      console.warn(message);
+      authService.clearToken();
+      setUser(null);
+    }
+
+    return () => {
+      isActive = false;
+    };
+  }, [location.key]);
+
   const handleLogin = () => {
     try {
       window.location.assign(authService.getGoogleLoginUrl());
@@ -13,6 +58,19 @@ export default function App() {
       const message =
         error instanceof Error ? error.message : "Unable to start login";
       console.warn(message);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to log out";
+      console.warn(message);
+    } finally {
+      authService.clearToken();
+      setUser(null);
     }
   };
 
@@ -48,9 +106,28 @@ export default function App() {
               Match History
             </NavLink>
           </div>
-          <button type="button" className="nav-auth-button" onClick={handleLogin}>
-            Sign in with Google
-          </button>
+          {user ? (
+            <div className="nav-user">
+              <span className="nav-user__name">
+                {user.displayName || user.email}
+              </span>
+              <button
+                type="button"
+                className="nav-logout-button"
+                onClick={handleLogout}
+              >
+                Log out
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="nav-auth-button"
+              onClick={handleLogin}
+            >
+              Sign in with Google
+            </button>
+          )}
         </div>
       </nav>
 
