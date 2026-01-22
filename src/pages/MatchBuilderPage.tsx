@@ -12,6 +12,7 @@ import {
 import type {
   GenderOption,
   MatchCard as MatchCardType,
+  MatchSession,
   MatchTeam,
   MatchType,
   MatchWinner,
@@ -31,6 +32,7 @@ import {
   formatCourtNumbers,
   parseCourtNumbers,
 } from "../store/matchBuilderStorage";
+import { matchesService } from "../services/matchesService";
 import ControlsPanel from "../components/matchBuilder/ControlsPanel";
 import FullscreenOverlay from "../components/matchBuilder/FullscreenOverlay";
 import MatchBuilderHero from "../components/matchBuilder/MatchBuilderHero";
@@ -68,6 +70,9 @@ export default function MatchBuilderPage() {
   );
   const activeMatchId = useAppSelector(
     (state) => state.matchBuilder.activeMatchId
+  );
+  const matchHistory = useAppSelector(
+    (state) => state.matchBuilder.matchHistory
   );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRound, setActiveRound] = useState(0);
@@ -219,10 +224,64 @@ export default function MatchBuilderPage() {
       resetAll();
       return;
     }
-    if (activeMatchId !== matchId) {
-      dispatch(matchBuilderActions.loadMatchSession(matchId));
+    if (activeMatchId === matchId) {
+      return;
     }
-  }, [activeMatchId, dispatch, matchId, resetAll]);
+    const existingSession = matchHistory.find((entry) => entry.id === matchId);
+    if (existingSession) {
+      dispatch(matchBuilderActions.loadMatchSession(matchId));
+      return;
+    }
+    let isActive = true;
+    matchesService
+      .get(matchId)
+      .then((session) => {
+        if (!isActive) {
+          return;
+        }
+        dispatch(matchBuilderActions.upsertMatchSession(session));
+        dispatch(matchBuilderActions.loadMatchSession(matchId));
+      })
+      .catch((error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Unable to load match session";
+        console.warn(message);
+      });
+    return () => {
+      isActive = false;
+    };
+  }, [activeMatchId, dispatch, matchHistory, matchId, resetAll]);
+
+  useEffect(() => {
+    if (!activeMatchId) {
+      return;
+    }
+    const patch: Partial<MatchSession> = {
+      matchType,
+      players,
+      numMatches,
+      numCourts,
+      courtNumbers,
+      schedule,
+      matchResults,
+    };
+    matchesService.update(activeMatchId, patch).catch((error) => {
+      const message =
+        error instanceof Error ? error.message : "Unable to save match updates";
+      console.warn(message);
+    });
+  }, [
+    activeMatchId,
+    courtNumbers,
+    matchResults,
+    matchType,
+    numCourts,
+    numMatches,
+    players,
+    schedule,
+  ]);
 
   const handleSelectWinner = (matchId: string, winner: MatchWinner | null) => {
     if (!winner) {
@@ -304,6 +363,43 @@ export default function MatchBuilderPage() {
     );
   };
 
+  const handleGenerateSchedule = async () => {
+    if (numPlayers < 4) {
+      dispatch(matchBuilderActions.setSchedule(null));
+      return;
+    }
+    const matchesList = buildSchedule(
+      normalizedPlayers,
+      numMatches,
+      activeCourtCount
+    );
+    const nextId = randomId();
+    const session: MatchSession = {
+      id: nextId,
+      createdAt: Date.now(),
+      matchType,
+      players,
+      numMatches,
+      numCourts,
+      courtNumbers,
+      schedule: { matches: matchesList },
+      matchResults: {},
+    };
+    try {
+      const savedSession = await matchesService.create(session);
+      dispatch(matchBuilderActions.setActiveMatchSession(savedSession));
+      navigate(`/match-builder/${savedSession.id}`);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to save match session";
+      console.warn(message);
+      dispatch(matchBuilderActions.setActiveMatchSession(session));
+      navigate(`/match-builder/${nextId}`);
+    }
+  };
+
   return (
     <div className="builder-shell text-left">
       <MatchBuilderHero matchTypeLabel={matchTypeLabel} />
@@ -346,23 +442,7 @@ export default function MatchBuilderPage() {
           dispatch(matchBuilderActions.setCourtNumbers(parseCourtNumbers(value)));
         }}
         onGenerateSchedule={() => {
-          if (numPlayers < 4) {
-            dispatch(matchBuilderActions.setSchedule(null));
-            return;
-          }
-          const matchesList = buildSchedule(
-            normalizedPlayers,
-            numMatches,
-            activeCourtCount
-          );
-          const nextId = randomId();
-          dispatch(
-            matchBuilderActions.createMatchSession({
-              id: nextId,
-              schedule: { matches: matchesList },
-            })
-          );
-          navigate(`/match-builder/${nextId}`);
+          void handleGenerateSchedule();
         }}
         onClearSchedule={() => {
           dispatch(matchBuilderActions.setSchedule(null));

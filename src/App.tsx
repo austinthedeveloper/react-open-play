@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { NavLink, Route, Routes } from "react-router-dom";
 import GoalsPage from "./pages/GoalsPage";
 import MatchBuilderPage from "./pages/MatchBuilderPage";
 import MatchHistoryPage from "./pages/MatchHistoryPage";
@@ -7,12 +7,11 @@ import AuthCallbackPage from "./pages/AuthCallbackPage";
 import { authService, type AuthUser } from "./services/authService";
 
 export default function App() {
-  const location = useLocation();
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState(() => authService.getToken());
 
   useEffect(() => {
     let isActive = true;
-    const token = authService.getToken();
 
     if (!token) {
       setUser(null);
@@ -49,7 +48,11 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, [location.key]);
+  }, [token]);
+
+  useEffect(() => {
+    return authService.onTokenChange(setToken);
+  }, []);
 
   const handleLogin = () => {
     try {

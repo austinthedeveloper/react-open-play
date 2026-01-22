@@ -51,16 +51,19 @@ const toApiSession = (session: MatchSession): MatchSessionApi => ({
   matchResults: session.matchResults,
 });
 
+const normalizeArray = <T,>(value: T[] | null | undefined) =>
+  Array.isArray(value) ? value : [];
+
 const fromApiSession = (session: MatchSessionApi): MatchSession => ({
   id: session.sessionId,
   createdAt: session.createdAt,
   matchType: session.matchType as MatchType,
-  players: session.players,
+  players: normalizeArray(session.players),
   numMatches: session.numMatches,
   numCourts: session.numCourts,
-  courtNumbers: session.courtNumbers,
-  schedule: session.schedule,
-  matchResults: session.matchResults,
+  courtNumbers: normalizeArray(session.courtNumbers),
+  schedule: session.schedule ?? null,
+  matchResults: session.matchResults ?? {},
 });
 
 export const matchesService = {

@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { matchBuilderActions } from "../store/matchBuilderSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import "./MatchHistoryPage.css";
 import { getMatchType } from "../utilities";
+import { matchesService } from "../services/matchesService";
 
 const formatTimestamp = (value: number) =>
   new Date(value).toLocaleString([], {
@@ -25,6 +26,27 @@ export default function MatchHistoryPage() {
   const orderedHistory = useMemo(() => {
     return [...matchHistory].sort((a, b) => b.createdAt - a.createdAt);
   }, [matchHistory]);
+
+  useEffect(() => {
+    let isActive = true;
+    matchesService
+      .list()
+      .then((sessions) => {
+        if (isActive) {
+          dispatch(matchBuilderActions.setMatchHistory(sessions));
+        }
+      })
+      .catch((error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Unable to load match history";
+        console.warn(message);
+      });
+    return () => {
+      isActive = false;
+    };
+  }, [dispatch]);
 
   return (
     <div className="app-shell text-left">
@@ -84,11 +106,21 @@ export default function MatchHistoryPage() {
                     <button
                       type="button"
                       className="ghost-button history-card__remove"
-                      onClick={() =>
-                        dispatch(
-                          matchBuilderActions.removeMatchSession(session.id)
-                        )
-                      }
+                      onClick={async () => {
+                        try {
+                          await matchesService.remove(session.id);
+                        } catch (error) {
+                          const message =
+                            error instanceof Error
+                              ? error.message
+                              : "Unable to remove match";
+                          console.warn(message);
+                        } finally {
+                          dispatch(
+                            matchBuilderActions.removeMatchSession(session.id)
+                          );
+                        }
+                      }}
                     >
                       Remove
                     </button>

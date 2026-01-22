@@ -1,4 +1,5 @@
 const TOKEN_KEY = "pickleGoalsAuthToken";
+const TOKEN_EVENT = "pickleGoalsAuthTokenChanged";
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
 
@@ -37,6 +38,13 @@ const request = async <T>(path: string, options: RequestInit = {}) => {
 
 const getToken = () => localStorage.getItem(TOKEN_KEY);
 
+const emitTokenChange = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.dispatchEvent(new Event(TOKEN_EVENT));
+};
+
 const getAuthHeaders = () => {
   const token = getToken();
   if (!token) {
@@ -54,9 +62,19 @@ export const authService = {
   },
   setToken(token: string) {
     localStorage.setItem(TOKEN_KEY, token);
+    emitTokenChange();
   },
   clearToken() {
     localStorage.removeItem(TOKEN_KEY);
+    emitTokenChange();
+  },
+  onTokenChange(callback: (token: string | null) => void) {
+    if (typeof window === "undefined") {
+      return () => undefined;
+    }
+    const handler = () => callback(getToken());
+    window.addEventListener(TOKEN_EVENT, handler);
+    return () => window.removeEventListener(TOKEN_EVENT, handler);
   },
   async getProfile() {
     return request<AuthUser>("/auth/profile", { headers: getAuthHeaders() });

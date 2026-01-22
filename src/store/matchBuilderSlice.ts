@@ -32,6 +32,40 @@ const matchBuilderSlice = createSlice({
   name: "matchBuilder",
   initialState: loadMatchBuilderState(),
   reducers: {
+    setMatchHistory(state, action: PayloadAction<MatchSession[]>) {
+      state.matchHistory = action.payload;
+    },
+    upsertMatchSession(state, action: PayloadAction<MatchSession>) {
+      const session = action.payload;
+      const index = state.matchHistory.findIndex(
+        (entry) => entry.id === session.id
+      );
+      if (index >= 0) {
+        state.matchHistory[index] = session;
+        return;
+      }
+      state.matchHistory = [session, ...state.matchHistory];
+    },
+    setActiveMatchSession(state, action: PayloadAction<MatchSession>) {
+      const session = action.payload;
+      const index = state.matchHistory.findIndex(
+        (entry) => entry.id === session.id
+      );
+      if (index >= 0) {
+        state.matchHistory[index] = session;
+      } else {
+        state.matchHistory = [session, ...state.matchHistory];
+      }
+      state.activeMatchId = session.id;
+      state.matchType = session.matchType;
+      state.players = session.players;
+      state.numMatches = session.numMatches;
+      state.numCourts = session.numCourts;
+      state.courtNumbers = session.courtNumbers;
+      state.courtNumbersText = formatCourtNumbers(session.courtNumbers);
+      state.schedule = session.schedule;
+      state.matchResults = session.matchResults;
+    },
     setPlayers(state, action: PayloadAction<PlayerProfile[]>) {
       state.players = action.payload;
       syncActiveSession(state);
