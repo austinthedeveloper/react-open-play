@@ -1,11 +1,8 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Schema as MongooseSchema } from "mongoose";
-import type { Document } from "mongoose";
-
-export type MatchDocument = Match & Document;
+import { Document, Schema as MongooseSchema } from "mongoose";
 
 @Schema({ collection: "matches" })
-export class Match {
+export class Match extends Document {
   @Prop({ required: true, unique: true, index: true })
   sessionId: string;
 

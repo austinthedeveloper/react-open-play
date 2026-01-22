@@ -1,10 +1,8 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import type { Document } from "mongoose";
-
-export type UserDocument = User & Document;
+import { Document } from "mongoose";
 
 @Schema({ collection: "users" })
-export class User {
+export class User extends Document {
   @Prop({ required: true, unique: true, index: true })
   googleId!: string;
 
@@ -17,7 +15,7 @@ export class User {
   @Prop({ required: true })
   photoUrl!: string;
 
-  @Prop()
+  @Prop({ type: String, default: null })
   refreshToken?: string | null;
 }
 
