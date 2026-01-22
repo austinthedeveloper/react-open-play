@@ -45,7 +45,7 @@ const emitTokenChange = () => {
   window.dispatchEvent(new Event(TOKEN_EVENT));
 };
 
-const getAuthHeaders = () => {
+const getAuthHeaders = (): Record<string, string> => {
   const token = getToken();
   if (!token) {
     return {};
