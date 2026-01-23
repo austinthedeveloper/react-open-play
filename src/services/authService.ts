@@ -74,6 +74,7 @@ export const authService = {
     }
     const handler = () => callback(getToken());
     window.addEventListener(TOKEN_EVENT, handler);
+    handler();
     return () => window.removeEventListener(TOKEN_EVENT, handler);
   },
   async getProfile() {
