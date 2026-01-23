@@ -87,6 +87,13 @@ const normalizeSchedule = (schedule?: Schedule | null) =>
 const normalizeMatchResults = (matchResults?: MatchResults) =>
   matchResults && typeof matchResults === "object" ? matchResults : {};
 
+const normalizeAllowedUserIds = (value?: string[]) =>
+  Array.isArray(value)
+    ? value.filter(
+        (entry): entry is string => typeof entry === "string" && entry.length > 0
+      )
+    : [];
+
 const resolveNumber = (value: unknown, fallback: number) =>
   typeof value === "number" ? value : fallback;
 
@@ -100,6 +107,8 @@ type StoredMatchSession = {
   courtNumbers?: number[] | string;
   schedule?: Schedule | null;
   matchResults?: MatchResults;
+  ownerId?: string | null;
+  allowedUserIds?: string[];
 };
 
 type StoredMatchBuilderState = {
@@ -186,6 +195,8 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
                 courtNumbers: sessionCourts.courtNumbers,
                 schedule: normalizeSchedule(entry.schedule),
                 matchResults: normalizeMatchResults(entry.matchResults),
+                ownerId: typeof entry.ownerId === "string" ? entry.ownerId : null,
+                allowedUserIds: normalizeAllowedUserIds(entry.allowedUserIds),
               } satisfies MatchSession;
             })
             .filter((entry): entry is MatchSession => Boolean(entry));

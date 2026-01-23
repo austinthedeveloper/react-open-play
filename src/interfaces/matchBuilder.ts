@@ -24,6 +24,8 @@ export type MatchSession = {
   courtNumbers: number[];
   schedule: Schedule | null;
   matchResults: MatchResults;
+  ownerId?: string | null;
+  allowedUserIds?: string[];
 };
 
 export type MatchCard = {

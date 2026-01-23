@@ -60,6 +60,9 @@ export const authService = {
   getToken() {
     return getToken();
   },
+  getAuthHeaders() {
+    return getAuthHeaders();
+  },
   setToken(token: string) {
     localStorage.setItem(TOKEN_KEY, token);
     emitTokenChange();

@@ -10,4 +10,5 @@ export class UpdateMatchDto implements Partial<CreateMatchDto> {
   courtNumbers?: number[];
   schedule?: CreateMatchDto["schedule"];
   matchResults?: CreateMatchDto["matchResults"];
+  allowedUserIds?: CreateMatchDto["allowedUserIds"];
 }

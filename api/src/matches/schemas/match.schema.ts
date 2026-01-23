@@ -9,6 +9,12 @@ export class Match extends Document {
   @Prop({ required: true, default: () => Date.now() })
   createdAt: number;
 
+  @Prop({ type: String, default: null, index: true })
+  ownerId?: string | null;
+
+  @Prop({ type: [String], default: [] })
+  allowedUserIds: string[];
+
   @Prop({ required: true })
   matchType: string;
 
