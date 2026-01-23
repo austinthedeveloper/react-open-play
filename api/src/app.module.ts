@@ -11,13 +11,16 @@ import { MatchesModule } from "./matches/matches.module";
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [
-        path.resolve(process.cwd(), "..", ".env.local"),
-        path.resolve(process.cwd(), "..", ".env.dev"),
-        path.resolve(process.cwd(), "..", ".env"),
-        path.resolve(process.cwd(), ".env.local"),
-        path.resolve(process.cwd(), ".env"),
-      ],
+      envFilePath:
+        process.env.NODE_ENV === "production"
+          ? []
+          : [
+              path.resolve(process.cwd(), "..", ".env.local"),
+              path.resolve(process.cwd(), "..", ".env.dev"),
+              path.resolve(process.cwd(), "..", ".env"),
+              path.resolve(process.cwd(), ".env.local"),
+              path.resolve(process.cwd(), ".env"),
+            ],
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
