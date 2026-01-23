@@ -9,23 +9,27 @@ import { authService, type AuthUser } from "./services/authService";
 export default function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState(() => authService.getToken());
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     let isActive = true;
 
     if (!token) {
       setUser(null);
+      setAuthReady(true);
       return () => {
         isActive = false;
       };
     }
 
+    setAuthReady(false);
     try {
       authService
         .getProfile()
         .then((profile) => {
           if (isActive) {
             setUser(profile);
+            setAuthReady(true);
           }
         })
         .catch((error) => {
@@ -35,6 +39,7 @@ export default function App() {
           authService.clearToken();
           if (isActive) {
             setUser(null);
+            setAuthReady(true);
           }
         });
     } catch (error) {
@@ -43,6 +48,7 @@ export default function App() {
       console.warn(message);
       authService.clearToken();
       setUser(null);
+      setAuthReady(true);
     }
 
     return () => {
@@ -109,28 +115,32 @@ export default function App() {
               Match History
             </NavLink>
           </div>
-          {user ? (
-            <div className="nav-user">
-              <span className="nav-user__name">
-                {user.displayName || user.email}
-              </span>
-              <button
-                type="button"
-                className="nav-logout-button"
-                onClick={handleLogout}
-              >
-                Log out
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className="nav-auth-button"
-              onClick={handleLogin}
-            >
-              Sign in with Google
-            </button>
-          )}
+          {authReady
+            ? user
+              ? (
+                <div className="nav-user">
+                  <span className="nav-user__name">
+                    {user.displayName || user.email}
+                  </span>
+                  <button
+                    type="button"
+                    className="nav-logout-button"
+                    onClick={handleLogout}
+                  >
+                    Log out
+                  </button>
+                </div>
+              )
+              : (
+                <button
+                  type="button"
+                  className="nav-auth-button"
+                  onClick={handleLogin}
+                >
+                  Sign in with Google
+                </button>
+              )
+            : null}
         </div>
       </nav>
 
