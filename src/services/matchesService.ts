@@ -1,4 +1,11 @@
-import type { MatchResults, MatchSession, MatchType, PlayerProfile, Schedule } from "../interfaces";
+import type {
+  MatchResults,
+  MatchSession,
+  MatchType,
+  PlayerProfile,
+  Schedule,
+} from "../interfaces";
+import { authService } from "./authService";
 
 export type MatchSessionApi = {
   sessionId: string;
@@ -10,6 +17,8 @@ export type MatchSessionApi = {
   courtNumbers: number[];
   schedule: Schedule | null;
   matchResults: MatchResults;
+  ownerId?: string | null;
+  allowedUserIds?: string[];
 };
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
@@ -27,6 +36,7 @@ const request = async <T>(path: string, options: RequestInit = {}) => {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...authService.getAuthHeaders(),
       ...(options.headers ?? {}),
     },
   });
@@ -49,6 +59,8 @@ const toApiSession = (session: MatchSession): MatchSessionApi => ({
   courtNumbers: session.courtNumbers,
   schedule: session.schedule,
   matchResults: session.matchResults,
+  ownerId: session.ownerId,
+  allowedUserIds: session.allowedUserIds,
 });
 
 const normalizeArray = <T,>(value: T[] | null | undefined) =>
@@ -64,6 +76,8 @@ const fromApiSession = (session: MatchSessionApi): MatchSession => ({
   courtNumbers: normalizeArray(session.courtNumbers),
   schedule: session.schedule ?? null,
   matchResults: session.matchResults ?? {},
+  ownerId: session.ownerId ?? null,
+  allowedUserIds: normalizeArray(session.allowedUserIds),
 });
 
 export const matchesService = {

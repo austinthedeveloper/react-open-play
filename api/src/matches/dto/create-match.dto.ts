@@ -25,4 +25,5 @@ export class CreateMatchDto {
   courtNumbers: number[];
   schedule: Schedule | null;
   matchResults: Record<string, string>;
+  allowedUserIds?: string[];
 }
