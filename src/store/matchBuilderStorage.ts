@@ -109,7 +109,6 @@ type StoredMatchSession = {
   schedule?: Schedule | null;
   matchResults?: MatchResults;
   ownerId?: string | null;
-  safd;
   allowedUserIds?: string[];
 };
 
