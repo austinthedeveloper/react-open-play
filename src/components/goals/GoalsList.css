@@ -4,6 +4,10 @@
     gap: 1rem;
   }
 
+  .goals-list__header {
+    margin-bottom: 1.25rem;
+  }
+
   .goals-card {
     padding: clamp(1rem, 2vw, 1.5rem);
     border-radius: 20px;

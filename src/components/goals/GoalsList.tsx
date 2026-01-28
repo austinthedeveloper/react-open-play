@@ -20,6 +20,12 @@ export default function GoalsList() {
 
   return (
     <main className="table-panel">
+      <header className="goals-list__header">
+        <h2 className="panel-title">Match Goals</h2>
+        <p className="panel-subtitle">
+          Generated goals tied to your current match session.
+        </p>
+      </header>
       {matches.length === 0 ? (
         <p className="empty-state">
           No matches yet. Click &quot;Generate goals&quot;.

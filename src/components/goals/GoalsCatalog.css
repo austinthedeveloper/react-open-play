@@ -1,0 +1,149 @@
+@layer components {
+  .goals-catalog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .goals-catalog__loading {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .goals-catalog__error {
+    color: #fca5a5;
+    margin: -0.5rem 0 1.25rem;
+  }
+
+  .goals-catalog__grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .goals-catalog__column {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .goals-catalog__title {
+    margin: 0;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .goals-catalog__list {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .goals-catalog__card {
+    padding: 1rem;
+    border-radius: 18px;
+    background: rgba(12, 17, 31, 0.65);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .goals-catalog__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .goals-catalog__pill {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(76, 243, 255, 0.4);
+    color: rgba(125, 211, 252, 0.9);
+  }
+
+  .goals-catalog__pill.is-user {
+    border-color: rgba(248, 250, 252, 0.3);
+    color: rgba(248, 250, 252, 0.85);
+  }
+
+  .goals-catalog__level {
+    font-size: 0.75rem;
+    color: rgba(148, 163, 184, 0.85);
+  }
+
+  .goals-catalog__text {
+    margin: 0;
+    color: rgba(248, 250, 252, 0.92);
+    font-weight: 500;
+  }
+
+  .goals-catalog__byline {
+    margin: 0;
+    font-size: 0.8rem;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .goals-catalog__form {
+    display: grid;
+    gap: 0.6rem;
+    padding: 1rem;
+    border-radius: 18px;
+    background: rgba(8, 12, 24, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+  }
+
+  .goals-catalog__form h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .goals-catalog__form textarea,
+  .goals-catalog__form select {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: rgba(10, 14, 26, 0.8);
+    color: rgba(248, 250, 252, 0.95);
+    padding: 0.6rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .goals-catalog__form textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .goals-catalog__actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .goals-catalog__edit {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .goals-catalog__note {
+    color: rgba(148, 163, 184, 0.75);
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .goals-catalog__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

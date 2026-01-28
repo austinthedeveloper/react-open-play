@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import GoalsCatalog from "../components/goals/GoalsCatalog";
 import { goalsCatalogActions } from "../store/goalsCatalogSlice";
 import { goalsActions } from "../store/goalsSlice";
-import { authService } from "../services/authService";
+import { authService, type AuthUser } from "../services/authService";
 import { goalsService } from "../services/goalsService";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import GoalsControls from "../components/goals/GoalsControls";
@@ -12,6 +13,7 @@ export default function GoalsPage() {
   const dispatch = useAppDispatch();
   const [isControlsOpen, setIsControlsOpen] = useState(true);
   const [token, setToken] = useState(() => authService.getToken());
+  const [user, setUser] = useState<AuthUser | null>(null);
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
   const profile = useAppSelector((state) => state.goals.profile);
   const numMatches = useAppSelector((state) => state.goals.numMatches);
@@ -107,6 +109,7 @@ export default function GoalsPage() {
 
     if (!token) {
       dispatch(goalsCatalogActions.setUserGoals([]));
+      setUser(null);
       return () => {
         isActive = false;
       };
@@ -118,6 +121,7 @@ export default function GoalsPage() {
         if (!isActive) {
           return;
         }
+        setUser(user);
         return goalsService.listUser(user._id);
       })
       .then((goals) => {
@@ -133,6 +137,7 @@ export default function GoalsPage() {
         const message =
           error instanceof Error ? error.message : "Unable to load goals";
         dispatch(goalsCatalogActions.setGoalsError(message));
+        setUser(null);
       });
 
     return () => {
@@ -166,6 +171,8 @@ export default function GoalsPage() {
         }
         onGenerate={regenerate}
       />
+
+      <GoalsCatalog user={user} />
 
       <GoalsList />
     </div>
