@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { goalsCatalogActions } from "../store/goalsCatalogSlice";
 import { goalsActions } from "../store/goalsSlice";
+import { authService } from "../services/authService";
+import { goalsService } from "../services/goalsService";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import GoalsControls from "../components/goals/GoalsControls";
 import GoalsHero from "../components/goals/GoalsHero";
@@ -8,6 +11,7 @@ import GoalsList from "../components/goals/GoalsList";
 export default function GoalsPage() {
   const dispatch = useAppDispatch();
   const [isControlsOpen, setIsControlsOpen] = useState(true);
+  const [token, setToken] = useState(() => authService.getToken());
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
   const profile = useAppSelector((state) => state.goals.profile);
   const numMatches = useAppSelector((state) => state.goals.numMatches);
@@ -19,6 +23,10 @@ export default function GoalsPage() {
   const regenerate = () => {
     dispatch(goalsActions.regenerateMatches());
   };
+
+  useEffect(() => {
+    return authService.onTokenChange(setToken);
+  }, []);
 
   useEffect(() => {
     if (!apiBaseUrl) {
@@ -61,6 +69,76 @@ export default function GoalsPage() {
       controller.abort();
     };
   }, [apiBaseUrl]);
+
+  useEffect(() => {
+    let isActive = true;
+    dispatch(goalsCatalogActions.setGoalsLoading(true));
+    dispatch(goalsCatalogActions.setGoalsError(null));
+
+    goalsService
+      .listGlobal()
+      .then((goals) => {
+        if (!isActive) {
+          return;
+        }
+        dispatch(goalsCatalogActions.setGlobalGoals(goals));
+      })
+      .catch((error) => {
+        if (!isActive) {
+          return;
+        }
+        const message =
+          error instanceof Error ? error.message : "Unable to load goals";
+        dispatch(goalsCatalogActions.setGoalsError(message));
+      })
+      .finally(() => {
+        if (isActive) {
+          dispatch(goalsCatalogActions.setGoalsLoading(false));
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!token) {
+      dispatch(goalsCatalogActions.setUserGoals([]));
+      return () => {
+        isActive = false;
+      };
+    }
+
+    authService
+      .getProfile()
+      .then((user) => {
+        if (!isActive) {
+          return;
+        }
+        return goalsService.listUser(user._id);
+      })
+      .then((goals) => {
+        if (!isActive || !goals) {
+          return;
+        }
+        dispatch(goalsCatalogActions.setUserGoals(goals));
+      })
+      .catch((error) => {
+        if (!isActive) {
+          return;
+        }
+        const message =
+          error instanceof Error ? error.message : "Unable to load goals";
+        dispatch(goalsCatalogActions.setGoalsError(message));
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [dispatch, token]);
 
   return (
     <div className="app-shell text-left">
