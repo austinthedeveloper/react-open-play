@@ -90,8 +90,7 @@ const normalizeMatchResults = (matchResults?: MatchResults) =>
 const normalizeAllowedUserIds = (value?: string[]) =>
   Array.isArray(value)
     ? value.filter(
-        (entry): entry is string =>
-          typeof entry === "string" && entry.length > 0,
+        (entry): entry is string => typeof entry === "string" && entry.length > 0
       )
     : [];
 
@@ -196,13 +195,12 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
                 courtNumbers: sessionCourts.courtNumbers,
                 schedule: normalizeSchedule(entry.schedule),
                 matchResults: normalizeMatchResults(entry.matchResults),
-                ownerId:
-                  typeof entry.ownerId === "string" ? entry.ownerId : null,
+                ownerId: typeof entry.ownerId === "string" ? entry.ownerId : null,
                 allowedUserIds: normalizeAllowedUserIds(entry.allowedUserIds),
               } satisfies MatchSession);
               return entries;
             },
-            [],
+            []
           );
         }
         if (typeof parsed.activeMatchId === "string") {
@@ -216,7 +214,7 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
 
   if (activeMatchId) {
     const activeSession = matchHistory.find(
-      (session) => session.id === activeMatchId,
+      (session) => session.id === activeMatchId
     );
     if (activeSession) {
       matchType = activeSession.matchType;
@@ -284,6 +282,6 @@ export const saveMatchBuilderState = ({
       isRosterOpen,
       matchHistory,
       activeMatchId,
-    }),
+    })
   );
 };
