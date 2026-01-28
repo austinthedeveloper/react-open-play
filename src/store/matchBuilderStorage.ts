@@ -175,14 +175,14 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
           isRosterOpen = parsed.isRosterOpen;
         }
         if (Array.isArray(parsed.matchHistory)) {
-          matchHistory = parsed.matchHistory
-            .map((entry) => {
+          matchHistory = parsed.matchHistory.reduce<MatchSession[]>(
+            (entries, entry) => {
               if (!entry || typeof entry !== "object") {
-                return null;
+                return entries;
               }
               const sessionPlayers = normalizePlayers(entry.players);
               const sessionCourts = normalizeCourtNumbers(entry.courtNumbers);
-              return {
+              entries.push({
                 id: typeof entry.id === "string" ? entry.id : randomId(),
                 createdAt:
                   typeof entry.createdAt === "number"
@@ -197,9 +197,11 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
                 matchResults: normalizeMatchResults(entry.matchResults),
                 ownerId: typeof entry.ownerId === "string" ? entry.ownerId : null,
                 allowedUserIds: normalizeAllowedUserIds(entry.allowedUserIds),
-              } satisfies MatchSession;
-            })
-            .filter((entry): entry is MatchSession => Boolean(entry));
+              } satisfies MatchSession);
+              return entries;
+            },
+            []
+          );
         }
         if (typeof parsed.activeMatchId === "string") {
           activeMatchId = parsed.activeMatchId;
