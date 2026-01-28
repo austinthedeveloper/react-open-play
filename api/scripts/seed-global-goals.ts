@@ -12,7 +12,10 @@ const seedGoals: SeedGoal[] = [
   { goalText: "Serve only to backhands." },
   { goalText: "Every return must land deep (past midcourt)." },
   { goalText: "No backspin allowed this match.", opponentLevel: "same" },
-  { goalText: "Practice soft hands: reset hard balls back to the kitchen.", opponentLevel: "lower" },
+  {
+    goalText: "Practice soft hands: reset hard balls back to the kitchen.",
+    opponentLevel: "lower",
+  },
   { goalText: "No hero shots down the line.", opponentLevel: "higher" },
 ];
 
@@ -49,7 +52,7 @@ const main = async () => {
         updatedByName: "Seed Script",
         updatedByPhotoUrl: null,
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     ).exec();
   }
 
