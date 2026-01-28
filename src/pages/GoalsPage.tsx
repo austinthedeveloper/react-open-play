@@ -11,6 +11,7 @@ import GoalsList from "../components/goals/GoalsList";
 
 export default function GoalsPage() {
   const dispatch = useAppDispatch();
+  const [activeTab, setActiveTab] = useState<"generate" | "manage">("generate");
   const [isControlsOpen, setIsControlsOpen] = useState(true);
   const [token, setToken] = useState(() => authService.getToken());
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -154,27 +155,65 @@ export default function GoalsPage() {
         totalMatches={matches.length}
       />
 
-      <GoalsControls
-        numMatches={numMatches}
-        ratingRange={profile.ratingRange}
-        defaultOpponentLevel={profile.defaultOpponentLevel}
-        isOpen={isControlsOpen}
-        onToggleOpen={() => setIsControlsOpen((prev) => !prev)}
-        onChangeNumMatches={(value) =>
-          dispatch(goalsActions.setNumMatches(value))
-        }
-        onChangeRatingRange={(value) =>
-          dispatch(goalsActions.setRatingRange(value))
-        }
-        onChangeOpponentLevel={(level) =>
-          dispatch(goalsActions.setDefaultOpponentLevel(level))
-        }
-        onGenerate={regenerate}
-      />
+      <div className="goals-tabs" role="tablist" aria-label="Goals sections">
+        <button
+          type="button"
+          role="tab"
+          id="goals-tab-generate"
+          aria-controls="goals-tabpanel-generate"
+          aria-selected={activeTab === "generate"}
+          className={`goals-tab${activeTab === "generate" ? " is-active" : ""}`}
+          onClick={() => setActiveTab("generate")}
+        >
+          Generating goals
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="goals-tab-manage"
+          aria-controls="goals-tabpanel-manage"
+          aria-selected={activeTab === "manage"}
+          className={`goals-tab${activeTab === "manage" ? " is-active" : ""}`}
+          onClick={() => setActiveTab("manage")}
+        >
+          Management
+        </button>
+      </div>
 
-      <GoalsCatalog user={user} />
-
-      <GoalsList />
+      {activeTab === "generate" ? (
+        <section
+          role="tabpanel"
+          id="goals-tabpanel-generate"
+          aria-labelledby="goals-tab-generate"
+        >
+          <GoalsControls
+            numMatches={numMatches}
+            ratingRange={profile.ratingRange}
+            defaultOpponentLevel={profile.defaultOpponentLevel}
+            isOpen={isControlsOpen}
+            onToggleOpen={() => setIsControlsOpen((prev) => !prev)}
+            onChangeNumMatches={(value) =>
+              dispatch(goalsActions.setNumMatches(value))
+            }
+            onChangeRatingRange={(value) =>
+              dispatch(goalsActions.setRatingRange(value))
+            }
+            onChangeOpponentLevel={(level) =>
+              dispatch(goalsActions.setDefaultOpponentLevel(level))
+            }
+            onGenerate={regenerate}
+          />
+          <GoalsList />
+        </section>
+      ) : (
+        <section
+          role="tabpanel"
+          id="goals-tabpanel-manage"
+          aria-labelledby="goals-tab-manage"
+        >
+          <GoalsCatalog user={user} />
+        </section>
+      )}
     </div>
   );
 }
