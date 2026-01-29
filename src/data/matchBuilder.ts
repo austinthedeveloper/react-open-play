@@ -4,7 +4,8 @@ export const DEFAULT_COURTS = 2;
 export const MAX_PLAYERS = 24;
 export const MAX_MATCHES = 20;
 export const MATCH_TYPES = [
-  { value: "round_robin", label: "Round Robin" },
+  { value: "round_robin", label: "Open Play" },
+  { value: "round_robin_fixed", label: "Round Robin" },
   { value: "tournament", label: "Tournament" },
   { value: "mixed_doubles", label: "Mixed Doubles" },
 ] as const;

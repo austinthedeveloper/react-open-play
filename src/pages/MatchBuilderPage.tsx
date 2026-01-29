@@ -45,7 +45,7 @@ import StatsPanel from "../components/matchBuilder/StatsPanel";
 import "./MatchBuilderPage.css";
 
 const resolveMatchTypeLabel = (type: MatchType) =>
-  MATCH_TYPES.find((option) => option.value === type)?.label ?? "Round Robin";
+  MATCH_TYPES.find((option) => option.value === type)?.label ?? "Open Play";
 
 export default function MatchBuilderPage() {
   const dispatch = useAppDispatch();
@@ -661,7 +661,11 @@ export default function MatchBuilderPage() {
           updatePlayer(index, { gender })
         }
         showGenderSelect={matchType === "mixed_doubles"}
-        showPartnerSelect={matchType === "tournament" || matchType === "mixed_doubles"}
+        showPartnerSelect={
+          matchType === "round_robin_fixed" ||
+          matchType === "tournament" ||
+          matchType === "mixed_doubles"
+        }
         warningText={pairingError ?? undefined}
         partnerLookup={partnerLookup}
         onPartnerChange={handlePartnerChange}

@@ -267,6 +267,164 @@ export function buildRoundRobinSchedule(
   return { matches, rounds };
 }
 
+type TeamEntry = {
+  key: string;
+  team: MatchTeam;
+};
+
+const scoreTeamMatchup = (
+  teams: [MatchTeam, MatchTeam],
+  playCounts: Map<string, number>,
+  opponentCounts: Map<string, number>
+) => {
+  const [teamA, teamB] = teams;
+  const players = [...teamA, ...teamB].filter(
+    (playerId) => playerId !== BYE_PLAYER_ID
+  );
+  if (players.length === 0) {
+    return 0;
+  }
+  const plays = players.map((playerId) => playCounts.get(playerId) ?? 0);
+  const minPlays = Math.min(...plays);
+  const maxPlays = Math.max(...plays);
+  let score = plays.reduce((sum, value) => sum + value, 0);
+
+  const teamKeyA = pairKey(teamA[0], teamA[1]);
+  const teamKeyB = pairKey(teamB[0], teamB[1]);
+  const matchupKey = pairKey(teamKeyA, teamKeyB);
+  score += (opponentCounts.get(matchupKey) ?? 0) * OPPONENT_WEIGHT;
+  score += (maxPlays - minPlays) * BALANCE_WEIGHT;
+
+  return score + Math.random() * 0.1;
+};
+
+const pickBestTeamMatchup = (
+  teams: TeamEntry[],
+  playCounts: Map<string, number>,
+  opponentCounts: Map<string, number>
+) => {
+  if (teams.length < 2) {
+    return null;
+  }
+  const sorted = [...teams].sort((a, b) => {
+    const playsA = a.team
+      .filter((playerId) => playerId !== BYE_PLAYER_ID)
+      .reduce((sum, playerId) => sum + (playCounts.get(playerId) ?? 0), 0);
+    const playsB = b.team
+      .filter((playerId) => playerId !== BYE_PLAYER_ID)
+      .reduce((sum, playerId) => sum + (playCounts.get(playerId) ?? 0), 0);
+    const countDelta = playsA - playsB;
+    return countDelta || Math.random() - 0.5;
+  });
+
+  const candidatePool = sorted.slice(0, Math.min(sorted.length, 10));
+  const combos = getCombinations(candidatePool, 2);
+  let bestTeams: [MatchTeam, MatchTeam] | null = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  for (const combo of combos) {
+    const [teamA, teamB] = combo.map((entry) => entry.team);
+    const score = scoreTeamMatchup(
+      [teamA, teamB],
+      playCounts,
+      opponentCounts
+    );
+    if (score < bestScore) {
+      bestScore = score;
+      bestTeams = [teamA, teamB];
+    }
+  }
+
+  return bestTeams;
+};
+
+const updateTeamCounts = (
+  teams: [MatchTeam, MatchTeam],
+  playCounts: Map<string, number>,
+  opponentCounts: Map<string, number>
+) => {
+  const [teamA, teamB] = teams;
+  const players = [...teamA, ...teamB];
+
+  for (const playerId of players) {
+    if (!playCounts.has(playerId)) {
+      continue;
+    }
+    playCounts.set(playerId, (playCounts.get(playerId) ?? 0) + 1);
+  }
+
+  const matchupKey = pairKey(
+    pairKey(teamA[0], teamA[1]),
+    pairKey(teamB[0], teamB[1])
+  );
+  opponentCounts.set(matchupKey, (opponentCounts.get(matchupKey) ?? 0) + 1);
+};
+
+export function buildFixedRoundRobinSchedule(
+  players: PlayerProfile[],
+  numRounds: number,
+  numCourts: number,
+  partnerPairs: PartnerPair[] = []
+): Schedule {
+  const playCounts = new Map(players.map((player) => [player.id, 0]));
+  const opponentCounts = new Map<string, number>();
+  const matches: MatchCardType[] = [];
+  const rounds: MatchCardType[][] = [];
+  const courts = Math.max(
+    1,
+    Math.min(numCourts, Math.floor(players.length / 4))
+  );
+  const teams = buildTournamentTeams(players, partnerPairs, false);
+  const teamEntries: TeamEntry[] = teams.map((team) => ({
+    team,
+    key: pairKey(team[0], team[1]),
+  }));
+
+  for (let round = 0; round < numRounds; round += 1) {
+    const usedTeams = new Set<string>();
+    let matchesBuilt = 0;
+    const roundMatches: MatchCardType[] = [];
+
+    for (let court = 0; court < courts; court += 1) {
+      const availableTeams = teamEntries.filter(
+        (entry) => !usedTeams.has(entry.key)
+      );
+      if (availableTeams.length < 2) {
+        break;
+      }
+      const teamsPair = pickBestTeamMatchup(
+        availableTeams,
+        playCounts,
+        opponentCounts
+      );
+      if (!teamsPair) {
+        return { matches, rounds };
+      }
+      updateTeamCounts(teamsPair, playCounts, opponentCounts);
+
+      for (const team of teamsPair) {
+        usedTeams.add(pairKey(team[0], team[1]));
+      }
+
+      const match: MatchCardType = {
+        id: randomId(),
+        index: matches.length + 1,
+        teams: teamsPair,
+      };
+      matches.push(match);
+      roundMatches.push(match);
+      matchesBuilt += 1;
+    }
+
+    if (matchesBuilt === 0) {
+      break;
+    }
+    rounds.push(roundMatches);
+  }
+
+  return { matches, rounds };
+}
+
 const isByeTeam = (team: MatchTeam) =>
   team.every((playerId) => playerId === BYE_PLAYER_ID);
 
@@ -515,6 +673,17 @@ export function buildSchedule(
       partnerPairs,
       matchType === "mixed_doubles"
     );
+  }
+  if (matchType === "round_robin_fixed") {
+    return {
+      schedule: buildFixedRoundRobinSchedule(
+        players,
+        numRounds,
+        numCourts,
+        partnerPairs
+      ),
+      matchResults: {},
+    };
   }
   return {
     schedule: buildRoundRobinSchedule(players, numRounds, numCourts),
