@@ -27,6 +27,7 @@ import {
   randomId,
   resolveMatchTeam,
   resolveScheduleMatches,
+  validateMixedDoublesPairing,
 } from "../utilities";
 import { matchBuilderActions } from "../store/matchBuilderSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -81,6 +82,7 @@ export default function MatchBuilderPage() {
   );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRound, setActiveRound] = useState(0);
+  const [pairingError, setPairingError] = useState<string | null>(null);
   const fullscreenRef = useRef<HTMLDivElement | null>(null);
   const isSessionView = Boolean(matchId);
 
@@ -338,11 +340,32 @@ export default function MatchBuilderPage() {
     dispatch(matchBuilderActions.setSchedule(null));
     dispatch(matchBuilderActions.setMatchResults({}));
     dispatch(matchBuilderActions.setPartnerPairs([]));
+    setPairingError(null);
     dispatch(matchBuilderActions.setIsControlsOpen(true));
     dispatch(matchBuilderActions.setIsRosterOpen(true));
     setActiveRound(0);
     closeFullscreen();
   }, [closeFullscreen, dispatch]);
+
+  useEffect(() => {
+    if (matchType !== "mixed_doubles") {
+      if (pairingError) {
+        setPairingError(null);
+      }
+      return;
+    }
+    const nextError = validateMixedDoublesPairing(players, partnerPairs);
+    if (!pairingError) {
+      return;
+    }
+    if (!nextError) {
+      setPairingError(null);
+      return;
+    }
+    if (nextError !== pairingError) {
+      setPairingError(nextError);
+    }
+  }, [matchType, pairingError, partnerPairs, players]);
 
   useEffect(() => {
     if (!matchId) {
@@ -514,6 +537,17 @@ export default function MatchBuilderPage() {
       dispatch(matchBuilderActions.setSchedule(null));
       return;
     }
+    if (matchType === "mixed_doubles") {
+      const validationError = validateMixedDoublesPairing(
+        normalizedPlayers,
+        partnerPairs
+      );
+      if (validationError) {
+        setPairingError(validationError);
+        return;
+      }
+    }
+    setPairingError(null);
     const { schedule: nextSchedule, matchResults: nextResults } = buildSchedule(
       normalizedPlayers,
       numMatches,
@@ -626,7 +660,9 @@ export default function MatchBuilderPage() {
         onPlayerGenderChange={(index, gender) =>
           updatePlayer(index, { gender })
         }
-        showPartnerSelect={matchType === "tournament"}
+        showGenderSelect={matchType === "mixed_doubles"}
+        showPartnerSelect={matchType === "tournament" || matchType === "mixed_doubles"}
+        warningText={pairingError ?? undefined}
         partnerLookup={partnerLookup}
         onPartnerChange={handlePartnerChange}
         onRemovePlayer={removePlayer}

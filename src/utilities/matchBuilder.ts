@@ -23,6 +23,54 @@ import { randomId } from "./randomId";
 export const BYE_PLAYER_ID = "__BYE__";
 const BYE_TEAM: MatchTeam = [BYE_PLAYER_ID, BYE_PLAYER_ID];
 
+export const validateMixedDoublesPairing = (
+  players: PlayerProfile[],
+  partnerPairs: PartnerPair[] = []
+) => {
+  const playerLookup = new Map(players.map((player) => [player.id, player]));
+  const used = new Set<string>();
+
+  for (const pair of partnerPairs) {
+    const [first, second] = pair;
+    if (!first || !second || first === second) {
+      continue;
+    }
+    const firstPlayer = playerLookup.get(first);
+    const secondPlayer = playerLookup.get(second);
+    if (!firstPlayer || !secondPlayer) {
+      continue;
+    }
+    const firstGender = firstPlayer.gender ?? "";
+    const secondGender = secondPlayer.gender ?? "";
+    if (!firstGender || !secondGender) {
+      return "Set gender for all locked pairs in Mixed Doubles.";
+    }
+    if (firstGender === secondGender) {
+      return "Mixed Doubles locked pairs must be one male and one female.";
+    }
+    used.add(first);
+    used.add(second);
+  }
+
+  const remaining = players.filter((player) => !used.has(player.id));
+  if (remaining.some((player) => !player.gender)) {
+    return "Set gender for all remaining players so Mixed Doubles can auto-pair.";
+  }
+
+  const remainingMales = remaining.filter(
+    (player) => player.gender === "male"
+  );
+  const remainingFemales = remaining.filter(
+    (player) => player.gender === "female"
+  );
+
+  if (remainingMales.length !== remainingFemales.length) {
+    return "Mixed Doubles needs an equal number of remaining males and females.";
+  }
+
+  return null;
+};
+
 export function buildDefaultPlayers(totalPlayers: number): PlayerProfile[] {
   return Array.from({ length: totalPlayers }, (_, index) => ({
     id: randomId(),
@@ -250,7 +298,8 @@ const resolveByeWinner = (teams: [MatchTeam, MatchTeam]): MatchWinner | null => 
 
 const buildTournamentTeams = (
   players: PlayerProfile[],
-  partnerPairs: PartnerPair[] = []
+  partnerPairs: PartnerPair[] = [],
+  preferMixed = false
 ) => {
   const playerLookup = new Map(players.map((player) => [player.id, player]));
   const used = new Set<string>();
@@ -274,16 +323,50 @@ const buildTournamentTeams = (
 
   const remainingPlayers = players.filter((player) => !used.has(player.id));
   const autoTeams: MatchTeam[] = [];
-  for (let i = 0; i < remainingPlayers.length; i += 2) {
-    const first = remainingPlayers[i];
-    const second = remainingPlayers[i + 1];
-    if (!first) {
-      break;
+
+  if (preferMixed) {
+    const males = remainingPlayers.filter((player) => player.gender === "male");
+    const females = remainingPlayers.filter(
+      (player) => player.gender === "female"
+    );
+    const unspecified = remainingPlayers.filter(
+      (player) => !player.gender
+    );
+
+    while (males.length > 0 && females.length > 0) {
+      const male = males.shift();
+      const female = females.shift();
+      if (!male || !female) {
+        break;
+      }
+      autoTeams.push([male.id, female.id]);
     }
-    if (second) {
-      autoTeams.push([first.id, second.id]);
-    } else {
-      autoTeams.push([first.id, BYE_PLAYER_ID]);
+
+    const leftovers = [...males, ...females, ...unspecified];
+    for (let i = 0; i < leftovers.length; i += 2) {
+      const first = leftovers[i];
+      const second = leftovers[i + 1];
+      if (!first) {
+        break;
+      }
+      if (second) {
+        autoTeams.push([first.id, second.id]);
+      } else {
+        autoTeams.push([first.id, BYE_PLAYER_ID]);
+      }
+    }
+  } else {
+    for (let i = 0; i < remainingPlayers.length; i += 2) {
+      const first = remainingPlayers[i];
+      const second = remainingPlayers[i + 1];
+      if (!first) {
+        break;
+      }
+      if (second) {
+        autoTeams.push([first.id, second.id]);
+      } else {
+        autoTeams.push([first.id, BYE_PLAYER_ID]);
+      }
     }
   }
 
@@ -292,9 +375,14 @@ const buildTournamentTeams = (
 
 export function buildTournamentSchedule(
   players: PlayerProfile[],
-  partnerPairs: PartnerPair[] = []
+  partnerPairs: PartnerPair[] = [],
+  preferMixed = false
 ): BuildScheduleResult {
-  const teams: MatchTeam[] = buildTournamentTeams(players, partnerPairs);
+  const teams: MatchTeam[] = buildTournamentTeams(
+    players,
+    partnerPairs,
+    preferMixed
+  );
 
   teams.sort((a, b) => {
     if (hasByePlayer(a) === hasByePlayer(b)) {
@@ -421,8 +509,12 @@ export function buildSchedule(
   matchType: MatchType,
   partnerPairs: PartnerPair[] = []
 ): BuildScheduleResult {
-  if (matchType === "tournament") {
-    return buildTournamentSchedule(players, partnerPairs);
+  if (matchType === "tournament" || matchType === "mixed_doubles") {
+    return buildTournamentSchedule(
+      players,
+      partnerPairs,
+      matchType === "mixed_doubles"
+    );
   }
   return {
     schedule: buildRoundRobinSchedule(players, numRounds, numCourts),

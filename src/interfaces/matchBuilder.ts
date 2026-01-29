@@ -1,5 +1,5 @@
 export type GenderOption = "" | "male" | "female";
-export type MatchType = "round_robin" | "tournament";
+export type MatchType = "round_robin" | "tournament" | "mixed_doubles";
 
 export type PlayerProfile = {
   id: string;

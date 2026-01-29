@@ -4,10 +4,10 @@
     gap: 0.75rem;
   }
 
-  .roster-header {
+  .roster-panel .roster-header {
     display: grid;
     gap: 0.75rem;
-    grid-template-columns: minmax(100px, 140px) minmax(180px, 1fr) 64px minmax(140px, 1fr) minmax(160px, 1fr) auto;
+    grid-template-columns: minmax(100px, 140px) minmax(180px, 1fr) 64px auto;
     align-items: center;
     margin-bottom: 0.5rem;
   }
@@ -19,11 +19,26 @@
     color: var(--text-fainter);
   }
 
-  .roster-row {
+  .roster-panel .roster-row {
     display: grid;
     gap: 0.75rem;
-    grid-template-columns: minmax(100px, 140px) minmax(180px, 1fr) 64px minmax(140px, 1fr) minmax(160px, 1fr) auto;
+    grid-template-columns: minmax(100px, 140px) minmax(180px, 1fr) 64px auto;
     align-items: center;
+  }
+
+  .roster-panel--gender .roster-header,
+  .roster-panel--gender .roster-row {
+    grid-template-columns: minmax(100px, 140px) minmax(180px, 1fr) 64px minmax(140px, 1fr) auto;
+  }
+
+  .roster-panel--partner .roster-header,
+  .roster-panel--partner .roster-row {
+    grid-template-columns: minmax(100px, 140px) minmax(180px, 1fr) 64px minmax(160px, 1fr) auto;
+  }
+
+  .roster-panel--gender.roster-panel--partner .roster-header,
+  .roster-panel--gender.roster-panel--partner .roster-row {
+    grid-template-columns: minmax(100px, 140px) minmax(180px, 1fr) 64px minmax(140px, 1fr) minmax(160px, 1fr) auto;
   }
 
   .roster-label {
@@ -99,10 +114,6 @@
     min-width: 160px;
   }
 
-  .roster-spacer {
-    height: 1px;
-  }
-
   .color-select {
     display: grid;
     grid-template-columns: 16px minmax(0, 1fr);
@@ -121,20 +132,25 @@
     font-size: 0.85rem;
     color: var(--text-faint);
   }
+
+  .roster-warning {
+    margin-top: 0.5rem;
+    color: var(--danger-text);
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 900px) {
-  .roster-header {
+  .roster-panel .roster-header {
     display: none;
   }
 
-  .roster-row {
+  .roster-panel .roster-row {
     grid-template-columns: minmax(56px, 80px) minmax(0, 1fr);
     grid-template-areas:
       "label label"
       "name name"
-      "color gender"
-      "partner partner"
+      "color color"
       "remove remove";
     gap: 0.6rem;
     padding: 0.75rem;
@@ -147,30 +163,55 @@
     background: var(--surface-glass);
   }
 
-  .roster-label {
+  .roster-panel .roster-label {
     grid-area: label;
   }
 
-  .roster-row > input[type="text"] {
+  .roster-panel .roster-row > input[type="text"] {
     grid-area: name;
   }
 
-  .roster-row > .color-input {
+  .roster-panel .roster-row > .color-input {
     grid-area: color;
     justify-self: start;
   }
 
-  .roster-row > .gender-toggle {
+  .roster-panel--gender .roster-row {
+    grid-template-areas:
+      "label label"
+      "name name"
+      "color gender"
+      "remove remove";
+  }
+
+  .roster-panel--gender .roster-row > .gender-toggle {
     grid-area: gender;
   }
 
-  .roster-row > .partner-select,
-  .roster-row > .roster-spacer {
+  .roster-panel--partner .roster-row {
+    grid-template-areas:
+      "label label"
+      "name name"
+      "color color"
+      "partner partner"
+      "remove remove";
+  }
+
+  .roster-panel--gender.roster-panel--partner .roster-row {
+    grid-template-areas:
+      "label label"
+      "name name"
+      "color gender"
+      "partner partner"
+      "remove remove";
+  }
+
+  .roster-panel--partner .roster-row > .partner-select {
     grid-area: partner;
   }
 
-  .roster-row > .ghost-button,
-  .roster-row > .btn-ghost {
+  .roster-panel .roster-row > .ghost-button,
+  .roster-panel .roster-row > .btn-ghost {
     grid-area: remove;
   }
 

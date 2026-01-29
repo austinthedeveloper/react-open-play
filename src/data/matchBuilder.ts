@@ -6,6 +6,7 @@ export const MAX_MATCHES = 20;
 export const MATCH_TYPES = [
   { value: "round_robin", label: "Round Robin" },
   { value: "tournament", label: "Tournament" },
+  { value: "mixed_doubles", label: "Mixed Doubles" },
 ] as const;
 export const DEFAULT_MATCH_TYPE = MATCH_TYPES[0].value;
 
