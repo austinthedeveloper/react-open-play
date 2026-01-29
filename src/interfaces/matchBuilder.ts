@@ -1,5 +1,5 @@
 export type GenderOption = "" | "male" | "female";
-export type MatchType = "round_robin";
+export type MatchType = "round_robin" | "tournament";
 
 export type PlayerProfile = {
   id: string;
@@ -9,6 +9,7 @@ export type PlayerProfile = {
 };
 
 export type MatchTeam = [string, string];
+export type PartnerPair = [string, string];
 
 export type MatchWinner = "A" | "B";
 
@@ -24,6 +25,7 @@ export type MatchSession = {
   courtNumbers: number[];
   schedule: Schedule | null;
   matchResults: MatchResults;
+  partnerPairs?: PartnerPair[];
   ownerId?: string | null;
   allowedUserIds?: string[];
 };
@@ -32,10 +34,12 @@ export type MatchCard = {
   id: string;
   index: number;
   teams: [MatchTeam, MatchTeam];
+  sourceMatchIds?: [string | null, string | null];
 };
 
 export type Schedule = {
   matches: MatchCard[];
+  rounds?: MatchCard[][];
 };
 
 export type PlayerStat = {

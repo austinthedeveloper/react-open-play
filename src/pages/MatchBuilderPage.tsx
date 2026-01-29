@@ -13,7 +13,6 @@ import type {
   GenderOption,
   MatchCard as MatchCardType,
   MatchSession,
-  MatchTeam,
   MatchType,
   MatchWinner,
   PlayerProfile,
@@ -23,8 +22,11 @@ import {
   buildDefaultPlayers,
   buildSchedule,
   buildStats,
+  BYE_PLAYER_ID,
   pickNextColor,
   randomId,
+  resolveMatchTeam,
+  resolveScheduleMatches,
 } from "../utilities";
 import { matchBuilderActions } from "../store/matchBuilderSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -61,6 +63,9 @@ export default function MatchBuilderPage() {
   const schedule = useAppSelector((state) => state.matchBuilder.schedule);
   const matchResults = useAppSelector(
     (state) => state.matchBuilder.matchResults
+  );
+  const partnerPairs = useAppSelector(
+    (state) => state.matchBuilder.partnerPairs
   );
   const isControlsOpen = useAppSelector(
     (state) => state.matchBuilder.isControlsOpen
@@ -115,6 +120,12 @@ export default function MatchBuilderPage() {
   }, [courtNumbers, dispatch, maxCourts]);
 
   const matches = schedule?.matches ?? [];
+  const resolvedMatches = useMemo(() => {
+    if (!schedule) {
+      return [];
+    }
+    return resolveScheduleMatches(schedule, matchResults);
+  }, [matchResults, schedule]);
   const isScheduleGenerated = matches.length > 0;
   const activeCourtNumbers = useMemo(() => {
     const fallback = Array.from(
@@ -129,20 +140,89 @@ export default function MatchBuilderPage() {
   const playerLookup = useMemo(() => {
     return new Map(normalizedPlayers.map((player) => [player.id, player]));
   }, [normalizedPlayers]);
+  const playerOrderLookup = useMemo(() => {
+    return new Map(normalizedPlayers.map((player, index) => [player.id, index]));
+  }, [normalizedPlayers]);
+  const partnerLookup = useMemo(() => {
+    const lookup = new Map<string, string>();
+    for (const [first, second] of partnerPairs) {
+      lookup.set(first, second);
+      lookup.set(second, first);
+    }
+    return lookup;
+  }, [partnerPairs]);
+  const matchLookup = useMemo(
+    () => new Map(matches.map((match) => [match.id, match])),
+    [matches]
+  );
+  const matchRoundLookup = useMemo(() => {
+    const lookup = new Map<string, number>();
+    if (!schedule?.rounds) {
+      return lookup;
+    }
+    schedule.rounds.forEach((round, roundIndex) => {
+      round.forEach((match) => {
+        lookup.set(match.id, roundIndex);
+      });
+    });
+    return lookup;
+  }, [schedule]);
+  const bracketRoundStatus = useMemo(() => {
+    if (!schedule?.rounds) {
+      return [];
+    }
+    return schedule.rounds.map((round) =>
+      round.every((match) => Boolean(matchResults[match.id]))
+    );
+  }, [matchResults, schedule]);
   const matchRounds = useMemo(() => {
+    if (schedule?.rounds && schedule.rounds.length > 0) {
+      const resolvedLookup = new Map(
+        resolvedMatches.map((match) => [match.id, match])
+      );
+      const roundChunks: MatchCardType[][] = [];
+      const perRound = Math.max(1, activeCourtCount);
+      schedule.rounds.forEach((round) => {
+        const resolvedRound = round.map(
+          (match) => resolvedLookup.get(match.id) ?? match
+        );
+        for (let i = 0; i < resolvedRound.length; i += perRound) {
+          roundChunks.push(resolvedRound.slice(i, i + perRound));
+        }
+      });
+      return roundChunks;
+    }
     const perRound = Math.max(1, activeCourtCount);
     const rounds: MatchCardType[][] = [];
-    for (let i = 0; i < matches.length; i += perRound) {
-      rounds.push(matches.slice(i, i + perRound));
+    for (let i = 0; i < resolvedMatches.length; i += perRound) {
+      rounds.push(resolvedMatches.slice(i, i + perRound));
     }
     return rounds;
-  }, [matches, activeCourtCount]);
+  }, [activeCourtCount, resolvedMatches, schedule]);
+  const matchRoundLabels = useMemo(() => {
+    if (schedule?.rounds && schedule.rounds.length > 0) {
+      const perRound = Math.max(1, activeCourtCount);
+      const labels: string[] = [];
+      schedule.rounds.forEach((round, roundIndex) => {
+        const chunkCount = Math.max(1, Math.ceil(round.length / perRound));
+        for (let i = 0; i < chunkCount; i += 1) {
+          const letter =
+            chunkCount > 1
+              ? String.fromCharCode(65 + (i % 26))
+              : "";
+          labels.push(`Round ${roundIndex + 1}${letter}`);
+        }
+      });
+      return labels;
+    }
+    return matchRounds.map((_, index) => `Round ${index + 1}`);
+  }, [activeCourtCount, matchRounds, schedule]);
   const stats = useMemo(() => {
     if (!schedule) {
       return [];
     }
-    return buildStats(normalizedPlayers, schedule.matches, matchResults);
-  }, [normalizedPlayers, schedule, matchResults]);
+    return buildStats(normalizedPlayers, resolvedMatches, matchResults);
+  }, [normalizedPlayers, resolvedMatches, matchResults, schedule]);
   const statsByWins = useMemo(() => {
     return [...stats].sort((a, b) => {
       if (b.wins !== a.wins) {
@@ -155,10 +235,54 @@ export default function MatchBuilderPage() {
     playerLookup.get(playerId)?.name ?? "Unknown";
   const getPlayerColor = (playerId: string) =>
     playerLookup.get(playerId)?.color ?? "transparent";
-  const resolveTeam = (team: MatchTeam): [TeamMember, TeamMember] => [
-    { name: getPlayerName(team[0]), color: getPlayerColor(team[0]) },
-    { name: getPlayerName(team[1]), color: getPlayerColor(team[1]) },
-  ];
+  const resolvePlayer = (playerId: string) => {
+    if (playerId === BYE_PLAYER_ID) {
+      return { name: "BYE", color: "transparent" };
+    }
+    if (!playerId) {
+      return { name: "TBD", color: "transparent" };
+    }
+    return { name: getPlayerName(playerId), color: getPlayerColor(playerId) };
+  };
+  const resolveTeam = (
+    match: MatchCardType,
+    teamIndex: 0 | 1
+  ): [TeamMember, TeamMember] => {
+    const sourceId = match.sourceMatchIds?.[teamIndex];
+    if (sourceId) {
+      const sourceRound = matchRoundLookup.get(sourceId);
+      if (
+        typeof sourceRound === "number" &&
+        !bracketRoundStatus[sourceRound]
+      ) {
+        const sourceMatch = matchLookup.get(sourceId);
+        const label = sourceMatch
+          ? `Winner of Match ${sourceMatch.index}`
+          : "TBD";
+        return [
+          { name: label, color: "transparent" },
+          { name: label, color: "transparent" },
+        ];
+      }
+    }
+    const resolvedTeam = resolveMatchTeam(
+      match,
+      teamIndex,
+      matchLookup,
+      matchResults
+    );
+    if (resolvedTeam) {
+      return [resolvePlayer(resolvedTeam[0]), resolvePlayer(resolvedTeam[1])];
+    }
+    const sourceMatch = sourceId ? matchLookup.get(sourceId) : null;
+    const label = sourceMatch
+      ? `Winner of Match ${sourceMatch.index}`
+      : "TBD";
+    return [
+      { name: label, color: "transparent" },
+      { name: label, color: "transparent" },
+    ];
+  };
 
   useEffect(() => {
     if (!schedule) {
@@ -213,6 +337,7 @@ export default function MatchBuilderPage() {
     dispatch(matchBuilderActions.setCourtNumbersText(""));
     dispatch(matchBuilderActions.setSchedule(null));
     dispatch(matchBuilderActions.setMatchResults({}));
+    dispatch(matchBuilderActions.setPartnerPairs([]));
     dispatch(matchBuilderActions.setIsControlsOpen(true));
     dispatch(matchBuilderActions.setIsRosterOpen(true));
     setActiveRound(0);
@@ -266,6 +391,7 @@ export default function MatchBuilderPage() {
       courtNumbers,
       schedule,
       matchResults,
+      partnerPairs,
     };
     matchesService.update(activeMatchId, patch).catch((error) => {
       const message =
@@ -279,6 +405,7 @@ export default function MatchBuilderPage() {
     matchType,
     numCourts,
     numMatches,
+    partnerPairs,
     players,
     schedule,
   ]);
@@ -363,15 +490,36 @@ export default function MatchBuilderPage() {
     );
   };
 
+  const handlePartnerChange = (playerId: string, partnerId?: string | null) => {
+    if (!playerId) {
+      return;
+    }
+    const nextPairs = partnerPairs.filter(
+      (pair) => !pair.includes(playerId) && !pair.includes(partnerId ?? "")
+    );
+    if (partnerId && partnerId !== playerId) {
+      const firstIndex = playerOrderLookup.get(playerId) ?? 0;
+      const secondIndex = playerOrderLookup.get(partnerId) ?? 0;
+      const ordered: [string, string] =
+        firstIndex <= secondIndex
+          ? [playerId, partnerId]
+          : [partnerId, playerId];
+      nextPairs.push(ordered);
+    }
+    dispatch(matchBuilderActions.setPartnerPairs(nextPairs));
+  };
+
   const handleGenerateSchedule = async () => {
     if (numPlayers < 4) {
       dispatch(matchBuilderActions.setSchedule(null));
       return;
     }
-    const matchesList = buildSchedule(
+    const { schedule: nextSchedule, matchResults: nextResults } = buildSchedule(
       normalizedPlayers,
       numMatches,
-      activeCourtCount
+      activeCourtCount,
+      matchType,
+      partnerPairs
     );
     const nextId = randomId();
     const session: MatchSession = {
@@ -382,13 +530,23 @@ export default function MatchBuilderPage() {
       numMatches,
       numCourts,
       courtNumbers,
-      schedule: { matches: matchesList },
-      matchResults: {},
+      schedule: nextSchedule,
+      matchResults: nextResults,
+      partnerPairs,
     };
     try {
       const savedSession = await matchesService.create(session);
-      dispatch(matchBuilderActions.setActiveMatchSession(savedSession));
-      navigate(`/match-builder/${savedSession.id}`);
+      const mergedSession: MatchSession = {
+        ...savedSession,
+        partnerPairs:
+          partnerPairs.length > 0 &&
+          (!savedSession.partnerPairs ||
+            savedSession.partnerPairs.length === 0)
+            ? partnerPairs
+            : savedSession.partnerPairs ?? [],
+      };
+      dispatch(matchBuilderActions.setActiveMatchSession(mergedSession));
+      navigate(`/match-builder/${mergedSession.id}`);
     } catch (error) {
       const message =
         error instanceof Error
@@ -468,6 +626,9 @@ export default function MatchBuilderPage() {
         onPlayerGenderChange={(index, gender) =>
           updatePlayer(index, { gender })
         }
+        showPartnerSelect={matchType === "tournament"}
+        partnerLookup={partnerLookup}
+        onPartnerChange={handlePartnerChange}
         onRemovePlayer={removePlayer}
         onAddPlayer={addPlayer}
         canRemovePlayer={players.length > 4}
@@ -484,6 +645,7 @@ export default function MatchBuilderPage() {
         <div className="builder-grid">
           <MatchupsPanel
             matchRounds={matchRounds}
+            roundLabels={matchRoundLabels}
             matchResults={matchResults}
             onSelectWinner={handleSelectWinner}
             onOpenFullscreen={openFullscreen}
@@ -510,6 +672,7 @@ export default function MatchBuilderPage() {
         fullscreenRef={fullscreenRef}
         activeRound={activeRound}
         matchRounds={matchRounds}
+        roundLabels={matchRoundLabels}
         matchResults={matchResults}
         statsByWins={statsByWins}
         courtNumbers={activeCourtNumbers}

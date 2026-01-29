@@ -8,6 +8,9 @@ export type RosterPanelProps = {
   onPlayerNameChange: (index: number, name: string) => void;
   onPlayerColorChange: (index: number, color: string) => void;
   onPlayerGenderChange: (index: number, gender: GenderOption) => void;
+  showPartnerSelect?: boolean;
+  partnerLookup?: Map<string, string>;
+  onPartnerChange?: (playerId: string, partnerId?: string | null) => void;
   onRemovePlayer: (index: number) => void;
   onAddPlayer: () => void;
   canRemovePlayer: boolean;
@@ -21,11 +24,16 @@ export default function RosterPanel({
   onPlayerNameChange,
   onPlayerColorChange,
   onPlayerGenderChange,
+  showPartnerSelect = false,
+  partnerLookup,
+  onPartnerChange,
   onRemovePlayer,
   onAddPlayer,
   canRemovePlayer,
   canAddPlayer,
 }: RosterPanelProps) {
+  const getPartnerValue = (playerId: string) =>
+    partnerLookup?.get(playerId) ?? "";
   return (
     <section className="panel">
       <div className="panel-header">
@@ -36,6 +44,9 @@ export default function RosterPanel({
       </div>
       <p className="panel-subtitle">
         Edit player names here. Optionally set a color or gender for each player.
+        {showPartnerSelect
+          ? " Lock partners to keep teams together."
+          : ""}
       </p>
       {isOpen ? (
         <>
@@ -44,6 +55,14 @@ export default function RosterPanel({
             <span className="roster-header-cell">Name</span>
             <span className="roster-header-cell">Color</span>
             <span className="roster-header-cell">Gender</span>
+            {showPartnerSelect ? (
+              <span className="roster-header-cell">Partner</span>
+            ) : (
+              <span
+                className="roster-header-cell roster-header-cell--empty"
+                aria-hidden="true"
+              />
+            )}
             <span className="roster-header-cell">Actions</span>
           </div>
           <div className="roster-grid">
@@ -115,6 +134,36 @@ export default function RosterPanel({
                     </span>
                   </button>
                 </div>
+                {showPartnerSelect ? (
+                  <select
+                    className="partner-select"
+                    value={getPartnerValue(player.id)}
+                    onChange={(event) =>
+                      onPartnerChange?.(player.id, event.target.value || null)
+                    }
+                  >
+                    <option value="">Auto-pair</option>
+                    {players
+                      .filter((candidate) => candidate.id !== player.id)
+                      .map((candidate) => {
+                        const candidatePartner =
+                          partnerLookup?.get(candidate.id);
+                        const isLockedElsewhere =
+                          Boolean(candidatePartner) &&
+                          candidatePartner !== player.id;
+                        const label = `${candidate.name || "Player"}${
+                          isLockedElsewhere ? " (locked)" : ""
+                        }`;
+                        return (
+                          <option key={candidate.id} value={candidate.id}>
+                            {label}
+                          </option>
+                        );
+                      })}
+                  </select>
+                ) : (
+                  <span className="roster-spacer" aria-hidden="true" />
+                )}
                 <button
                   type="button"
                   className="btn-ghost"

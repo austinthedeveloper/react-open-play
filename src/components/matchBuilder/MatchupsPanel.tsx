@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import MatchCard from "../MatchCard";
 import type {
   MatchCard as MatchCardType,
-  MatchTeam,
   MatchWinner,
   TeamMember,
 } from "../../interfaces";
@@ -10,19 +9,24 @@ import "./MatchupsPanel.css";
 
 export type MatchupsPanelProps = {
   matchRounds: MatchCardType[][];
+  roundLabels?: string[];
   matchResults: Record<string, MatchWinner>;
   onSelectWinner: (matchId: string, winner: MatchWinner | null) => void;
   onOpenFullscreen: () => void;
   activeRound: number;
   onPreviousRound: () => void;
   onNextRound: () => void;
-  resolveTeam: (team: MatchTeam) => [TeamMember, TeamMember];
+  resolveTeam: (
+    match: MatchCardType,
+    teamIndex: 0 | 1
+  ) => [TeamMember, TeamMember];
   matchesCount: number;
   courtNumbers: number[];
 };
 
 export default function MatchupsPanel({
   matchRounds,
+  roundLabels,
   matchResults,
   onSelectWinner,
   onOpenFullscreen,
@@ -34,6 +38,8 @@ export default function MatchupsPanel({
   courtNumbers,
 }: MatchupsPanelProps) {
   const [isCompactView, setIsCompactView] = useState(false);
+  const activeRoundLabel =
+    roundLabels?.[activeRound] ?? `Round ${activeRound + 1}`;
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -85,7 +91,7 @@ export default function MatchupsPanel({
       {isCompactView && matchesCount > 0 ? (
         <div className="round-nav">
           <div className="round-nav-label">
-            Round {matchRounds.length === 0 ? 0 : activeRound + 1}
+            {matchRounds.length === 0 ? "Round 0" : activeRoundLabel}
           </div>
           <div className="round-nav-actions">
             <button
@@ -117,7 +123,9 @@ export default function MatchupsPanel({
               className={!isCompactView ? "round-block" : undefined}
             >
               {!isCompactView ? (
-                <div className="round-header">Round {roundIndex + 1}</div>
+                <div className="round-header">
+                  {roundLabels?.[roundIndex] ?? `Round ${roundIndex + 1}`}
+                </div>
               ) : null}
               <div className="round-courts">
                 {roundMatches.map((match, matchIndex) => (
@@ -130,8 +138,8 @@ export default function MatchupsPanel({
                     onSelectWinner={(winner) =>
                       onSelectWinner(match.id, winner)
                     }
-                    teamA={resolveTeam(match.teams[0])}
-                    teamB={resolveTeam(match.teams[1])}
+                    teamA={resolveTeam(match, 0)}
+                    teamB={resolveTeam(match, 1)}
                   />
                 ))}
               </div>
