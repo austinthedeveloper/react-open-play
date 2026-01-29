@@ -5,6 +5,8 @@ import * as path from "node:path";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
+import { GoalsModule } from "./goals/goals.module";
+import { GoalSessionsModule } from "./goal-sessions/goal-sessions.module";
 import { MatchesModule } from "./matches/matches.module";
 
 @Module({
@@ -31,6 +33,8 @@ import { MatchesModule } from "./matches/matches.module";
       }),
     }),
     AuthModule,
+    GoalsModule,
+    GoalSessionsModule,
     MatchesModule,
   ],
   controllers: [AppController],

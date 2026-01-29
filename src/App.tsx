@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
-import GoalsPage from "./pages/GoalsPage";
+import GoalsHistoryPage from "./pages/GoalsHistoryPage";
+import GoalsSessionPage from "./pages/GoalsSessionPage";
 import MatchBuilderPage from "./pages/MatchBuilderPage";
 import MatchHistoryPage from "./pages/MatchHistoryPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
@@ -145,7 +146,8 @@ export default function App() {
       </nav>
 
       <Routes>
-        <Route path="/" element={<GoalsPage />} />
+        <Route path="/" element={<GoalsHistoryPage />} />
+        <Route path="/goals/:id" element={<GoalsSessionPage />} />
         <Route path="/match-builder" element={<MatchBuilderPage />} />
         <Route path="/match-builder/:id" element={<MatchBuilderPage />} />
         <Route path="/match-history" element={<MatchHistoryPage />} />
