@@ -14,7 +14,7 @@ export default function GoalsHero({
   totalMatches,
 }: GoalsHeroProps) {
   return (
-    <header className="hero-panel">
+    <header className="panel-hero">
       <div>
         <p className="eyebrow">Open Play Lab</p>
         <h1 className="hero-title">Open Play Goals</h1>

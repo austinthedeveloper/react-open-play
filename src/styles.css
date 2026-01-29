@@ -1,6 +1,50 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
 @import "tailwindcss";
 
+@theme {
+  --color-bg: var(--bg);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-panel: var(--panel);
+  --color-panel-soft: var(--panel-soft);
+  --color-surface-glass: var(--surface-glass);
+  --color-surface-card: var(--surface-card);
+  --color-surface-card-soft: var(--surface-card-soft);
+  --color-surface-form: var(--surface-form);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-chip: var(--surface-chip);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-text-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
+  --shadow-card: var(--shadow-card);
+  --shadow-card-soft: var(--shadow-card-soft);
+  --shadow-panel: var(--shadow-panel);
+  --shadow-overlay: var(--shadow-overlay);
+  --shadow-button: var(--shadow-button);
+  --shadow-button-hover: var(--shadow-button-hover);
+  --radius-panel: 24px;
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --gradient-accent: linear-gradient(120deg, var(--accent), var(--accent-2) 60%, var(--accent-3));
+  --gradient-accent-reverse: linear-gradient(120deg, var(--accent-2), var(--accent) 70%, var(--accent-3));
+  --gradient-hero: linear-gradient(120deg, #ffffff 0%, #7ae7ff 40%, var(--accent-2) 70%, var(--accent-3) 100%);
+  --gradient-hero-panel: linear-gradient(135deg, rgba(21, 27, 43, 0.95), rgba(10, 15, 26, 0.85));
+  --gradient-nav: linear-gradient(120deg, rgba(21, 27, 43, 0.95), rgba(10, 14, 24, 0.95));
+  --gradient-fullscreen:
+    radial-gradient(1200px 900px at 20% 10%, rgba(76, 243, 255, 0.16), transparent 60%),
+    radial-gradient(900px 700px at 80% 20%, rgba(242, 166, 255, 0.2), transparent 60%),
+    radial-gradient(800px 650px at 40% 90%, rgba(255, 184, 107, 0.18), transparent 70%),
+    linear-gradient(140deg, rgba(11, 15, 24, 0.98), rgba(6, 8, 14, 0.98));
+  --bg-gradient:
+    radial-gradient(1200px 600px at 15% -10%, rgba(76, 243, 255, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(242, 166, 255, 0.16), transparent 55%),
+    radial-gradient(700px 500px at 35% 85%, rgba(255, 184, 107, 0.12), transparent 60%),
+    linear-gradient(140deg, rgba(21, 27, 43, 0.9), rgba(9, 12, 20, 0.95));
+}
+
 @layer base {
   :root {
     color-scheme: dark;
@@ -65,21 +109,6 @@
     --focus-ring-strong: rgba(76, 243, 255, 0.6);
     --focus-ring-warm: rgba(255, 184, 107, 0.6);
     --focus-ring-light: rgba(248, 250, 252, 0.7);
-    --gradient-accent: linear-gradient(120deg, var(--accent), var(--accent-2) 60%, var(--accent-3));
-    --gradient-accent-reverse: linear-gradient(120deg, var(--accent-2), var(--accent) 70%, var(--accent-3));
-    --gradient-hero: linear-gradient(120deg, #ffffff 0%, #7ae7ff 40%, var(--accent-2) 70%, var(--accent-3) 100%);
-    --gradient-nav: linear-gradient(120deg, rgba(21, 27, 43, 0.95), rgba(10, 14, 24, 0.95));
-    --gradient-hero-panel: linear-gradient(135deg, rgba(21, 27, 43, 0.95), rgba(10, 15, 26, 0.85));
-    --gradient-fullscreen:
-      radial-gradient(1200px 900px at 20% 10%, rgba(76, 243, 255, 0.16), transparent 60%),
-      radial-gradient(900px 700px at 80% 20%, rgba(242, 166, 255, 0.2), transparent 60%),
-      radial-gradient(800px 650px at 40% 90%, rgba(255, 184, 107, 0.18), transparent 70%),
-      linear-gradient(140deg, rgba(11, 15, 24, 0.98), rgba(6, 8, 14, 0.98));
-    --bg-gradient:
-      radial-gradient(1200px 600px at 15% -10%, rgba(76, 243, 255, 0.18), transparent 60%),
-      radial-gradient(900px 500px at 90% 10%, rgba(242, 166, 255, 0.16), transparent 55%),
-      radial-gradient(700px 500px at 35% 85%, rgba(255, 184, 107, 0.12), transparent 60%),
-      linear-gradient(140deg, rgba(21, 27, 43, 0.9), rgba(9, 12, 20, 0.95));
     --glow: 0 20px 60px rgba(76, 243, 255, 0.15);
     --shadow-glow-strong: 0 25px 80px rgba(242, 166, 255, 0.22);
     --shadow-nav: 0 16px 40px rgba(9, 12, 20, 0.45);
@@ -206,7 +235,8 @@
     box-shadow: var(--shadow-pill);
   }
 
-  .nav-auth-button {
+  .nav-auth-button,
+  .btn-primary-reverse {
     border: none;
     border-radius: 999px;
     padding: 0.55rem 1.2rem;
@@ -219,12 +249,14 @@
     transition: transform 150ms ease, box-shadow 150ms ease;
   }
 
-  .nav-auth-button:hover {
+  .nav-auth-button:hover,
+  .btn-primary-reverse:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-button-alt-hover);
   }
 
-  .nav-auth-button:focus-visible {
+  .nav-auth-button:focus-visible,
+  .btn-primary-reverse:focus-visible {
     outline: 2px solid var(--focus-ring-light);
     outline-offset: 3px;
   }
@@ -246,7 +278,8 @@
     white-space: nowrap;
   }
 
-  .nav-logout-button {
+  .nav-logout-button,
+  .btn-outline {
     border: 1px solid var(--border-light);
     border-radius: 999px;
     padding: 0.4rem 0.85rem;
@@ -258,18 +291,21 @@
     transition: border-color 150ms ease, color 150ms ease, transform 150ms ease;
   }
 
-  .nav-logout-button:hover {
+  .nav-logout-button:hover,
+  .btn-outline:hover {
     color: var(--text-bright);
     border-color: var(--accent-border-strong);
     transform: translateY(-1px);
   }
 
-  .nav-logout-button:focus-visible {
+  .nav-logout-button:focus-visible,
+  .btn-outline:focus-visible {
     outline: 2px solid var(--focus-ring-light);
     outline-offset: 3px;
   }
 
-  .hero-panel {
+  .hero-panel,
+  .panel-hero {
     display: grid;
     gap: 1rem;
     padding: 1.75rem 1.75rem;
@@ -326,7 +362,8 @@
     color: var(--text);
   }
 
-  .controls-panel {
+  .controls-panel,
+  .panel-glass {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
@@ -338,13 +375,15 @@
     backdrop-filter: blur(10px);
   }
 
-  .controls-panel-card {
+  .controls-panel-card,
+  .panel-glass-card {
     display: grid;
     gap: 1rem;
     align-items: stretch;
   }
 
-  .controls-panel-body {
+  .controls-panel-body,
+  .panel-glass-body {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
@@ -395,7 +434,8 @@
     color: var(--text-subtle);
   }
 
-  .glow-button {
+  .glow-button,
+  .btn-primary {
     padding: 0.65rem 1.5rem;
     border-radius: 999px;
     font-weight: 600;
@@ -407,19 +447,22 @@
     transition: transform 150ms ease, box-shadow 150ms ease;
   }
 
-  .glow-button:hover {
+  .glow-button:hover,
+  .btn-primary:hover {
     transform: translateY(-1px) scale(1.01);
     box-shadow: var(--shadow-button-hover);
   }
 
-  .glow-button:disabled {
+  .glow-button:disabled,
+  .btn-primary:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
   }
 
-  .glow-button:focus-visible {
+  .glow-button:focus-visible,
+  .btn-primary:focus-visible {
     outline: 3px solid var(--focus-ring-warm);
     outline-offset: 4px;
   }
@@ -431,7 +474,8 @@
     align-items: center;
   }
 
-  .table-panel {
+  .table-panel,
+  .panel {
     padding: 1.5rem;
     border-radius: 24px;
     background: var(--panel);
@@ -439,7 +483,8 @@
     box-shadow: var(--shadow-panel);
   }
 
-  .goals-tabs {
+  .goals-tabs,
+  .tabs-pill {
     display: inline-flex;
     gap: 0.35rem;
     padding: 0.35rem;
@@ -449,7 +494,8 @@
     margin: 0.5rem 0 1.5rem;
   }
 
-  .goals-tab {
+  .goals-tab,
+  .tab-pill {
     padding: 0.45rem 1.1rem;
     border-radius: 999px;
     border: 1px solid transparent;
@@ -462,19 +508,22 @@
       background 150ms ease;
   }
 
-  .goals-tab:hover {
+  .goals-tab:hover,
+  .tab-pill:hover {
     color: var(--text-strong);
     border-color: var(--accent-border);
   }
 
-  .goals-tab.is-active {
+  .goals-tab.is-active,
+  .tab-pill.is-active {
     color: var(--bg);
     background: var(--gradient-accent);
     border-color: transparent;
     box-shadow: var(--shadow-pill);
   }
 
-  .goals-tab:focus-visible {
+  .goals-tab:focus-visible,
+  .tab-pill:focus-visible {
     outline: 3px solid var(--focus-ring);
     outline-offset: 3px;
   }
@@ -497,7 +546,8 @@
     font-size: 0.9rem;
   }
 
-  .ghost-button {
+  .ghost-button,
+  .btn-ghost {
     padding: 0.5rem 1.1rem;
     border-radius: 999px;
     border: 1px solid var(--border-solid);
@@ -507,12 +557,14 @@
     transition: border-color 150ms ease, transform 150ms ease;
   }
 
-  .ghost-button:hover:not(:disabled) {
+  .ghost-button:hover:not(:disabled),
+  .btn-ghost:hover:not(:disabled) {
     border-color: var(--accent-border);
     transform: translateY(-1px);
   }
 
-  .ghost-button:disabled {
+  .ghost-button:disabled,
+  .btn-ghost:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }

@@ -25,7 +25,7 @@ export default function GoalsList({ onUpdateMatch }: GoalsListProps) {
   };
 
   return (
-    <main className="table-panel">
+    <main className="panel">
       <header className="goals-list__header">
         <h2 className="panel-title">Match Goals</h2>
         <p className="panel-subtitle">

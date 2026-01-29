@@ -6,7 +6,7 @@ export default function MatchBuilderHero({
   matchTypeLabel,
 }: MatchBuilderHeroProps) {
   return (
-    <header className="hero-panel">
+    <header className="panel-hero">
       <div>
         <p className="eyebrow">{matchTypeLabel} Lab</p>
         <h1 className="hero-title">Match Builder</h1>

@@ -155,7 +155,8 @@
     grid-area: gender;
   }
 
-  .roster-row > .ghost-button {
+  .roster-row > .ghost-button,
+  .roster-row > .btn-ghost {
     grid-area: remove;
   }
 

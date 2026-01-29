@@ -475,7 +475,7 @@ export default function MatchBuilderPage() {
       />
 
       {numPlayers < 4 ? (
-        <div className="table-panel">
+        <div className="panel">
           <p className="empty-state">
             You need at least 4 players to build doubles matches.
           </p>

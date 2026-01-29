@@ -20,7 +20,7 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="app-shell text-left">
-      <section className="hero-panel">
+      <section className="panel-hero">
         <p className="eyebrow">Auth Callback</p>
         <h1 className="hero-title">Signing you in…</h1>
         <p className="hero-subtitle">

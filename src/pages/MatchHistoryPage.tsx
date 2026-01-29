@@ -50,7 +50,7 @@ export default function MatchHistoryPage() {
 
   return (
     <div className="app-shell text-left">
-      <header className="hero-panel">
+      <header className="panel-hero">
         <div>
           <p className="eyebrow">Match Builder Lab</p>
           <h1 className="hero-title">Match History</h1>
@@ -60,13 +60,13 @@ export default function MatchHistoryPage() {
         </div>
       </header>
 
-      <main className="table-panel">
+      <main className="panel">
         {orderedHistory.length === 0 ? (
           <div className="empty-state history-empty">
             <p>No matches yet. Generate a schedule.</p>
             <button
               type="button"
-              className="glow-button"
+              className="btn-primary"
               onClick={() => navigate("/match-builder")}
             >
               Build a match
@@ -98,14 +98,14 @@ export default function MatchHistoryPage() {
                   <div className="history-card__actions">
                     <button
                       type="button"
-                      className="ghost-button"
+                      className="btn-ghost"
                       onClick={() => navigate(`/match-builder/${session.id}`)}
                     >
                       Load match
                     </button>
                     <button
                       type="button"
-                      className="ghost-button history-card__remove"
+                      className="btn-ghost history-card__remove"
                       onClick={async () => {
                         try {
                           await matchesService.remove(session.id);

@@ -27,10 +27,10 @@ export default function RosterPanel({
   canAddPlayer,
 }: RosterPanelProps) {
   return (
-    <section className="table-panel">
+    <section className="panel">
       <div className="panel-header">
         <h2 className="panel-title">Roster</h2>
-        <button type="button" className="ghost-button" onClick={onToggleOpen}>
+        <button type="button" className="btn-ghost" onClick={onToggleOpen}>
           {isOpen ? "Collapse" : "Expand"}
         </button>
       </div>
@@ -117,7 +117,7 @@ export default function RosterPanel({
                 </div>
                 <button
                   type="button"
-                  className="ghost-button"
+                  className="btn-ghost"
                   onClick={() => onRemovePlayer(index)}
                   disabled={!canRemovePlayer}
                 >
@@ -129,7 +129,7 @@ export default function RosterPanel({
           <div className="roster-actions">
             <button
               type="button"
-              className="ghost-button"
+              className="btn-ghost"
               onClick={onAddPlayer}
               disabled={!canAddPlayer}
             >
