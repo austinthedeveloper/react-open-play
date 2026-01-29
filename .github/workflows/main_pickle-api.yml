@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - api/**
+      - .github/workflows/main_pickle-api.yml
   workflow_dispatch:
 
 jobs:
