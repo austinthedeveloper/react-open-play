@@ -125,7 +125,7 @@ export default function App() {
                   </span>
                   <button
                     type="button"
-                    className="nav-logout-button"
+                    className="btn-outline"
                     onClick={handleLogout}
                   >
                     Log out
@@ -135,7 +135,7 @@ export default function App() {
               : (
                 <button
                   type="button"
-                  className="nav-auth-button"
+                  className="btn-primary-reverse"
                   onClick={handleLogin}
                 >
                   Sign in with Google

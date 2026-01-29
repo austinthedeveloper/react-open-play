@@ -11,11 +11,11 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.24em;
-    color: rgba(148, 163, 184, 0.7);
+    color: var(--text-faint);
   }
 
   .goals-catalog__error {
-    color: #fca5a5;
+    color: var(--danger-text);
     margin: -0.5rem 0 1.25rem;
   }
 
@@ -35,7 +35,7 @@
     font-size: 1rem;
     text-transform: uppercase;
     letter-spacing: 0.2em;
-    color: rgba(148, 163, 184, 0.7);
+    color: var(--text-faint);
   }
 
   .goals-catalog__list {
@@ -46,8 +46,8 @@
   .goals-catalog__card {
     padding: 1rem;
     border-radius: 18px;
-    background: rgba(12, 17, 31, 0.65);
-    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: var(--surface-card-soft);
+    border: 1px solid var(--border-default);
     display: grid;
     gap: 0.65rem;
   }
@@ -65,30 +65,30 @@
     letter-spacing: 0.18em;
     padding: 0.25rem 0.6rem;
     border-radius: 999px;
-    border: 1px solid rgba(76, 243, 255, 0.4);
-    color: rgba(125, 211, 252, 0.9);
+    border: 1px solid var(--accent-border);
+    color: var(--accent-text);
   }
 
   .goals-catalog__pill.is-user {
-    border-color: rgba(248, 250, 252, 0.3);
-    color: rgba(248, 250, 252, 0.85);
+    border-color: var(--border-solid);
+    color: var(--text-muted);
   }
 
   .goals-catalog__level {
     font-size: 0.75rem;
-    color: rgba(148, 163, 184, 0.85);
+    color: var(--text-muted);
   }
 
   .goals-catalog__text {
     margin: 0;
-    color: rgba(248, 250, 252, 0.92);
+    color: var(--text);
     font-weight: 500;
   }
 
   .goals-catalog__byline {
     margin: 0;
     font-size: 0.8rem;
-    color: rgba(148, 163, 184, 0.7);
+    color: var(--text-faint);
   }
 
   .goals-catalog__form {
@@ -96,8 +96,8 @@
     gap: 0.6rem;
     padding: 1rem;
     border-radius: 18px;
-    background: rgba(8, 12, 24, 0.7);
-    border: 1px solid rgba(148, 163, 184, 0.15);
+    background: var(--surface-form);
+    border: 1px solid var(--border-subtle);
   }
 
   .goals-catalog__form h4 {
@@ -105,16 +105,16 @@
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    color: rgba(148, 163, 184, 0.7);
+    color: var(--text-faint);
   }
 
   .goals-catalog__form textarea,
   .goals-catalog__form select {
     width: 100%;
     border-radius: 12px;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    background: rgba(10, 14, 26, 0.8);
-    color: rgba(248, 250, 252, 0.95);
+    border: 1px solid var(--border-strong);
+    background: var(--surface-form-strong);
+    color: var(--text-strong);
     padding: 0.6rem 0.75rem;
     font-size: 0.9rem;
   }
@@ -136,7 +136,7 @@
   }
 
   .goals-catalog__note {
-    color: rgba(148, 163, 184, 0.75);
+    color: var(--text-muted);
     font-size: 0.85rem;
   }
 }

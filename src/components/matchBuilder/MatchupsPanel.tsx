@@ -68,13 +68,13 @@ export default function MatchupsPanel({
   }, [activeRound, isCompactView, matchRounds]);
 
   return (
-    <section className="table-panel">
+    <section className="panel">
       <div className="panel-header">
         <h2 className="panel-title">Matchups</h2>
         {!isCompactView ? (
           <button
             type="button"
-            className="ghost-button"
+            className="btn-ghost"
             onClick={onOpenFullscreen}
             disabled={matchesCount === 0}
           >
@@ -90,7 +90,7 @@ export default function MatchupsPanel({
           <div className="round-nav-actions">
             <button
               type="button"
-              className="ghost-button"
+              className="btn-ghost"
               onClick={onPreviousRound}
               disabled={activeRound <= 0}
             >
@@ -98,7 +98,7 @@ export default function MatchupsPanel({
             </button>
             <button
               type="button"
-              className="ghost-button"
+              className="btn-ghost"
               onClick={onNextRound}
               disabled={activeRound >= matchRounds.length - 1}
             >

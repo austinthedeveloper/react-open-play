@@ -27,16 +27,16 @@ export default function GoalsControls({
   onGenerate,
 }: GoalsControlsProps) {
   return (
-    <section className="controls-panel controls-panel-card">
+    <section className="panel-glass panel-glass-card">
       <div className="panel-header">
         <h2 className="panel-title">Goals setup</h2>
-        <button type="button" className="ghost-button" onClick={onToggleOpen}>
+        <button type="button" className="btn-ghost" onClick={onToggleOpen}>
           {isOpen ? "Collapse" : "Expand"}
         </button>
       </div>
       {isOpen ? (
         <>
-          <div className="controls-panel-body">
+          <div className="panel-glass-body">
             <label className="control">
               <span className="control-label">Matches this session</span>
               <input
@@ -78,7 +78,7 @@ export default function GoalsControls({
             </label>
           </div>
 
-          <button type="button" onClick={onGenerate} className="glow-button">
+          <button type="button" onClick={onGenerate} className="btn-primary">
             Generate goals
           </button>
         </>

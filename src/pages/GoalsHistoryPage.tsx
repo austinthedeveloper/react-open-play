@@ -191,7 +191,7 @@ export default function GoalsHistoryPage() {
 
   return (
     <div className="app-shell text-left">
-      <header className="hero-panel">
+      <header className="panel-hero">
         <div>
           <p className="eyebrow">Open Play Lab</p>
           <h1 className="hero-title">Goal Sessions</h1>
@@ -201,14 +201,14 @@ export default function GoalsHistoryPage() {
         </div>
       </header>
 
-      <div className="goals-tabs" role="tablist" aria-label="Goals sections">
+      <div className="tabs-pill" role="tablist" aria-label="Goals sections">
         <button
           type="button"
           role="tab"
-          id="goals-tab-generate"
-          aria-controls="goals-tabpanel-generate"
+          id="tab-pill-generate"
+          aria-controls="tab-panel-generate"
           aria-selected={activeTab === "generate"}
-          className={`goals-tab${activeTab === "generate" ? " is-active" : ""}`}
+          className={`tab-pill${activeTab === "generate" ? " is-active" : ""}`}
           onClick={() => setActiveTab("generate")}
         >
           Generating goals
@@ -216,10 +216,10 @@ export default function GoalsHistoryPage() {
         <button
           type="button"
           role="tab"
-          id="goals-tab-manage"
-          aria-controls="goals-tabpanel-manage"
+          id="tab-pill-manage"
+          aria-controls="tab-panel-manage"
           aria-selected={activeTab === "manage"}
-          className={`goals-tab${activeTab === "manage" ? " is-active" : ""}`}
+          className={`tab-pill${activeTab === "manage" ? " is-active" : ""}`}
           onClick={() => setActiveTab("manage")}
         >
           Management
@@ -229,8 +229,8 @@ export default function GoalsHistoryPage() {
       {activeTab === "generate" ? (
         <section
           role="tabpanel"
-          id="goals-tabpanel-generate"
-          aria-labelledby="goals-tab-generate"
+          id="tab-panel-generate"
+          aria-labelledby="tab-pill-generate"
         >
           <GoalsControls
             numMatches={numMatches}
@@ -253,20 +253,20 @@ export default function GoalsHistoryPage() {
       ) : (
         <section
           role="tabpanel"
-          id="goals-tabpanel-manage"
-          aria-labelledby="goals-tab-manage"
+          id="tab-panel-manage"
+          aria-labelledby="tab-pill-manage"
         >
           <GoalsCatalog user={user} />
         </section>
       )}
 
-      <main className="table-panel">
+      <main className="panel">
         {!user ? (
           <div className="empty-state history-empty">
             <p>Sign in to view and save goal sessions.</p>
             <button
               type="button"
-              className="glow-button"
+              className="btn-primary"
               onClick={handleLogin}
             >
               Sign in
@@ -275,7 +275,7 @@ export default function GoalsHistoryPage() {
         ) : visibleSessions.length === 0 ? (
           <div className="empty-state history-empty">
             <p>No goal sessions yet. Generate a set.</p>
-            <button type="button" className="glow-button" onClick={handleGenerate}>
+            <button type="button" className="btn-primary" onClick={handleGenerate}>
               Generate goals
             </button>
           </div>
@@ -307,14 +307,14 @@ export default function GoalsHistoryPage() {
                   <div className="history-card__actions">
                     <button
                       type="button"
-                      className="ghost-button"
+                      className="btn-ghost"
                       onClick={() => navigate(`/goals/${session.id}`)}
                     >
                       Open session
                     </button>
                     <button
                       type="button"
-                      className="ghost-button history-card__remove"
+                      className="btn-ghost history-card__remove"
                       onClick={async () => {
                         try {
                           await goalSessionsService.remove(session.id);

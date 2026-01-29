@@ -8,7 +8,7 @@ export type StatsPanelProps = {
 
 export default function StatsPanel({ stats }: StatsPanelProps) {
   return (
-    <section className="table-panel">
+    <section className="panel">
       <h2 className="panel-title">Player Balance</h2>
       <p className="panel-subtitle">
         Each player should land within one match of the group average.

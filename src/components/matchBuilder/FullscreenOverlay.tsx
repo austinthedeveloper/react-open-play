@@ -57,7 +57,7 @@ export default function FullscreenOverlay({
           <div className="fullscreen-actions">
             <button
               type="button"
-              className="ghost-button"
+              className="btn-ghost"
               onClick={onPreviousRound}
               disabled={activeRound <= 0}
             >
@@ -65,13 +65,13 @@ export default function FullscreenOverlay({
             </button>
             <button
               type="button"
-              className="ghost-button"
+              className="btn-ghost"
               onClick={onNextRound}
               disabled={activeRound >= matchRounds.length - 1}
             >
               Next round
             </button>
-            <button type="button" className="glow-button" onClick={onClose}>
+            <button type="button" className="btn-primary" onClick={onClose}>
               Exit fullscreen
             </button>
           </div>

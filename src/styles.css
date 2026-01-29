@@ -1,6 +1,50 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
 @import "tailwindcss";
 
+@theme {
+  --color-bg: var(--bg);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-panel: var(--panel);
+  --color-panel-soft: var(--panel-soft);
+  --color-surface-glass: var(--surface-glass);
+  --color-surface-card: var(--surface-card);
+  --color-surface-card-soft: var(--surface-card-soft);
+  --color-surface-form: var(--surface-form);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-chip: var(--surface-chip);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-text-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
+  --shadow-card: var(--shadow-card);
+  --shadow-card-soft: var(--shadow-card-soft);
+  --shadow-panel: var(--shadow-panel);
+  --shadow-overlay: var(--shadow-overlay);
+  --shadow-button: var(--shadow-button);
+  --shadow-button-hover: var(--shadow-button-hover);
+  --radius-panel: 24px;
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --gradient-accent: linear-gradient(120deg, var(--accent), var(--accent-2) 60%, var(--accent-3));
+  --gradient-accent-reverse: linear-gradient(120deg, var(--accent-2), var(--accent) 70%, var(--accent-3));
+  --gradient-hero: linear-gradient(120deg, #ffffff 0%, #7ae7ff 40%, var(--accent-2) 70%, var(--accent-3) 100%);
+  --gradient-hero-panel: linear-gradient(135deg, rgba(21, 27, 43, 0.95), rgba(10, 15, 26, 0.85));
+  --gradient-nav: linear-gradient(120deg, rgba(21, 27, 43, 0.95), rgba(10, 14, 24, 0.95));
+  --gradient-fullscreen:
+    radial-gradient(1200px 900px at 20% 10%, rgba(76, 243, 255, 0.16), transparent 60%),
+    radial-gradient(900px 700px at 80% 20%, rgba(242, 166, 255, 0.2), transparent 60%),
+    radial-gradient(800px 650px at 40% 90%, rgba(255, 184, 107, 0.18), transparent 70%),
+    linear-gradient(140deg, rgba(11, 15, 24, 0.98), rgba(6, 8, 14, 0.98));
+  --bg-gradient:
+    radial-gradient(1200px 600px at 15% -10%, rgba(76, 243, 255, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(242, 166, 255, 0.16), transparent 55%),
+    radial-gradient(700px 500px at 35% 85%, rgba(255, 184, 107, 0.12), transparent 60%),
+    linear-gradient(140deg, rgba(21, 27, 43, 0.9), rgba(9, 12, 20, 0.95));
+}
+
 @layer base {
   :root {
     color-scheme: dark;
@@ -8,24 +52,85 @@
     --bg-secondary: #121726;
     --panel: #111624;
     --panel-soft: #151b2b;
+    --surface-glass: rgba(15, 23, 42, 0.7);
+    --surface-glass-strong: rgba(15, 23, 42, 0.85);
+    --surface-card: rgba(14, 19, 32, 0.75);
+    --surface-card-strong: rgba(14, 19, 32, 0.78);
+    --surface-card-soft: rgba(12, 17, 31, 0.65);
+    --surface-card-muted: rgba(10, 15, 26, 0.65);
+    --surface-card-muted-soft: rgba(10, 15, 26, 0.45);
+    --surface-form: rgba(8, 12, 24, 0.7);
+    --surface-form-strong: rgba(10, 14, 26, 0.8);
+    --surface-overlay: rgba(9, 12, 20, 0.85);
+    --surface-scrim: rgba(15, 20, 33, 0.7);
+    --surface-chip: rgba(15, 23, 42, 0.6);
+    --surface-chip-strong: rgba(11, 18, 30, 0.8);
+    --surface-ink: rgba(11, 15, 24, 0.8);
+    --surface-ink-soft: rgba(11, 15, 24, 0.6);
+    --surface-muted: rgba(15, 23, 42, 0.5);
+    --surface-hover: rgba(148, 163, 184, 0.1);
+    --surface-switch-active: rgba(30, 64, 86, 0.9);
+    --surface-thumb: rgba(226, 232, 240, 0.8);
     --line: rgba(148, 163, 184, 0.2);
+    --border-soft: rgba(148, 163, 184, 0.12);
+    --border-subtle: rgba(148, 163, 184, 0.15);
+    --border-default: rgba(148, 163, 184, 0.16);
+    --border-muted: rgba(148, 163, 184, 0.18);
+    --border-strong: rgba(148, 163, 184, 0.2);
+    --border-stronger: rgba(148, 163, 184, 0.25);
+    --border-solid: rgba(148, 163, 184, 0.3);
+    --border-heavy: rgba(148, 163, 184, 0.4);
+    --border-heavier: rgba(148, 163, 184, 0.45);
+    --border-bright: rgba(148, 163, 184, 0.6);
+    --border-light: rgba(248, 250, 252, 0.2);
+    --text-strong: rgba(248, 250, 252, 0.95);
     --text: rgba(248, 250, 252, 0.92);
-    --muted: rgba(226, 232, 240, 0.62);
+    --text-muted: rgba(226, 232, 240, 0.75);
+    --text-subtle: rgba(226, 232, 240, 0.62);
+    --text-faint: rgba(148, 163, 184, 0.7);
+    --text-fainter: rgba(148, 163, 184, 0.6);
+    --text-bright: #ffffff;
     --accent: #4cf3ff;
     --accent-2: #f2a6ff;
     --accent-3: #ffb86b;
+    --accent-soft: rgba(76, 243, 255, 0.12);
+    --accent-soft-faint: rgba(76, 243, 255, 0.14);
+    --accent-soft-strong: rgba(76, 243, 255, 0.24);
+    --accent-border: rgba(76, 243, 255, 0.4);
+    --accent-border-strong: rgba(76, 243, 255, 0.6);
+    --accent-outline: rgba(76, 243, 255, 0.3);
+    --accent-text: rgba(76, 243, 255, 0.9);
+    --accent-2-text: rgba(242, 166, 255, 0.95);
+    --accent-3-text: rgba(255, 184, 107, 0.95);
+    --danger-border: rgba(239, 68, 68, 0.4);
+    --danger-border-strong: rgba(239, 68, 68, 0.7);
+    --danger-text: rgba(248, 113, 113, 0.9);
+    --focus-ring: rgba(76, 243, 255, 0.4);
+    --focus-ring-strong: rgba(76, 243, 255, 0.6);
+    --focus-ring-warm: rgba(255, 184, 107, 0.6);
+    --focus-ring-light: rgba(248, 250, 252, 0.7);
     --glow: 0 20px 60px rgba(76, 243, 255, 0.15);
+    --shadow-glow-strong: 0 25px 80px rgba(242, 166, 255, 0.22);
+    --shadow-nav: 0 16px 40px rgba(9, 12, 20, 0.45);
+    --shadow-card: 0 16px 40px rgba(7, 11, 20, 0.45);
+    --shadow-card-soft: 0 16px 40px rgba(7, 11, 20, 0.35);
+    --shadow-card-accent: 0 18px 30px rgba(10, 15, 26, 0.35);
+    --shadow-dot: 0 0 10px rgba(15, 23, 42, 0.6);
+    --shadow-thumb: 0 4px 8px rgba(6, 8, 18, 0.35);
+    --shadow-panel: 0 20px 60px rgba(15, 23, 42, 0.55);
+    --shadow-overlay: 0 30px 80px rgba(6, 10, 20, 0.6);
+    --shadow-button: 0 16px 35px rgba(76, 243, 255, 0.22);
+    --shadow-button-hover: 0 18px 45px rgba(242, 166, 255, 0.25);
+    --shadow-button-alt: 0 10px 22px rgba(76, 243, 255, 0.22);
+    --shadow-button-alt-hover: 0 14px 28px rgba(76, 243, 255, 0.28);
+    --shadow-pill: 0 10px 24px rgba(76, 243, 255, 0.2);
   }
 
   body {
     @apply m-0 flex min-w-[320px] min-h-screen text-white/90 antialiased overflow-y-scroll;
     font-family: "Space Grotesk", "Segoe UI", sans-serif;
     background-color: var(--bg);
-    background-image:
-      radial-gradient(1200px 600px at 15% -10%, rgba(76, 243, 255, 0.18), transparent 60%),
-      radial-gradient(900px 500px at 90% 10%, rgba(242, 166, 255, 0.16), transparent 55%),
-      radial-gradient(700px 500px at 35% 85%, rgba(255, 184, 107, 0.12), transparent 60%),
-      linear-gradient(140deg, rgba(21, 27, 43, 0.9), rgba(9, 12, 20, 0.95));
+    background-image: var(--bg-gradient);
     text-rendering: optimizeLegibility;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -38,8 +143,8 @@
   select {
     color: var(--text);
     font-family: "Space Mono", "SFMono-Regular", monospace;
-    background-color: rgba(15, 23, 42, 0.7);
-    border: 1px solid rgba(148, 163, 184, 0.3);
+    background-color: var(--surface-glass);
+    border: 1px solid var(--border-solid);
     border-radius: 12px;
     padding: 0.55rem 0.75rem;
     transition: border-color 150ms ease, box-shadow 150ms ease;
@@ -48,8 +153,8 @@
   input:focus,
   select:focus {
     outline: none;
-    border-color: rgba(76, 243, 255, 0.7);
-    box-shadow: 0 0 0 3px rgba(76, 243, 255, 0.12);
+    border-color: var(--accent-border-strong);
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
 
   table {
@@ -58,7 +163,7 @@
 
   thead th {
     font-weight: 600;
-    color: rgba(226, 232, 240, 0.8);
+    color: var(--text-muted);
   }
 }
 
@@ -80,9 +185,9 @@
     gap: 1rem;
     padding: 1rem 1.5rem;
     border-radius: 18px;
-    background: linear-gradient(120deg, rgba(21, 27, 43, 0.95), rgba(10, 14, 24, 0.95));
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    box-shadow: 0 16px 40px rgba(9, 12, 20, 0.45);
+    background: var(--gradient-nav);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-nav);
   }
 
   .nav-brand {
@@ -90,7 +195,7 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     font-size: 0.8rem;
-    color: rgba(226, 232, 240, 0.85);
+    color: var(--text-muted);
   }
 
   .nav-links {
@@ -110,7 +215,7 @@
 
   .nav-link {
     text-decoration: none;
-    color: rgba(226, 232, 240, 0.78);
+    color: var(--text-muted);
     font-size: 0.9rem;
     font-weight: 600;
     padding: 0.5rem 1.1rem;
@@ -120,36 +225,39 @@
   }
 
   .nav-link:hover {
-    color: rgba(248, 250, 252, 0.95);
-    border-color: rgba(76, 243, 255, 0.4);
+    color: var(--text-strong);
+    border-color: var(--accent-border);
   }
 
   .nav-link.is-active {
-    color: #0b0d12;
-    background: linear-gradient(120deg, #4cf3ff, #f2a6ff 60%, #ffb86b);
-    box-shadow: 0 12px 24px rgba(76, 243, 255, 0.2);
+    color: var(--bg);
+    background: var(--gradient-accent);
+    box-shadow: var(--shadow-pill);
   }
 
-  .nav-auth-button {
+  .nav-auth-button,
+  .btn-primary-reverse {
     border: none;
     border-radius: 999px;
     padding: 0.55rem 1.2rem;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #0b0d12;
-    background: linear-gradient(120deg, #f2a6ff, #4cf3ff 70%, #ffb86b);
-    box-shadow: 0 10px 22px rgba(76, 243, 255, 0.22);
+    color: var(--bg);
+    background: var(--gradient-accent-reverse);
+    box-shadow: var(--shadow-button-alt);
     cursor: pointer;
     transition: transform 150ms ease, box-shadow 150ms ease;
   }
 
-  .nav-auth-button:hover {
+  .nav-auth-button:hover,
+  .btn-primary-reverse:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 28px rgba(76, 243, 255, 0.28);
+    box-shadow: var(--shadow-button-alt-hover);
   }
 
-  .nav-auth-button:focus-visible {
-    outline: 2px solid rgba(248, 250, 252, 0.7);
+  .nav-auth-button:focus-visible,
+  .btn-primary-reverse:focus-visible {
+    outline: 2px solid var(--focus-ring-light);
     outline-offset: 3px;
   }
 
@@ -159,47 +267,51 @@
     gap: 0.65rem;
     padding: 0.35rem 0.35rem 0.35rem 0.8rem;
     border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    background: rgba(15, 20, 33, 0.7);
+    border: 1px solid var(--border-stronger);
+    background: var(--surface-scrim);
   }
 
   .nav-user__name {
     font-size: 0.85rem;
     font-weight: 600;
-    color: rgba(226, 232, 240, 0.9);
+    color: var(--text);
     white-space: nowrap;
   }
 
-  .nav-logout-button {
-    border: 1px solid rgba(248, 250, 252, 0.2);
+  .nav-logout-button,
+  .btn-outline {
+    border: 1px solid var(--border-light);
     border-radius: 999px;
     padding: 0.4rem 0.85rem;
     font-size: 0.78rem;
     font-weight: 600;
-    color: rgba(226, 232, 240, 0.95);
+    color: var(--text-strong);
     background: transparent;
     cursor: pointer;
     transition: border-color 150ms ease, color 150ms ease, transform 150ms ease;
   }
 
-  .nav-logout-button:hover {
-    color: #ffffff;
-    border-color: rgba(76, 243, 255, 0.6);
+  .nav-logout-button:hover,
+  .btn-outline:hover {
+    color: var(--text-bright);
+    border-color: var(--accent-border-strong);
     transform: translateY(-1px);
   }
 
-  .nav-logout-button:focus-visible {
-    outline: 2px solid rgba(248, 250, 252, 0.7);
+  .nav-logout-button:focus-visible,
+  .btn-outline:focus-visible {
+    outline: 2px solid var(--focus-ring-light);
     outline-offset: 3px;
   }
 
-  .hero-panel {
+  .hero-panel,
+  .panel-hero {
     display: grid;
     gap: 1rem;
     padding: 1.75rem 1.75rem;
     border-radius: 24px;
-    background: linear-gradient(135deg, rgba(21, 27, 43, 0.95), rgba(10, 15, 26, 0.85));
-    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: var(--gradient-hero-panel);
+    border: 1px solid var(--border-strong);
     box-shadow: var(--glow);
     animation: pulseGlow 7s ease-in-out infinite;
   }
@@ -208,7 +320,7 @@
     text-transform: uppercase;
     letter-spacing: 0.3em;
     font-size: 0.72rem;
-    color: rgba(148, 163, 184, 0.7);
+    color: var(--text-faint);
     margin-bottom: 0.35rem;
   }
 
@@ -217,14 +329,14 @@
     line-height: 1.05;
     font-weight: 700;
     margin: 0;
-    background: linear-gradient(120deg, #ffffff 0%, #7ae7ff 40%, #f2a6ff 70%, #ffb86b 100%);
+    background: var(--gradient-hero);
     -webkit-background-clip: text;
     color: transparent;
   }
 
   .hero-subtitle {
     margin: 0.35rem 0 0;
-    color: var(--muted);
+    color: var(--text-subtle);
   }
 
   .hero-stats {
@@ -239,7 +351,7 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    color: rgba(148, 163, 184, 0.7);
+    color: var(--text-faint);
   }
 
   .stat-value {
@@ -250,25 +362,28 @@
     color: var(--text);
   }
 
-  .controls-panel {
+  .controls-panel,
+  .panel-glass {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
     align-items: end;
     padding: 1.25rem 1.5rem;
     border-radius: 20px;
-    background: rgba(15, 23, 42, 0.7);
-    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: var(--surface-glass);
+    border: 1px solid var(--border-default);
     backdrop-filter: blur(10px);
   }
 
-  .controls-panel-card {
+  .controls-panel-card,
+  .panel-glass-card {
     display: grid;
     gap: 1rem;
     align-items: stretch;
   }
 
-  .controls-panel-body {
+  .controls-panel-body,
+  .panel-glass-body {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
@@ -290,7 +405,7 @@
   .control {
     display: grid;
     gap: 0.4rem;
-    color: var(--muted);
+    color: var(--text-subtle);
     font-size: 0.85rem;
   }
 
@@ -309,42 +424,46 @@
     font-size: 0.6rem;
     padding: 0.1rem 0.35rem;
     border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    color: rgba(226, 232, 240, 0.75);
-    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border-heavy);
+    color: var(--text-muted);
+    background: var(--surface-muted);
   }
 
   .control .control-helper {
     font-size: 0.7rem;
-    color: rgba(226, 232, 240, 0.6);
+    color: var(--text-subtle);
   }
 
-  .glow-button {
+  .glow-button,
+  .btn-primary {
     padding: 0.65rem 1.5rem;
     border-radius: 999px;
     font-weight: 600;
     font-size: 0.95rem;
-    color: #0b0d12;
-    background: linear-gradient(120deg, #4cf3ff, #f2a6ff 60%, #ffb86b);
+    color: var(--bg);
+    background: var(--gradient-accent);
     border: none;
-    box-shadow: 0 16px 35px rgba(76, 243, 255, 0.22);
+    box-shadow: var(--shadow-button);
     transition: transform 150ms ease, box-shadow 150ms ease;
   }
 
-  .glow-button:hover {
+  .glow-button:hover,
+  .btn-primary:hover {
     transform: translateY(-1px) scale(1.01);
-    box-shadow: 0 18px 45px rgba(242, 166, 255, 0.25);
+    box-shadow: var(--shadow-button-hover);
   }
 
-  .glow-button:disabled {
+  .glow-button:disabled,
+  .btn-primary:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
   }
 
-  .glow-button:focus-visible {
-    outline: 3px solid rgba(255, 184, 107, 0.6);
+  .glow-button:focus-visible,
+  .btn-primary:focus-visible {
+    outline: 3px solid var(--focus-ring-warm);
     outline-offset: 4px;
   }
 
@@ -355,30 +474,33 @@
     align-items: center;
   }
 
-  .table-panel {
+  .table-panel,
+  .panel {
     padding: 1.5rem;
     border-radius: 24px;
     background: var(--panel);
-    border: 1px solid rgba(148, 163, 184, 0.16);
-    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.55);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-panel);
   }
 
-  .goals-tabs {
+  .goals-tabs,
+  .tabs-pill {
     display: inline-flex;
     gap: 0.35rem;
     padding: 0.35rem;
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: var(--surface-chip);
+    border: 1px solid var(--border-stronger);
     margin: 0.5rem 0 1.5rem;
   }
 
-  .goals-tab {
+  .goals-tab,
+  .tab-pill {
     padding: 0.45rem 1.1rem;
     border-radius: 999px;
     border: 1px solid transparent;
     background: transparent;
-    color: rgba(226, 232, 240, 0.75);
+    color: var(--text-muted);
     font-size: 0.85rem;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -386,25 +508,28 @@
       background 150ms ease;
   }
 
-  .goals-tab:hover {
-    color: rgba(248, 250, 252, 0.95);
-    border-color: rgba(76, 243, 255, 0.35);
+  .goals-tab:hover,
+  .tab-pill:hover {
+    color: var(--text-strong);
+    border-color: var(--accent-border);
   }
 
-  .goals-tab.is-active {
-    color: #0b0d12;
-    background: linear-gradient(120deg, #4cf3ff, #f2a6ff 60%, #ffb86b);
+  .goals-tab.is-active,
+  .tab-pill.is-active {
+    color: var(--bg);
+    background: var(--gradient-accent);
     border-color: transparent;
-    box-shadow: 0 10px 24px rgba(76, 243, 255, 0.2);
+    box-shadow: var(--shadow-pill);
   }
 
-  .goals-tab:focus-visible {
-    outline: 3px solid rgba(76, 243, 255, 0.4);
+  .goals-tab:focus-visible,
+  .tab-pill:focus-visible {
+    outline: 3px solid var(--focus-ring);
     outline-offset: 3px;
   }
 
   .empty-state {
-    color: var(--muted);
+    color: var(--text-subtle);
     text-align: center;
     padding: 2rem 1rem;
   }
@@ -417,26 +542,29 @@
 
   .panel-subtitle {
     margin: 0 0 1.25rem;
-    color: var(--muted);
+    color: var(--text-subtle);
     font-size: 0.9rem;
   }
 
-  .ghost-button {
+  .ghost-button,
+  .btn-ghost {
     padding: 0.5rem 1.1rem;
     border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    background: rgba(12, 17, 31, 0.7);
-    color: rgba(248, 250, 252, 0.9);
+    border: 1px solid var(--border-solid);
+    background: var(--surface-card-soft);
+    color: var(--text);
     font-size: 0.85rem;
     transition: border-color 150ms ease, transform 150ms ease;
   }
 
-  .ghost-button:hover:not(:disabled) {
-    border-color: rgba(76, 243, 255, 0.5);
+  .ghost-button:hover:not(:disabled),
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--accent-border);
     transform: translateY(-1px);
   }
 
-  .ghost-button:disabled {
+  .ghost-button:disabled,
+  .btn-ghost:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
@@ -446,10 +574,10 @@
 @keyframes pulseGlow {
   0%,
   100% {
-    box-shadow: 0 20px 60px rgba(76, 243, 255, 0.15);
+    box-shadow: var(--glow);
   }
   50% {
-    box-shadow: 0 25px 80px rgba(242, 166, 255, 0.22);
+    box-shadow: var(--shadow-glow-strong);
   }
 }
 

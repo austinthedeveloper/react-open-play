@@ -163,7 +163,7 @@ export default function GoalsCatalog({ user }: { user: AuthUser | null }) {
   };
 
   return (
-    <section className="table-panel goals-catalog">
+    <section className="panel goals-catalog">
       <header className="goals-catalog__header">
         <div>
           <h2 className="panel-title">Goal Library</h2>
@@ -232,7 +232,7 @@ export default function GoalsCatalog({ user }: { user: AuthUser | null }) {
               </select>
               <button
                 type="button"
-                className="ghost-button"
+                className="btn-ghost"
                 onClick={handleCreateGlobalGoal}
                 disabled={isSaving || !globalDraft.goalText.trim()}
               >
@@ -274,7 +274,7 @@ export default function GoalsCatalog({ user }: { user: AuthUser | null }) {
               </select>
               <button
                 type="button"
-                className="ghost-button"
+                className="btn-ghost"
                 onClick={handleCreateUserGoal}
                 disabled={isSaving || !userDraft.goalText.trim()}
               >
@@ -330,7 +330,7 @@ export default function GoalsCatalog({ user }: { user: AuthUser | null }) {
                         <div className="goals-catalog__actions">
                           <button
                             type="button"
-                            className="ghost-button"
+                            className="btn-ghost"
                             onClick={() => handleUpdateUserGoal(goal.id)}
                             disabled={isSaving || !editDraft.goalText.trim()}
                           >
@@ -338,7 +338,7 @@ export default function GoalsCatalog({ user }: { user: AuthUser | null }) {
                           </button>
                           <button
                             type="button"
-                            className="ghost-button"
+                            className="btn-ghost"
                             onClick={cancelEdit}
                             disabled={isSaving}
                           >
@@ -352,7 +352,7 @@ export default function GoalsCatalog({ user }: { user: AuthUser | null }) {
                         <div className="goals-catalog__actions">
                           <button
                             type="button"
-                            className="ghost-button"
+                            className="btn-ghost"
                             onClick={() => startEdit(goal)}
                             disabled={isSaving}
                           >
@@ -360,7 +360,7 @@ export default function GoalsCatalog({ user }: { user: AuthUser | null }) {
                           </button>
                           <button
                             type="button"
-                            className="ghost-button"
+                            className="btn-ghost"
                             onClick={() => handleDeleteUserGoal(goal.id)}
                             disabled={isSaving}
                           >

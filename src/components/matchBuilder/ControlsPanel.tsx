@@ -58,16 +58,16 @@ export default function ControlsPanel({
   const lockedMessage =
     "Locked after schedule generation. Clear schedule to change.";
   return (
-    <section className="controls-panel controls-panel-card">
+    <section className="panel-glass panel-glass-card">
       <div className="panel-header">
         <h2 className="panel-title">Match type</h2>
-        <button type="button" className="ghost-button" onClick={onToggleOpen}>
+        <button type="button" className="btn-ghost" onClick={onToggleOpen}>
           {isOpen ? "Collapse" : "Expand"}
         </button>
       </div>
       {isOpen ? (
         <>
-          <div className="controls-panel-body">
+          <div className="panel-glass-body">
             <label className="control">
               <span className="control-label">
                 Match type
@@ -179,7 +179,7 @@ export default function ControlsPanel({
               <button
                 type="button"
                 onClick={onGenerateSchedule}
-                className="glow-button"
+                className="btn-primary"
                 disabled={isScheduleGenerated}
               >
                 Generate schedule
@@ -187,7 +187,7 @@ export default function ControlsPanel({
               <button
                 type="button"
                 onClick={onClearSchedule}
-                className="ghost-button"
+                className="btn-ghost"
                 disabled={!canClearSchedule}
               >
                 Clear schedule
@@ -195,7 +195,7 @@ export default function ControlsPanel({
               <button
                 type="button"
                 onClick={onResetAll}
-                className="ghost-button"
+                className="btn-ghost"
               >
                 Reset all
               </button>

@@ -89,7 +89,7 @@ export default function GoalsSessionPage() {
     <div className="app-shell text-left">
       <button
         type="button"
-        className="ghost-button"
+        className="btn-ghost"
         onClick={() => navigate("/")}
       >
         Back to sessions
