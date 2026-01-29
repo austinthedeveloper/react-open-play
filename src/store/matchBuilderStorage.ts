@@ -147,7 +147,7 @@ export type MatchBuilderState = {
 };
 
 export const loadMatchBuilderState = (): MatchBuilderState => {
-  let matchType = DEFAULT_MATCH_TYPE;
+  let matchType: MatchType = DEFAULT_MATCH_TYPE;
   let players = buildDefaultPlayers(DEFAULT_PLAYERS);
   let numMatches = DEFAULT_MATCHES;
   let numCourts = DEFAULT_COURTS;

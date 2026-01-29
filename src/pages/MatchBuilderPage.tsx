@@ -141,14 +141,42 @@ export default function MatchBuilderPage() {
     () => new Map(matches.map((match) => [match.id, match])),
     [matches]
   );
+  const matchRoundLookup = useMemo(() => {
+    const lookup = new Map<string, number>();
+    if (!schedule?.rounds) {
+      return lookup;
+    }
+    schedule.rounds.forEach((round, roundIndex) => {
+      round.forEach((match) => {
+        lookup.set(match.id, roundIndex);
+      });
+    });
+    return lookup;
+  }, [schedule]);
+  const bracketRoundStatus = useMemo(() => {
+    if (!schedule?.rounds) {
+      return [];
+    }
+    return schedule.rounds.map((round) =>
+      round.every((match) => Boolean(matchResults[match.id]))
+    );
+  }, [matchResults, schedule]);
   const matchRounds = useMemo(() => {
     if (schedule?.rounds && schedule.rounds.length > 0) {
       const resolvedLookup = new Map(
         resolvedMatches.map((match) => [match.id, match])
       );
-      return schedule.rounds.map((round) =>
-        round.map((match) => resolvedLookup.get(match.id) ?? match)
-      );
+      const roundChunks: MatchCardType[][] = [];
+      const perRound = Math.max(1, activeCourtCount);
+      schedule.rounds.forEach((round) => {
+        const resolvedRound = round.map(
+          (match) => resolvedLookup.get(match.id) ?? match
+        );
+        for (let i = 0; i < resolvedRound.length; i += perRound) {
+          roundChunks.push(resolvedRound.slice(i, i + perRound));
+        }
+      });
+      return roundChunks;
     }
     const perRound = Math.max(1, activeCourtCount);
     const rounds: MatchCardType[][] = [];
@@ -188,6 +216,23 @@ export default function MatchBuilderPage() {
     match: MatchCardType,
     teamIndex: 0 | 1
   ): [TeamMember, TeamMember] => {
+    const sourceId = match.sourceMatchIds?.[teamIndex];
+    if (sourceId) {
+      const sourceRound = matchRoundLookup.get(sourceId);
+      if (
+        typeof sourceRound === "number" &&
+        !bracketRoundStatus[sourceRound]
+      ) {
+        const sourceMatch = matchLookup.get(sourceId);
+        const label = sourceMatch
+          ? `Winner of Match ${sourceMatch.index}`
+          : "TBD";
+        return [
+          { name: label, color: "transparent" },
+          { name: label, color: "transparent" },
+        ];
+      }
+    }
     const resolvedTeam = resolveMatchTeam(
       match,
       teamIndex,
@@ -197,7 +242,6 @@ export default function MatchBuilderPage() {
     if (resolvedTeam) {
       return [resolvePlayer(resolvedTeam[0]), resolvePlayer(resolvedTeam[1])];
     }
-    const sourceId = match.sourceMatchIds?.[teamIndex];
     const sourceMatch = sourceId ? matchLookup.get(sourceId) : null;
     const label = sourceMatch
       ? `Winner of Match ${sourceMatch.index}`
