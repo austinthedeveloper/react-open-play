@@ -40,15 +40,17 @@ const syncActiveSession = (state: GoalsState) => {
   session.matches = state.matches;
 };
 
+const initialState: GoalsState = {
+  profile: { ...DEFAULT_PROFILE },
+  numMatches: NUM_MATCHES_DEFAULT,
+  matches: [],
+  goalSessions: [],
+  activeSessionId: null,
+};
+
 const goalsSlice = createSlice({
   name: "goals",
-  initialState: {
-    profile: { ...DEFAULT_PROFILE },
-    numMatches: NUM_MATCHES_DEFAULT,
-    matches: [],
-    goalSessions: [],
-    activeSessionId: null,
-  } satisfies GoalsState,
+  initialState,
   reducers: {
     setGoalSessions(state, action: PayloadAction<GoalSession[]>) {
       state.goalSessions = action.payload;
