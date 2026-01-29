@@ -8,7 +8,9 @@ export type RosterPanelProps = {
   onPlayerNameChange: (index: number, name: string) => void;
   onPlayerColorChange: (index: number, color: string) => void;
   onPlayerGenderChange: (index: number, gender: GenderOption) => void;
+  showGenderSelect?: boolean;
   showPartnerSelect?: boolean;
+  warningText?: string;
   partnerLookup?: Map<string, string>;
   onPartnerChange?: (playerId: string, partnerId?: string | null) => void;
   onRemovePlayer: (index: number) => void;
@@ -24,7 +26,9 @@ export default function RosterPanel({
   onPlayerNameChange,
   onPlayerColorChange,
   onPlayerGenderChange,
+  showGenderSelect = true,
   showPartnerSelect = false,
+  warningText,
   partnerLookup,
   onPartnerChange,
   onRemovePlayer,
@@ -34,8 +38,16 @@ export default function RosterPanel({
 }: RosterPanelProps) {
   const getPartnerValue = (playerId: string) =>
     partnerLookup?.get(playerId) ?? "";
+  const panelClassName = [
+    "panel",
+    "roster-panel",
+    showGenderSelect ? "roster-panel--gender" : "",
+    showPartnerSelect ? "roster-panel--partner" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
-    <section className="panel">
+    <section className={panelClassName}>
       <div className="panel-header">
         <h2 className="panel-title">Roster</h2>
         <button type="button" className="btn-ghost" onClick={onToggleOpen}>
@@ -48,21 +60,23 @@ export default function RosterPanel({
           ? " Lock partners to keep teams together."
           : ""}
       </p>
+      {warningText ? (
+        <p className="roster-warning" role="alert">
+          {warningText}
+        </p>
+      ) : null}
       {isOpen ? (
         <>
           <div className="roster-header">
             <span className="roster-header-cell">Player</span>
             <span className="roster-header-cell">Name</span>
             <span className="roster-header-cell">Color</span>
-            <span className="roster-header-cell">Gender</span>
+            {showGenderSelect ? (
+              <span className="roster-header-cell">Gender</span>
+            ) : null}
             {showPartnerSelect ? (
               <span className="roster-header-cell">Partner</span>
-            ) : (
-              <span
-                className="roster-header-cell roster-header-cell--empty"
-                aria-hidden="true"
-              />
-            )}
+            ) : null}
             <span className="roster-header-cell">Actions</span>
           </div>
           <div className="roster-grid">
@@ -86,54 +100,56 @@ export default function RosterPanel({
                   }
                   aria-label={`Color for player ${index + 1}`}
                 />
-                <div
-                  className="gender-toggle"
-                  role="group"
-                  aria-label={`Gender for player ${index + 1}`}
-                >
-                  <button
-                    type="button"
-                    className={`gender-toggle-button ${
-                      player.gender === "male" ? "is-active" : ""
-                    }`}
-                    data-value="male"
-                    aria-pressed={player.gender === "male"}
-                    aria-label="Male"
-                    onClick={() => onPlayerGenderChange(index, "male")}
+                {showGenderSelect ? (
+                  <div
+                    className="gender-toggle"
+                    role="group"
+                    aria-label={`Gender for player ${index + 1}`}
                   >
-                    <span className="material-icons" aria-hidden="true">
-                      male
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`gender-toggle-button ${
-                      !player.gender ? "is-active" : ""
-                    }`}
-                    data-value=""
-                    aria-pressed={!player.gender}
-                    aria-label="Unspecified"
-                    onClick={() => onPlayerGenderChange(index, "")}
-                  >
-                    <span className="material-icons" aria-hidden="true">
-                      remove
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`gender-toggle-button ${
-                      player.gender === "female" ? "is-active" : ""
-                    }`}
-                    data-value="female"
-                    aria-pressed={player.gender === "female"}
-                    aria-label="Female"
-                    onClick={() => onPlayerGenderChange(index, "female")}
-                  >
-                    <span className="material-icons" aria-hidden="true">
-                      female
-                    </span>
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      className={`gender-toggle-button ${
+                        player.gender === "male" ? "is-active" : ""
+                      }`}
+                      data-value="male"
+                      aria-pressed={player.gender === "male"}
+                      aria-label="Male"
+                      onClick={() => onPlayerGenderChange(index, "male")}
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        male
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`gender-toggle-button ${
+                        !player.gender ? "is-active" : ""
+                      }`}
+                      data-value=""
+                      aria-pressed={!player.gender}
+                      aria-label="Unspecified"
+                      onClick={() => onPlayerGenderChange(index, "")}
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        remove
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`gender-toggle-button ${
+                        player.gender === "female" ? "is-active" : ""
+                      }`}
+                      data-value="female"
+                      aria-pressed={player.gender === "female"}
+                      aria-label="Female"
+                      onClick={() => onPlayerGenderChange(index, "female")}
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        female
+                      </span>
+                    </button>
+                  </div>
+                ) : null}
                 {showPartnerSelect ? (
                   <select
                     className="partner-select"
@@ -161,9 +177,7 @@ export default function RosterPanel({
                         );
                       })}
                   </select>
-                ) : (
-                  <span className="roster-spacer" aria-hidden="true" />
-                )}
+                ) : null}
                 <button
                   type="button"
                   className="btn-ghost"
