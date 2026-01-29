@@ -3,13 +3,19 @@ import { goalsActions } from "../../store/goalsSlice";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import "./GoalsList.css";
 
-export default function GoalsList() {
+type GoalsListProps = {
+  onUpdateMatch?: (id: string, patch: Partial<MatchGoal>) => void;
+};
+
+export default function GoalsList({ onUpdateMatch }: GoalsListProps) {
   const dispatch = useAppDispatch();
   const matches = useAppSelector((state) => state.goals.matches);
 
-  const updateMatch = (id: string, patch: Partial<MatchGoal>) => {
-    dispatch(goalsActions.updateMatch({ id, patch }));
-  };
+  const updateMatch =
+    onUpdateMatch ??
+    ((id: string, patch: Partial<MatchGoal>) => {
+      dispatch(goalsActions.updateMatch({ id, patch }));
+    });
 
   const resultLabels: Record<GoalResult, string> = {
     pending: "Pending",
