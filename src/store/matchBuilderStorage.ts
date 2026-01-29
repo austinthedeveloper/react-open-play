@@ -12,6 +12,7 @@ import type {
   MatchSession,
   MatchResults,
   MatchType,
+  PartnerPair,
   PlayerProfile,
   Schedule,
 } from "../interfaces";
@@ -103,6 +104,33 @@ const normalizeAllowedUserIds = (value?: string[]) =>
 const resolveNumber = (value: unknown, fallback: number) =>
   typeof value === "number" ? value : fallback;
 
+const normalizePartnerPairs = (value?: PartnerPair[]) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const normalized: PartnerPair[] = [];
+  const used = new Set<string>();
+  for (const pair of value) {
+    if (!Array.isArray(pair) || pair.length < 2) {
+      continue;
+    }
+    const [first, second] = pair;
+    if (typeof first !== "string" || typeof second !== "string") {
+      continue;
+    }
+    if (!first || !second || first === second) {
+      continue;
+    }
+    if (used.has(first) || used.has(second)) {
+      continue;
+    }
+    used.add(first);
+    used.add(second);
+    normalized.push([first, second]);
+  }
+  return normalized;
+};
+
 type StoredMatchSession = {
   id?: string;
   createdAt?: number;
@@ -113,6 +141,7 @@ type StoredMatchSession = {
   courtNumbers?: number[] | string;
   schedule?: Schedule | null;
   matchResults?: MatchResults;
+  partnerPairs?: PartnerPair[];
   ownerId?: string | null;
   allowedUserIds?: string[];
 };
@@ -125,6 +154,7 @@ type StoredMatchBuilderState = {
   courtNumbers?: number[] | string;
   schedule?: Schedule | null;
   matchResults?: MatchResults;
+  partnerPairs?: PartnerPair[];
   isControlsOpen?: boolean;
   isRosterOpen?: boolean;
   matchHistory?: StoredMatchSession[];
@@ -140,6 +170,7 @@ export type MatchBuilderState = {
   courtNumbersText: string;
   schedule: Schedule | null;
   matchResults: MatchResults;
+  partnerPairs: PartnerPair[];
   isControlsOpen: boolean;
   isRosterOpen: boolean;
   matchHistory: MatchSession[];
@@ -155,6 +186,7 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
   let courtNumbersText = "";
   let schedule: Schedule | null = null;
   let matchResults: MatchResults = {};
+  let partnerPairs: PartnerPair[] = [];
   let isControlsOpen = true;
   let isRosterOpen = true;
   let matchHistory: MatchSession[] = [];
@@ -174,6 +206,7 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
         courtNumbersText = normalizedCourts.courtNumbersText;
         schedule = normalizeSchedule(parsed.schedule);
         matchResults = normalizeMatchResults(parsed.matchResults);
+        partnerPairs = normalizePartnerPairs(parsed.partnerPairs);
         if (typeof parsed.isControlsOpen === "boolean") {
           isControlsOpen = parsed.isControlsOpen;
         }
@@ -201,6 +234,7 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
                 courtNumbers: sessionCourts.courtNumbers,
                 schedule: normalizeSchedule(entry.schedule),
                 matchResults: normalizeMatchResults(entry.matchResults),
+                partnerPairs: normalizePartnerPairs(entry.partnerPairs),
                 ownerId: typeof entry.ownerId === "string" ? entry.ownerId : null,
                 allowedUserIds: normalizeAllowedUserIds(entry.allowedUserIds),
               } satisfies MatchSession);
@@ -231,6 +265,7 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
       courtNumbersText = formatCourtNumbers(activeSession.courtNumbers);
       schedule = activeSession.schedule;
       matchResults = activeSession.matchResults;
+      partnerPairs = normalizePartnerPairs(activeSession.partnerPairs);
       isControlsOpen = false;
       isRosterOpen = false;
     } else {
@@ -251,6 +286,7 @@ export const loadMatchBuilderState = (): MatchBuilderState => {
     courtNumbersText,
     schedule,
     matchResults,
+    partnerPairs,
     isControlsOpen,
     isRosterOpen,
     matchHistory,
@@ -266,6 +302,7 @@ export const saveMatchBuilderState = ({
   courtNumbers,
   schedule,
   matchResults,
+  partnerPairs,
   isControlsOpen,
   isRosterOpen,
   matchHistory,
@@ -284,6 +321,7 @@ export const saveMatchBuilderState = ({
       courtNumbers,
       schedule,
       matchResults,
+      partnerPairs,
       isControlsOpen,
       isRosterOpen,
       matchHistory,

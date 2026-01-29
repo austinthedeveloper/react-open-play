@@ -64,6 +64,9 @@ export default function MatchBuilderPage() {
   const matchResults = useAppSelector(
     (state) => state.matchBuilder.matchResults
   );
+  const partnerPairs = useAppSelector(
+    (state) => state.matchBuilder.partnerPairs
+  );
   const isControlsOpen = useAppSelector(
     (state) => state.matchBuilder.isControlsOpen
   );
@@ -137,6 +140,17 @@ export default function MatchBuilderPage() {
   const playerLookup = useMemo(() => {
     return new Map(normalizedPlayers.map((player) => [player.id, player]));
   }, [normalizedPlayers]);
+  const playerOrderLookup = useMemo(() => {
+    return new Map(normalizedPlayers.map((player, index) => [player.id, index]));
+  }, [normalizedPlayers]);
+  const partnerLookup = useMemo(() => {
+    const lookup = new Map<string, string>();
+    for (const [first, second] of partnerPairs) {
+      lookup.set(first, second);
+      lookup.set(second, first);
+    }
+    return lookup;
+  }, [partnerPairs]);
   const matchLookup = useMemo(
     () => new Map(matches.map((match) => [match.id, match])),
     [matches]
@@ -323,6 +337,7 @@ export default function MatchBuilderPage() {
     dispatch(matchBuilderActions.setCourtNumbersText(""));
     dispatch(matchBuilderActions.setSchedule(null));
     dispatch(matchBuilderActions.setMatchResults({}));
+    dispatch(matchBuilderActions.setPartnerPairs([]));
     dispatch(matchBuilderActions.setIsControlsOpen(true));
     dispatch(matchBuilderActions.setIsRosterOpen(true));
     setActiveRound(0);
@@ -376,6 +391,7 @@ export default function MatchBuilderPage() {
       courtNumbers,
       schedule,
       matchResults,
+      partnerPairs,
     };
     matchesService.update(activeMatchId, patch).catch((error) => {
       const message =
@@ -389,6 +405,7 @@ export default function MatchBuilderPage() {
     matchType,
     numCourts,
     numMatches,
+    partnerPairs,
     players,
     schedule,
   ]);
@@ -473,6 +490,25 @@ export default function MatchBuilderPage() {
     );
   };
 
+  const handlePartnerChange = (playerId: string, partnerId?: string | null) => {
+    if (!playerId) {
+      return;
+    }
+    const nextPairs = partnerPairs.filter(
+      (pair) => !pair.includes(playerId) && !pair.includes(partnerId ?? "")
+    );
+    if (partnerId && partnerId !== playerId) {
+      const firstIndex = playerOrderLookup.get(playerId) ?? 0;
+      const secondIndex = playerOrderLookup.get(partnerId) ?? 0;
+      const ordered: [string, string] =
+        firstIndex <= secondIndex
+          ? [playerId, partnerId]
+          : [partnerId, playerId];
+      nextPairs.push(ordered);
+    }
+    dispatch(matchBuilderActions.setPartnerPairs(nextPairs));
+  };
+
   const handleGenerateSchedule = async () => {
     if (numPlayers < 4) {
       dispatch(matchBuilderActions.setSchedule(null));
@@ -482,7 +518,8 @@ export default function MatchBuilderPage() {
       normalizedPlayers,
       numMatches,
       activeCourtCount,
-      matchType
+      matchType,
+      partnerPairs
     );
     const nextId = randomId();
     const session: MatchSession = {
@@ -495,11 +532,21 @@ export default function MatchBuilderPage() {
       courtNumbers,
       schedule: nextSchedule,
       matchResults: nextResults,
+      partnerPairs,
     };
     try {
       const savedSession = await matchesService.create(session);
-      dispatch(matchBuilderActions.setActiveMatchSession(savedSession));
-      navigate(`/match-builder/${savedSession.id}`);
+      const mergedSession: MatchSession = {
+        ...savedSession,
+        partnerPairs:
+          partnerPairs.length > 0 &&
+          (!savedSession.partnerPairs ||
+            savedSession.partnerPairs.length === 0)
+            ? partnerPairs
+            : savedSession.partnerPairs ?? [],
+      };
+      dispatch(matchBuilderActions.setActiveMatchSession(mergedSession));
+      navigate(`/match-builder/${mergedSession.id}`);
     } catch (error) {
       const message =
         error instanceof Error
@@ -579,6 +626,9 @@ export default function MatchBuilderPage() {
         onPlayerGenderChange={(index, gender) =>
           updatePlayer(index, { gender })
         }
+        showPartnerSelect={matchType === "tournament"}
+        partnerLookup={partnerLookup}
+        onPartnerChange={handlePartnerChange}
         onRemovePlayer={removePlayer}
         onAddPlayer={addPlayer}
         canRemovePlayer={players.length > 4}

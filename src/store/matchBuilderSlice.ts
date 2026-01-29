@@ -4,6 +4,7 @@ import type {
   MatchResults,
   MatchSession,
   MatchType,
+  PartnerPair,
   PlayerProfile,
   Schedule,
 } from "../interfaces";
@@ -26,6 +27,7 @@ const syncActiveSession = (state: ReturnType<typeof loadMatchBuilderState>) => {
   session.courtNumbers = state.courtNumbers;
   session.schedule = state.schedule;
   session.matchResults = state.matchResults;
+  session.partnerPairs = state.partnerPairs;
 };
 
 const matchBuilderSlice = createSlice({
@@ -65,9 +67,29 @@ const matchBuilderSlice = createSlice({
       state.courtNumbersText = formatCourtNumbers(session.courtNumbers);
       state.schedule = session.schedule;
       state.matchResults = session.matchResults;
+      state.partnerPairs = session.partnerPairs ?? [];
     },
     setPlayers(state, action: PayloadAction<PlayerProfile[]>) {
       state.players = action.payload;
+      const playerIds = new Set(action.payload.map((player) => player.id));
+      const nextPairs: PartnerPair[] = [];
+      const used = new Set<string>();
+      for (const pair of state.partnerPairs) {
+        const [first, second] = pair;
+        if (!playerIds.has(first) || !playerIds.has(second)) {
+          continue;
+        }
+        if (first === second) {
+          continue;
+        }
+        if (used.has(first) || used.has(second)) {
+          continue;
+        }
+        used.add(first);
+        used.add(second);
+        nextPairs.push([first, second]);
+      }
+      state.partnerPairs = nextPairs;
       syncActiveSession(state);
     },
     setMatchType(state, action: PayloadAction<MatchType>) {
@@ -97,6 +119,10 @@ const matchBuilderSlice = createSlice({
       state.matchResults = action.payload;
       syncActiveSession(state);
     },
+    setPartnerPairs(state, action: PayloadAction<PartnerPair[]>) {
+      state.partnerPairs = action.payload;
+      syncActiveSession(state);
+    },
     setIsControlsOpen(state, action: PayloadAction<boolean>) {
       state.isControlsOpen = action.payload;
     },
@@ -118,6 +144,7 @@ const matchBuilderSlice = createSlice({
         courtNumbers: state.courtNumbers,
         schedule,
         matchResults: {},
+        partnerPairs: state.partnerPairs,
       };
       state.matchHistory = [newSession, ...state.matchHistory];
       state.activeMatchId = id;
@@ -140,6 +167,7 @@ const matchBuilderSlice = createSlice({
       state.courtNumbersText = formatCourtNumbers(session.courtNumbers);
       state.schedule = session.schedule;
       state.matchResults = session.matchResults;
+      state.partnerPairs = session.partnerPairs ?? [];
       state.isControlsOpen = false;
       state.isRosterOpen = false;
     },

@@ -9,6 +9,7 @@ export type PlayerProfile = {
 };
 
 export type MatchTeam = [string, string];
+export type PartnerPair = [string, string];
 
 export type MatchWinner = "A" | "B";
 
@@ -24,6 +25,7 @@ export type MatchSession = {
   courtNumbers: number[];
   schedule: Schedule | null;
   matchResults: MatchResults;
+  partnerPairs?: PartnerPair[];
   ownerId?: string | null;
   allowedUserIds?: string[];
 };

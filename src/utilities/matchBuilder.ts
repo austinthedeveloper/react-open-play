@@ -11,6 +11,7 @@ import type {
   MatchTeam,
   MatchType,
   MatchWinner,
+  PartnerPair,
   PlayerProfile,
   PlayerStat,
   Schedule,
@@ -247,22 +248,53 @@ const resolveByeWinner = (teams: [MatchTeam, MatchTeam]): MatchWinner | null => 
   return null;
 };
 
-export function buildTournamentSchedule(
-  players: PlayerProfile[]
-): BuildScheduleResult {
-  const teams: MatchTeam[] = [];
-  for (let i = 0; i < players.length; i += 2) {
-    const first = players[i];
-    const second = players[i + 1];
+const buildTournamentTeams = (
+  players: PlayerProfile[],
+  partnerPairs: PartnerPair[] = []
+) => {
+  const playerLookup = new Map(players.map((player) => [player.id, player]));
+  const used = new Set<string>();
+  const lockedTeams: MatchTeam[] = [];
+
+  for (const pair of partnerPairs) {
+    const [first, second] = pair;
+    if (!first || !second || first === second) {
+      continue;
+    }
+    if (!playerLookup.has(first) || !playerLookup.has(second)) {
+      continue;
+    }
+    if (used.has(first) || used.has(second)) {
+      continue;
+    }
+    used.add(first);
+    used.add(second);
+    lockedTeams.push([first, second]);
+  }
+
+  const remainingPlayers = players.filter((player) => !used.has(player.id));
+  const autoTeams: MatchTeam[] = [];
+  for (let i = 0; i < remainingPlayers.length; i += 2) {
+    const first = remainingPlayers[i];
+    const second = remainingPlayers[i + 1];
     if (!first) {
       break;
     }
     if (second) {
-      teams.push([first.id, second.id]);
+      autoTeams.push([first.id, second.id]);
     } else {
-      teams.push([first.id, BYE_PLAYER_ID]);
+      autoTeams.push([first.id, BYE_PLAYER_ID]);
     }
   }
+
+  return [...lockedTeams, ...autoTeams];
+};
+
+export function buildTournamentSchedule(
+  players: PlayerProfile[],
+  partnerPairs: PartnerPair[] = []
+): BuildScheduleResult {
+  const teams: MatchTeam[] = buildTournamentTeams(players, partnerPairs);
 
   teams.sort((a, b) => {
     if (hasByePlayer(a) === hasByePlayer(b)) {
@@ -386,10 +418,11 @@ export function buildSchedule(
   players: PlayerProfile[],
   numRounds: number,
   numCourts: number,
-  matchType: MatchType
+  matchType: MatchType,
+  partnerPairs: PartnerPair[] = []
 ): BuildScheduleResult {
   if (matchType === "tournament") {
-    return buildTournamentSchedule(players);
+    return buildTournamentSchedule(players, partnerPairs);
   }
   return {
     schedule: buildRoundRobinSchedule(players, numRounds, numCourts),

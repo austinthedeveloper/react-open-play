@@ -2,6 +2,7 @@ import type {
   MatchResults,
   MatchSession,
   MatchType,
+  PartnerPair,
   PlayerProfile,
   Schedule,
 } from "../interfaces";
@@ -17,6 +18,7 @@ export type MatchSessionApi = {
   courtNumbers: number[];
   schedule: Schedule | null;
   matchResults: MatchResults;
+  partnerPairs?: PartnerPair[];
   ownerId?: string | null;
   allowedUserIds?: string[];
 };
@@ -59,6 +61,7 @@ const toApiSession = (session: MatchSession): MatchSessionApi => ({
   courtNumbers: session.courtNumbers,
   schedule: session.schedule,
   matchResults: session.matchResults,
+  partnerPairs: session.partnerPairs,
   ownerId: session.ownerId,
   allowedUserIds: session.allowedUserIds,
 });
@@ -76,6 +79,7 @@ const fromApiSession = (session: MatchSessionApi): MatchSession => ({
   courtNumbers: normalizeArray(session.courtNumbers),
   schedule: session.schedule ?? null,
   matchResults: session.matchResults ?? {},
+  partnerPairs: session.partnerPairs ?? [],
   ownerId: session.ownerId ?? null,
   allowedUserIds: normalizeArray(session.allowedUserIds),
 });
