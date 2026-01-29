@@ -1,5 +1,5 @@
 export type GenderOption = "" | "male" | "female";
-export type MatchType = "round_robin";
+export type MatchType = "round_robin" | "tournament";
 
 export type PlayerProfile = {
   id: string;
@@ -32,10 +32,12 @@ export type MatchCard = {
   id: string;
   index: number;
   teams: [MatchTeam, MatchTeam];
+  sourceMatchIds?: [string | null, string | null];
 };
 
 export type Schedule = {
   matches: MatchCard[];
+  rounds?: MatchCard[][];
 };
 
 export type PlayerStat = {

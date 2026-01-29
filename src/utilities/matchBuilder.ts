@@ -7,14 +7,20 @@ import {
 import type {
   GenderOption,
   MatchCard as MatchCardType,
+  MatchResults,
   MatchTeam,
+  MatchType,
   MatchWinner,
   PlayerProfile,
   PlayerStat,
+  Schedule,
 } from "../interfaces";
 import { getCombinations } from "./combinations";
 import { pairKey } from "./pairKey";
 import { randomId } from "./randomId";
+
+export const BYE_PLAYER_ID = "__BYE__";
+const BYE_TEAM: MatchTeam = [BYE_PLAYER_ID, BYE_PLAYER_ID];
 
 export function buildDefaultPlayers(totalPlayers: number): PlayerProfile[] {
   return Array.from({ length: totalPlayers }, (_, index) => ({
@@ -146,15 +152,21 @@ function updateCounts(
   }
 }
 
-export function buildSchedule(
+export type BuildScheduleResult = {
+  schedule: Schedule;
+  matchResults: MatchResults;
+};
+
+export function buildRoundRobinSchedule(
   players: PlayerProfile[],
   numRounds: number,
   numCourts: number
-) {
+) : Schedule {
   const playCounts = new Map(players.map((player) => [player.id, 0]));
   const teammateCounts = new Map<string, number>();
   const opponentCounts = new Map<string, number>();
   const matches: MatchCardType[] = [];
+  const rounds: MatchCardType[][] = [];
   const courts = Math.max(
     1,
     Math.min(numCourts, Math.floor(players.length / 4))
@@ -163,6 +175,7 @@ export function buildSchedule(
   for (let round = 0; round < numRounds; round += 1) {
     const usedThisRound = new Set<string>();
     let matchesBuilt = 0;
+    const roundMatches: MatchCardType[] = [];
 
     for (let court = 0; court < courts; court += 1) {
       const availablePlayers = players.filter(
@@ -179,7 +192,7 @@ export function buildSchedule(
         opponentCounts
       );
       if (!teams) {
-        return matches;
+        return { matches, rounds };
       }
       updateCounts(teams, playCounts, teammateCounts, opponentCounts);
 
@@ -187,19 +200,201 @@ export function buildSchedule(
         usedThisRound.add(playerId);
       }
 
-      matches.push({
+      const match: MatchCardType = {
         id: randomId(),
         index: matches.length + 1,
         teams,
-      });
+      };
+      matches.push(match);
+      roundMatches.push(match);
       matchesBuilt += 1;
     }
 
     if (matchesBuilt === 0) {
       break;
     }
+    rounds.push(roundMatches);
   }
-  return matches;
+  return { matches, rounds };
+}
+
+const isByeTeam = (team: MatchTeam) =>
+  team.every((playerId) => playerId === BYE_PLAYER_ID);
+
+const hasByePlayer = (team: MatchTeam) =>
+  team.some((playerId) => playerId === BYE_PLAYER_ID);
+
+const isPartialByeTeam = (team: MatchTeam) =>
+  hasByePlayer(team) && !isByeTeam(team);
+
+const resolveByeWinner = (teams: [MatchTeam, MatchTeam]): MatchWinner | null => {
+  const [teamA, teamB] = teams;
+  const teamAIsBye = isByeTeam(teamA);
+  const teamBIsBye = isByeTeam(teamB);
+
+  if (teamAIsBye && !teamBIsBye) {
+    return "B";
+  }
+  if (teamBIsBye && !teamAIsBye) {
+    return "A";
+  }
+  if (isPartialByeTeam(teamA) && !hasByePlayer(teamB)) {
+    return "A";
+  }
+  if (isPartialByeTeam(teamB) && !hasByePlayer(teamA)) {
+    return "B";
+  }
+  return null;
+};
+
+export function buildTournamentSchedule(
+  players: PlayerProfile[]
+): BuildScheduleResult {
+  const teams: MatchTeam[] = [];
+  for (let i = 0; i < players.length; i += 2) {
+    const first = players[i];
+    const second = players[i + 1];
+    if (!first) {
+      break;
+    }
+    if (second) {
+      teams.push([first.id, second.id]);
+    } else {
+      teams.push([first.id, BYE_PLAYER_ID]);
+    }
+  }
+
+  teams.sort((a, b) => {
+    if (hasByePlayer(a) === hasByePlayer(b)) {
+      return 0;
+    }
+    return hasByePlayer(a) ? -1 : 1;
+  });
+
+  const bracketSize = Math.max(
+    2,
+    2 ** Math.ceil(Math.log2(Math.max(teams.length, 2)))
+  );
+  const byeCount = Math.max(0, bracketSize - teams.length);
+
+  const seededTeams: MatchTeam[] = [];
+  let byeLeft = byeCount;
+  for (const team of teams) {
+    seededTeams.push(team);
+    if (byeLeft > 0) {
+      seededTeams.push(BYE_TEAM);
+      byeLeft -= 1;
+    }
+  }
+  while (seededTeams.length < bracketSize) {
+    seededTeams.push(BYE_TEAM);
+  }
+
+  const matches: MatchCardType[] = [];
+  const rounds: MatchCardType[][] = [];
+  const matchResults: MatchResults = {};
+
+  const roundOne: MatchCardType[] = [];
+  for (let i = 0; i < seededTeams.length; i += 2) {
+    const teamsPair: [MatchTeam, MatchTeam] = [
+      seededTeams[i],
+      seededTeams[i + 1] ?? BYE_TEAM,
+    ];
+    const match: MatchCardType = {
+      id: randomId(),
+      index: matches.length + 1,
+      teams: teamsPair,
+    };
+    const byeWinner = resolveByeWinner(teamsPair);
+    if (byeWinner) {
+      matchResults[match.id] = byeWinner;
+    }
+    matches.push(match);
+    roundOne.push(match);
+  }
+  rounds.push(roundOne);
+
+  const totalRounds = Math.log2(bracketSize);
+  let previousRound = roundOne;
+  for (let round = 1; round < totalRounds; round += 1) {
+    const nextRound: MatchCardType[] = [];
+    for (let i = 0; i < previousRound.length; i += 2) {
+      const sourceA = previousRound[i];
+      const sourceB = previousRound[i + 1];
+      const match: MatchCardType = {
+        id: randomId(),
+        index: matches.length + 1,
+        teams: [
+          ["", ""],
+          ["", ""],
+        ],
+        sourceMatchIds: [sourceA?.id ?? null, sourceB?.id ?? null],
+      };
+      matches.push(match);
+      nextRound.push(match);
+    }
+    rounds.push(nextRound);
+    previousRound = nextRound;
+  }
+
+  return { schedule: { matches, rounds }, matchResults };
+}
+
+export function resolveMatchTeam(
+  match: MatchCardType,
+  teamIndex: 0 | 1,
+  matchLookup: Map<string, MatchCardType>,
+  matchResults: MatchResults
+): MatchTeam | null {
+  const sourceId = match.sourceMatchIds?.[teamIndex];
+  if (!sourceId) {
+    return match.teams[teamIndex];
+  }
+  const sourceMatch = matchLookup.get(sourceId);
+  if (!sourceMatch) {
+    return null;
+  }
+  const winner = matchResults[sourceId];
+  if (!winner) {
+    return null;
+  }
+  const winnerIndex = winner === "A" ? 0 : 1;
+  return resolveMatchTeam(sourceMatch, winnerIndex, matchLookup, matchResults);
+}
+
+export function resolveScheduleMatches(
+  schedule: Schedule,
+  matchResults: MatchResults
+): MatchCardType[] {
+  const matchLookup = new Map(
+    schedule.matches.map((match) => [match.id, match])
+  );
+
+  return schedule.matches.map((match) => {
+    const teamA =
+      resolveMatchTeam(match, 0, matchLookup, matchResults) ?? match.teams[0];
+    const teamB =
+      resolveMatchTeam(match, 1, matchLookup, matchResults) ?? match.teams[1];
+    return {
+      ...match,
+      teams: [teamA, teamB],
+    };
+  });
+}
+
+export function buildSchedule(
+  players: PlayerProfile[],
+  numRounds: number,
+  numCourts: number,
+  matchType: MatchType
+): BuildScheduleResult {
+  if (matchType === "tournament") {
+    return buildTournamentSchedule(players);
+  }
+  return {
+    schedule: buildRoundRobinSchedule(players, numRounds, numCourts),
+    matchResults: {},
+  };
 }
 
 export function buildStats(

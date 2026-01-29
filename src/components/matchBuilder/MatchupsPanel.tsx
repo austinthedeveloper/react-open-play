@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import MatchCard from "../MatchCard";
 import type {
   MatchCard as MatchCardType,
-  MatchTeam,
   MatchWinner,
   TeamMember,
 } from "../../interfaces";
@@ -16,7 +15,10 @@ export type MatchupsPanelProps = {
   activeRound: number;
   onPreviousRound: () => void;
   onNextRound: () => void;
-  resolveTeam: (team: MatchTeam) => [TeamMember, TeamMember];
+  resolveTeam: (
+    match: MatchCardType,
+    teamIndex: 0 | 1
+  ) => [TeamMember, TeamMember];
   matchesCount: number;
   courtNumbers: number[];
 };
@@ -130,8 +132,8 @@ export default function MatchupsPanel({
                     onSelectWinner={(winner) =>
                       onSelectWinner(match.id, winner)
                     }
-                    teamA={resolveTeam(match.teams[0])}
-                    teamB={resolveTeam(match.teams[1])}
+                    teamA={resolveTeam(match, 0)}
+                    teamB={resolveTeam(match, 1)}
                   />
                 ))}
               </div>

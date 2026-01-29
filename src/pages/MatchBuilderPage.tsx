@@ -13,7 +13,6 @@ import type {
   GenderOption,
   MatchCard as MatchCardType,
   MatchSession,
-  MatchTeam,
   MatchType,
   MatchWinner,
   PlayerProfile,
@@ -23,8 +22,11 @@ import {
   buildDefaultPlayers,
   buildSchedule,
   buildStats,
+  BYE_PLAYER_ID,
   pickNextColor,
   randomId,
+  resolveMatchTeam,
+  resolveScheduleMatches,
 } from "../utilities";
 import { matchBuilderActions } from "../store/matchBuilderSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -115,6 +117,12 @@ export default function MatchBuilderPage() {
   }, [courtNumbers, dispatch, maxCourts]);
 
   const matches = schedule?.matches ?? [];
+  const resolvedMatches = useMemo(() => {
+    if (!schedule) {
+      return [];
+    }
+    return resolveScheduleMatches(schedule, matchResults);
+  }, [matchResults, schedule]);
   const isScheduleGenerated = matches.length > 0;
   const activeCourtNumbers = useMemo(() => {
     const fallback = Array.from(
@@ -129,20 +137,32 @@ export default function MatchBuilderPage() {
   const playerLookup = useMemo(() => {
     return new Map(normalizedPlayers.map((player) => [player.id, player]));
   }, [normalizedPlayers]);
+  const matchLookup = useMemo(
+    () => new Map(matches.map((match) => [match.id, match])),
+    [matches]
+  );
   const matchRounds = useMemo(() => {
+    if (schedule?.rounds && schedule.rounds.length > 0) {
+      const resolvedLookup = new Map(
+        resolvedMatches.map((match) => [match.id, match])
+      );
+      return schedule.rounds.map((round) =>
+        round.map((match) => resolvedLookup.get(match.id) ?? match)
+      );
+    }
     const perRound = Math.max(1, activeCourtCount);
     const rounds: MatchCardType[][] = [];
-    for (let i = 0; i < matches.length; i += perRound) {
-      rounds.push(matches.slice(i, i + perRound));
+    for (let i = 0; i < resolvedMatches.length; i += perRound) {
+      rounds.push(resolvedMatches.slice(i, i + perRound));
     }
     return rounds;
-  }, [matches, activeCourtCount]);
+  }, [activeCourtCount, resolvedMatches, schedule]);
   const stats = useMemo(() => {
     if (!schedule) {
       return [];
     }
-    return buildStats(normalizedPlayers, schedule.matches, matchResults);
-  }, [normalizedPlayers, schedule, matchResults]);
+    return buildStats(normalizedPlayers, resolvedMatches, matchResults);
+  }, [normalizedPlayers, resolvedMatches, matchResults, schedule]);
   const statsByWins = useMemo(() => {
     return [...stats].sort((a, b) => {
       if (b.wins !== a.wins) {
@@ -155,10 +175,38 @@ export default function MatchBuilderPage() {
     playerLookup.get(playerId)?.name ?? "Unknown";
   const getPlayerColor = (playerId: string) =>
     playerLookup.get(playerId)?.color ?? "transparent";
-  const resolveTeam = (team: MatchTeam): [TeamMember, TeamMember] => [
-    { name: getPlayerName(team[0]), color: getPlayerColor(team[0]) },
-    { name: getPlayerName(team[1]), color: getPlayerColor(team[1]) },
-  ];
+  const resolvePlayer = (playerId: string) => {
+    if (playerId === BYE_PLAYER_ID) {
+      return { name: "BYE", color: "transparent" };
+    }
+    if (!playerId) {
+      return { name: "TBD", color: "transparent" };
+    }
+    return { name: getPlayerName(playerId), color: getPlayerColor(playerId) };
+  };
+  const resolveTeam = (
+    match: MatchCardType,
+    teamIndex: 0 | 1
+  ): [TeamMember, TeamMember] => {
+    const resolvedTeam = resolveMatchTeam(
+      match,
+      teamIndex,
+      matchLookup,
+      matchResults
+    );
+    if (resolvedTeam) {
+      return [resolvePlayer(resolvedTeam[0]), resolvePlayer(resolvedTeam[1])];
+    }
+    const sourceId = match.sourceMatchIds?.[teamIndex];
+    const sourceMatch = sourceId ? matchLookup.get(sourceId) : null;
+    const label = sourceMatch
+      ? `Winner of Match ${sourceMatch.index}`
+      : "TBD";
+    return [
+      { name: label, color: "transparent" },
+      { name: label, color: "transparent" },
+    ];
+  };
 
   useEffect(() => {
     if (!schedule) {
@@ -368,10 +416,11 @@ export default function MatchBuilderPage() {
       dispatch(matchBuilderActions.setSchedule(null));
       return;
     }
-    const matchesList = buildSchedule(
+    const { schedule: nextSchedule, matchResults: nextResults } = buildSchedule(
       normalizedPlayers,
       numMatches,
-      activeCourtCount
+      activeCourtCount,
+      matchType
     );
     const nextId = randomId();
     const session: MatchSession = {
@@ -382,8 +431,8 @@ export default function MatchBuilderPage() {
       numMatches,
       numCourts,
       courtNumbers,
-      schedule: { matches: matchesList },
-      matchResults: {},
+      schedule: nextSchedule,
+      matchResults: nextResults,
     };
     try {
       const savedSession = await matchesService.create(session);

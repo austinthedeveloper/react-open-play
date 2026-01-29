@@ -79,10 +79,16 @@ const normalizeCourtNumbers = (input?: number[] | string) => {
   return { courtNumbers: [], courtNumbersText: "" };
 };
 
-const normalizeSchedule = (schedule?: Schedule | null) =>
-  schedule && Array.isArray(schedule.matches)
-    ? { matches: schedule.matches }
-    : null;
+const normalizeSchedule = (schedule?: Schedule | null) => {
+  if (!schedule || !Array.isArray(schedule.matches)) {
+    return null;
+  }
+  const normalized: Schedule = { matches: schedule.matches };
+  if (Array.isArray(schedule.rounds)) {
+    normalized.rounds = schedule.rounds;
+  }
+  return normalized;
+};
 
 const normalizeMatchResults = (matchResults?: MatchResults) =>
   matchResults && typeof matchResults === "object" ? matchResults : {};

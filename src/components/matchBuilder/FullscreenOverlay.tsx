@@ -1,7 +1,6 @@
 import type { RefObject } from "react";
 import type {
   MatchCard as MatchCardType,
-  MatchTeam,
   MatchWinner,
   PlayerStat,
   TeamMember,
@@ -22,7 +21,10 @@ export type FullscreenOverlayProps = {
   onPreviousRound: () => void;
   onNextRound: () => void;
   onClose: () => void;
-  resolveTeam: (team: MatchTeam) => [TeamMember, TeamMember];
+  resolveTeam: (
+    match: MatchCardType,
+    teamIndex: 0 | 1
+  ) => [TeamMember, TeamMember];
 };
 
 export default function FullscreenOverlay({
@@ -86,8 +88,8 @@ export default function FullscreenOverlay({
                 size="full"
                 winner={matchResults[match.id] ?? null}
                 onSelectWinner={(winner) => onSelectWinner(match.id, winner)}
-                teamA={resolveTeam(match.teams[0])}
-                teamB={resolveTeam(match.teams[1])}
+                teamA={resolveTeam(match, 0)}
+                teamB={resolveTeam(match, 1)}
               />
             ))}
           </section>
