@@ -13,11 +13,33 @@
     text-align: center;
   }
 
+  .stat-card--team {
+    text-align: left;
+  }
+
   .stat-card-label {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
     font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+  }
+
+  .stat-card-label--team {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    text-transform: none;
+    letter-spacing: 0.03em;
+  }
+
+  .stat-team-member {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--text-faint);

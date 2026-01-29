@@ -16,6 +16,7 @@ import type {
   MatchType,
   MatchWinner,
   PlayerProfile,
+  MatchTeam,
   TeamMember,
 } from "../interfaces";
 import {
@@ -28,6 +29,7 @@ import {
   resolveMatchTeam,
   resolveScheduleMatches,
   validateMixedDoublesPairing,
+  pairKey,
 } from "../utilities";
 import { matchBuilderActions } from "../store/matchBuilderSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -41,7 +43,7 @@ import FullscreenOverlay from "../components/matchBuilder/FullscreenOverlay";
 import MatchBuilderHero from "../components/matchBuilder/MatchBuilderHero";
 import MatchupsPanel from "../components/matchBuilder/MatchupsPanel";
 import RosterPanel from "../components/matchBuilder/RosterPanel";
-import StatsPanel from "../components/matchBuilder/StatsPanel";
+import StatsPanel, { type TeamStat } from "../components/matchBuilder/StatsPanel";
 import "./MatchBuilderPage.css";
 
 const resolveMatchTypeLabel = (type: MatchType) =>
@@ -225,6 +227,98 @@ export default function MatchBuilderPage() {
     }
     return buildStats(normalizedPlayers, resolvedMatches, matchResults);
   }, [normalizedPlayers, resolvedMatches, matchResults, schedule]);
+  const isTeamView = matchType !== "round_robin";
+  const teamStats = useMemo(() => {
+    if (!schedule) {
+      return [];
+    }
+    const teamMap = new Map<string, TeamStat>();
+
+    const resolveTeamPlayers = (team: MatchTeam) => {
+      const [firstId, secondId] = team;
+      if (!firstId || !secondId) {
+        return null;
+      }
+      if (firstId === BYE_PLAYER_ID || secondId === BYE_PLAYER_ID) {
+        return null;
+      }
+      const first = playerLookup.get(firstId);
+      const second = playerLookup.get(secondId);
+      if (!first || !second) {
+        return null;
+      }
+      const ordered = [first, second].sort((a, b) => {
+        const indexA = playerOrderLookup.get(a.id) ?? 0;
+        const indexB = playerOrderLookup.get(b.id) ?? 0;
+        return indexA - indexB;
+      });
+      return ordered.map((player) => ({
+        id: player.id,
+        name: player.name,
+        color: player.color,
+      }));
+    };
+
+    const ensureTeam = (team: MatchTeam) => {
+      const players = resolveTeamPlayers(team);
+      if (!players) {
+        return null;
+      }
+      const key = pairKey(team[0], team[1]);
+      const existing = teamMap.get(key);
+      if (existing) {
+        return existing;
+      }
+      const next: TeamStat = {
+        id: key,
+        players,
+        wins: 0,
+        losses: 0,
+        playCount: 0,
+      };
+      teamMap.set(key, next);
+      return next;
+    };
+
+    for (const match of resolvedMatches) {
+      const teamA = ensureTeam(match.teams[0]);
+      const teamB = ensureTeam(match.teams[1]);
+      if (teamA) {
+        teamA.playCount += 1;
+      }
+      if (teamB) {
+        teamB.playCount += 1;
+      }
+      const winner = matchResults[match.id];
+      if (!winner || !teamA || !teamB) {
+        continue;
+      }
+      if (winner === "A") {
+        teamA.wins += 1;
+        teamB.losses += 1;
+      } else {
+        teamB.wins += 1;
+        teamA.losses += 1;
+      }
+    }
+
+    const entries = [...teamMap.values()];
+    entries.sort((a, b) => {
+      if (b.wins !== a.wins) {
+        return b.wins - a.wins;
+      }
+      const nameA = a.players.map((player) => player.name).join(" ");
+      const nameB = b.players.map((player) => player.name).join(" ");
+      return nameA.localeCompare(nameB);
+    });
+    return entries;
+  }, [
+    matchResults,
+    playerLookup,
+    playerOrderLookup,
+    resolvedMatches,
+    schedule,
+  ]);
   const statsByWins = useMemo(() => {
     return [...stats].sort((a, b) => {
       if (b.wins !== a.wins) {
@@ -703,7 +797,11 @@ export default function MatchBuilderPage() {
             courtNumbers={activeCourtNumbers}
           />
 
-          <StatsPanel stats={stats} />
+          <StatsPanel
+            stats={stats}
+            teamStats={teamStats}
+            mode={isTeamView ? "team" : "player"}
+          />
         </div>
       )}
 
