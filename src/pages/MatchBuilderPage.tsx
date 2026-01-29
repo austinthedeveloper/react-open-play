@@ -185,6 +185,24 @@ export default function MatchBuilderPage() {
     }
     return rounds;
   }, [activeCourtCount, resolvedMatches, schedule]);
+  const matchRoundLabels = useMemo(() => {
+    if (schedule?.rounds && schedule.rounds.length > 0) {
+      const perRound = Math.max(1, activeCourtCount);
+      const labels: string[] = [];
+      schedule.rounds.forEach((round, roundIndex) => {
+        const chunkCount = Math.max(1, Math.ceil(round.length / perRound));
+        for (let i = 0; i < chunkCount; i += 1) {
+          const letter =
+            chunkCount > 1
+              ? String.fromCharCode(65 + (i % 26))
+              : "";
+          labels.push(`Round ${roundIndex + 1}${letter}`);
+        }
+      });
+      return labels;
+    }
+    return matchRounds.map((_, index) => `Round ${index + 1}`);
+  }, [activeCourtCount, matchRounds, schedule]);
   const stats = useMemo(() => {
     if (!schedule) {
       return [];
@@ -577,6 +595,7 @@ export default function MatchBuilderPage() {
         <div className="builder-grid">
           <MatchupsPanel
             matchRounds={matchRounds}
+            roundLabels={matchRoundLabels}
             matchResults={matchResults}
             onSelectWinner={handleSelectWinner}
             onOpenFullscreen={openFullscreen}
@@ -603,6 +622,7 @@ export default function MatchBuilderPage() {
         fullscreenRef={fullscreenRef}
         activeRound={activeRound}
         matchRounds={matchRounds}
+        roundLabels={matchRoundLabels}
         matchResults={matchResults}
         statsByWins={statsByWins}
         courtNumbers={activeCourtNumbers}
