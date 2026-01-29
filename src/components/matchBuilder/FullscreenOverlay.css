@@ -11,11 +11,7 @@
   .match-fullscreen-backdrop {
     position: absolute;
     inset: 0;
-    background:
-      radial-gradient(1200px 900px at 20% 10%, rgba(76, 243, 255, 0.16), transparent 60%),
-      radial-gradient(900px 700px at 80% 20%, rgba(242, 166, 255, 0.2), transparent 60%),
-      radial-gradient(800px 650px at 40% 90%, rgba(255, 184, 107, 0.18), transparent 70%),
-      linear-gradient(140deg, rgba(11, 15, 24, 0.98), rgba(6, 8, 14, 0.98));
+    background: var(--gradient-fullscreen);
   }
 
   .match-fullscreen-frame {
@@ -24,9 +20,9 @@
     aspect-ratio: 16 / 9;
     padding: clamp(1.5rem, 3vw, 3rem);
     border-radius: 36px;
-    background: rgba(9, 12, 20, 0.85);
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    box-shadow: 0 30px 80px rgba(6, 10, 20, 0.6);
+    background: var(--surface-overlay);
+    border: 1px solid var(--border-muted);
+    box-shadow: var(--shadow-overlay);
     display: grid;
     grid-template-rows: auto 1fr;
     gap: clamp(1.5rem, 2.5vw, 2.5rem);
@@ -45,7 +41,7 @@
     text-transform: uppercase;
     letter-spacing: 0.38em;
     font-size: 0.7rem;
-    color: rgba(148, 163, 184, 0.7);
+    color: var(--text-faint);
   }
 
   .fullscreen-title {
@@ -79,8 +75,8 @@
   .fullscreen-sidebar {
     padding: 0.9rem 0.85rem;
     border-radius: 18px;
-    background: rgba(12, 17, 31, 0.65);
-    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: var(--surface-card-soft);
+    border: 1px solid var(--border-default);
     min-height: 0;
   }
 
@@ -89,7 +85,7 @@
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.26em;
-    color: rgba(148, 163, 184, 0.7);
+    color: var(--text-faint);
   }
 
   .fullscreen-player-list {
@@ -105,13 +101,13 @@
     gap: 0.5rem;
     padding: 0.35rem 0.45rem;
     border-radius: 12px;
-    background: rgba(8, 12, 22, 0.7);
-    border: 1px solid rgba(148, 163, 184, 0.12);
+    background: var(--surface-form);
+    border: 1px solid var(--border-soft);
   }
 
   .fullscreen-player-name {
     font-size: 0.85rem;
-    color: rgba(248, 250, 252, 0.88);
+    color: var(--text);
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
@@ -121,11 +117,11 @@
     font-size: 0.7rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(76, 243, 255, 0.9);
+    color: var(--accent-text);
     padding: 0.15rem 0.4rem;
     border-radius: 999px;
-    background: rgba(76, 243, 255, 0.12);
-    border: 1px solid rgba(76, 243, 255, 0.35);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
   }
 }
 

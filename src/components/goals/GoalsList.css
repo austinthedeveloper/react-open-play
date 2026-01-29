@@ -11,9 +11,9 @@
   .goals-card {
     padding: clamp(1rem, 2vw, 1.5rem);
     border-radius: 20px;
-    background: rgba(14, 19, 32, 0.75);
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    box-shadow: 0 16px 40px rgba(7, 11, 20, 0.35);
+    background: var(--surface-card);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-card-soft);
     display: grid;
     gap: 0.9rem;
   }
@@ -21,11 +21,11 @@
   .goals-card.is-played {
     background: linear-gradient(
         120deg,
-        rgba(76, 243, 255, 0.14),
-        rgba(11, 15, 24, 0.8)
+        var(--accent-soft-faint),
+        var(--surface-ink)
       ),
-      rgba(14, 19, 32, 0.75);
-    border-color: rgba(76, 243, 255, 0.35);
+      var(--surface-card);
+    border-color: var(--accent-border);
   }
 
   .goals-card__header {
@@ -39,31 +39,31 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.2em;
-    color: rgba(148, 163, 184, 0.75);
+    color: var(--text-faint);
   }
 
   .goals-card__status {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    color: rgba(148, 163, 184, 0.65);
+    color: var(--text-faint);
     padding: 0.35rem 0.75rem;
     border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-strong);
+    background: var(--surface-chip);
   }
 
   .goals-card__status.is-set {
-    color: rgba(248, 250, 252, 0.9);
-    border-color: rgba(76, 243, 255, 0.45);
-    background: rgba(11, 18, 30, 0.8);
+    color: var(--text);
+    border-color: var(--accent-border);
+    background: var(--surface-chip-strong);
   }
 
   .goals-card__goal {
     margin: 0;
     font-size: clamp(1.05rem, 2vw, 1.35rem);
     font-weight: 600;
-    color: rgba(248, 250, 252, 0.95);
+    color: var(--text-strong);
   }
 
   .goals-card__controls {
@@ -79,7 +79,7 @@
     align-items: center;
     gap: 0.5rem;
     font-size: 0.85rem;
-    color: rgba(226, 232, 240, 0.7);
+    color: var(--text-subtle);
     cursor: pointer;
   }
 
@@ -93,8 +93,8 @@
     width: 42px;
     height: 22px;
     border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid var(--border-heavy);
+    background: var(--surface-glass-strong);
     padding: 2px;
     display: inline-flex;
     align-items: center;
@@ -105,27 +105,27 @@
     width: 18px;
     height: 18px;
     border-radius: 999px;
-    background: rgba(226, 232, 240, 0.8);
-    box-shadow: 0 4px 8px rgba(6, 8, 18, 0.35);
+    background: var(--surface-thumb);
+    box-shadow: var(--shadow-thumb);
     transform: translateX(0);
     transition: transform 0.2s ease, background 0.2s ease;
   }
 
   .goals-card__switch input:focus-visible + .goals-card__switch-track {
-    outline: 2px solid rgba(125, 211, 252, 0.9);
+    outline: 2px solid var(--accent-text);
     outline-offset: 2px;
   }
 
   .goals-card__switch input:checked + .goals-card__switch-track {
-    border-color: rgba(76, 243, 255, 0.7);
-    background: rgba(30, 64, 86, 0.9);
+    border-color: var(--accent-border-strong);
+    background: var(--surface-switch-active);
   }
 
   .goals-card__switch input:checked
     + .goals-card__switch-track
     .goals-card__switch-thumb {
     transform: translateX(20px);
-    background: rgba(248, 250, 252, 0.95);
+    background: var(--text-strong);
   }
 
   .goals-card__switch-label {

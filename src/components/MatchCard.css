@@ -2,16 +2,16 @@
   .match-card {
     padding: clamp(1.2rem, 2.2vw, 2rem);
     border-radius: 22px;
-    background: rgba(14, 19, 32, 0.78);
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    box-shadow: 0 16px 40px rgba(7, 11, 20, 0.45);
+    background: var(--surface-card-strong);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-card);
   }
 
   .match-index {
     font-size: clamp(0.7rem, 1.2vw, 0.85rem);
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(148, 163, 184, 0.75);
+    color: var(--text-faint);
   }
 
   .match-teams {
@@ -28,8 +28,8 @@
     text-align: left;
     padding: 0.7rem 0.85rem;
     border-radius: 18px;
-    background: rgba(10, 15, 26, 0.45);
-    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: var(--surface-card-muted-soft);
+    border: 1px solid var(--border-default);
     appearance: none;
     color: inherit;
     font: inherit;
@@ -39,23 +39,23 @@
   }
 
   .team-block:hover {
-    border-color: rgba(76, 243, 255, 0.4);
+    border-color: var(--accent-border);
     transform: translateY(-1px);
   }
 
   .team-block:focus-visible {
-    outline: 2px solid rgba(76, 243, 255, 0.6);
+    outline: 2px solid var(--focus-ring-strong);
     outline-offset: 2px;
   }
 
   .team-block--winner {
     background: linear-gradient(
       120deg,
-      rgba(76, 243, 255, 0.24),
-      rgba(11, 15, 24, 0.6)
+      var(--accent-soft-strong),
+      var(--surface-ink-soft)
     );
-    border-color: rgba(76, 243, 255, 0.6);
-    box-shadow: 0 18px 30px rgba(10, 15, 26, 0.35);
+    border-color: var(--accent-border-strong);
+    box-shadow: var(--shadow-card-accent);
   }
 
   .team-block--loser {
@@ -67,7 +67,7 @@
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    color: rgba(148, 163, 184, 0.6);
+    color: var(--text-fainter);
     margin-bottom: 0.35rem;
   }
 
@@ -79,7 +79,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.3rem;
-    color: rgba(248, 250, 252, 0.92);
+    color: var(--text);
   }
 
   .player-chip {
@@ -97,7 +97,7 @@
     width: 0.7rem;
     height: 0.7rem;
     border-radius: 999px;
-    box-shadow: 0 0 10px rgba(15, 23, 42, 0.6);
+    box-shadow: var(--shadow-dot);
     display: inline-block;
     flex-shrink: 0;
   }
@@ -106,13 +106,13 @@
     font-size: clamp(0.95rem, 1.8vw, 1.4rem);
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    color: rgba(242, 166, 255, 0.85);
+    color: var(--accent-2-text);
   }
 
   .match-card--compact {
     padding: 1rem 1.15rem;
     border-radius: 16px;
-    background: rgba(15, 23, 42, 0.65);
+    background: var(--surface-chip);
     box-shadow: none;
   }
 
