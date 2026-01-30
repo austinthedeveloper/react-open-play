@@ -1,4 +1,4 @@
-import type { Player } from "../interfaces";
+import type { GenderOption, Player } from "../interfaces";
 import { authService } from "./authService";
 
 export type PlayerApi = {
@@ -43,7 +43,7 @@ const fromApiPlayer = (player: PlayerApi): Player => ({
   id: player.playerId,
   name: player.name,
   color: player.color,
-  gender: player.gender,
+  gender: (player.gender ?? "") as GenderOption,
   createdAt: player.createdAt,
   updatedAt: player.updatedAt,
 });
