@@ -4,10 +4,26 @@ export const DEFAULT_COURTS = 2;
 export const MAX_PLAYERS = 24;
 export const MAX_MATCHES = 20;
 export const MATCH_TYPES = [
-  { value: "round_robin", label: "Open Play" },
-  { value: "round_robin_fixed", label: "Round Robin" },
-  { value: "tournament", label: "Tournament" },
-  { value: "mixed_doubles", label: "Mixed Doubles" },
+  {
+    value: "round_robin",
+    label: "Open Play",
+    description: "Partners rotate each round with balanced matchups.",
+  },
+  {
+    value: "round_robin_fixed",
+    label: "Round Robin",
+    description: "Teams stay together and face varied opponents each round.",
+  },
+  {
+    value: "tournament",
+    label: "Tournament",
+    description: "Single-elimination bracket with locked teams.",
+  },
+  {
+    value: "mixed_doubles",
+    label: "Mixed Doubles",
+    description: "Male/female teams with optional locked partners.",
+  },
 ] as const;
 export const DEFAULT_MATCH_TYPE = MATCH_TYPES[0].value;
 

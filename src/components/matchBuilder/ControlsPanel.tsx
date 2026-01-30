@@ -6,6 +6,7 @@ export type ControlsPanelProps = {
   matchTypeOptions: ReadonlyArray<{
     value: MatchType;
     label: string;
+    description?: string;
   }>;
   isOpen: boolean;
   onToggleOpen: () => void;
@@ -57,6 +58,9 @@ export default function ControlsPanel({
 }: ControlsPanelProps) {
   const lockedMessage =
     "Locked after schedule generation. Clear schedule to change.";
+  const selectedMatchType = matchTypeOptions.find(
+    (option) => option.value === matchType
+  );
   return (
     <section className="panel-glass panel-glass-card">
       <div className="panel-header">
@@ -67,6 +71,9 @@ export default function ControlsPanel({
       </div>
       {isOpen ? (
         <>
+          {selectedMatchType?.description ? (
+            <p className="panel-subtitle">{selectedMatchType.description}</p>
+          ) : null}
           <div className="panel-glass-body">
             <label className="control">
               <span className="control-label">
