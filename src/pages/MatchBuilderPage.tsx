@@ -187,6 +187,7 @@ export default function MatchBuilderPage() {
     return resolveScheduleMatches(schedule, matchResults);
   }, [matchResults, schedule]);
   const isScheduleGenerated = matches.length > 0;
+  const isRosterLocked = isScheduleGenerated;
   const activeCourtNumbers = useMemo(() => {
     const fallback = Array.from(
       { length: Math.max(1, numCourts) },
@@ -203,14 +204,41 @@ export default function MatchBuilderPage() {
   const playerOrderLookup = useMemo(() => {
     return new Map(normalizedPlayers.map((player, index) => [player.id, index]));
   }, [normalizedPlayers]);
+  const lockedPartnerLookup = useMemo(() => {
+    if (!isRosterLocked || !schedule) {
+      return null;
+    }
+    const lookup = new Map<string, string>();
+    for (const match of schedule.matches) {
+      for (const team of match.teams) {
+        const [first, second] = team;
+        if (!first || !second) {
+          continue;
+        }
+        if (first === BYE_PLAYER_ID || second === BYE_PLAYER_ID) {
+          continue;
+        }
+        if (lookup.has(first) || lookup.has(second)) {
+          continue;
+        }
+        lookup.set(first, second);
+        lookup.set(second, first);
+      }
+    }
+    return lookup;
+  }, [isRosterLocked, schedule]);
+
   const partnerLookup = useMemo(() => {
+    if (lockedPartnerLookup) {
+      return lockedPartnerLookup;
+    }
     const lookup = new Map<string, string>();
     for (const [first, second] of partnerPairs) {
       lookup.set(first, second);
       lookup.set(second, first);
     }
     return lookup;
-  }, [partnerPairs]);
+  }, [lockedPartnerLookup, partnerPairs]);
   const matchLookup = useMemo(
     () => new Map(matches.map((match) => [match.id, match])),
     [matches]
@@ -884,8 +912,8 @@ export default function MatchBuilderPage() {
         onPartnerChange={handlePartnerChange}
         onRemovePlayer={removePlayer}
         onAddPlayer={addPlayer}
-        canRemovePlayer={players.length > 4}
-        canAddPlayer={players.length < MAX_PLAYERS}
+        canRemovePlayer={!isRosterLocked && players.length > 4}
+        canAddPlayer={!isRosterLocked && players.length < MAX_PLAYERS}
         savedPlayers={libraryPlayers}
         savedGroups={libraryGroups}
         onAddSavedPlayer={handleAddLibraryPlayer}
@@ -899,6 +927,10 @@ export default function MatchBuilderPage() {
                 ? libraryError
                 : undefined
         }
+        hideAddArea={isRosterLocked}
+        hideAddPlayer={isRosterLocked}
+        hideRemoveActions={isRosterLocked}
+        disablePartnerSelect={isRosterLocked}
       />
 
       {numPlayers < 4 ? (

@@ -28,6 +28,10 @@ export type RosterPanelProps = {
   onAddSavedPlayer?: (playerId: string) => void;
   onAddGroup?: (groupId: string) => void;
   libraryMessage?: string;
+  hideAddArea?: boolean;
+  hideAddPlayer?: boolean;
+  hideRemoveActions?: boolean;
+  disablePartnerSelect?: boolean;
 };
 
 export default function RosterPanel({
@@ -51,6 +55,10 @@ export default function RosterPanel({
   onAddSavedPlayer,
   onAddGroup,
   libraryMessage,
+  hideAddArea = false,
+  hideAddPlayer = false,
+  hideRemoveActions = false,
+  disablePartnerSelect = false,
 }: RosterPanelProps) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState("");
@@ -62,6 +70,8 @@ export default function RosterPanel({
   const canAddSavedPlayer =
     Boolean(onAddSavedPlayer) && savedPlayers.length > 0;
   const canAddGroup = Boolean(onAddGroup) && savedGroups.length > 0;
+  const showAddArea = !hideAddArea && (hasLibrary || Boolean(libraryMessage));
+  const showRemoveButton = !hideRemoveActions;
   const subtitle = showPartnerSelect
     ? "Edit player names here. Optionally set a color or gender for each player. Lock partners to keep teams together."
     : "Edit player names here. Optionally set a color or gender for each player.";
@@ -75,7 +85,10 @@ export default function RosterPanel({
     .join(" ");
 
   useEffect(() => {
-    if (selectedPlayerId && !savedPlayers.some((p) => p.id === selectedPlayerId)) {
+    if (
+      selectedPlayerId &&
+      !savedPlayers.some((p) => p.id === selectedPlayerId)
+    ) {
       setSelectedPlayerId("");
     }
   }, [savedPlayers, selectedPlayerId]);
@@ -102,7 +115,7 @@ export default function RosterPanel({
       ) : null}
       {isOpen ? (
         <>
-          {hasLibrary || libraryMessage ? (
+          {showAddArea ? (
             <div className="roster-library">
               <div className="roster-library-control">
                 <label htmlFor="roster-library-player">Add player</label>
@@ -110,7 +123,9 @@ export default function RosterPanel({
                   <select
                     id="roster-library-player"
                     value={selectedPlayerId}
-                    onChange={(event) => setSelectedPlayerId(event.target.value)}
+                    onChange={(event) =>
+                      setSelectedPlayerId(event.target.value)
+                    }
                     disabled={!canAddSavedPlayer}
                   >
                     <option value="">Select player</option>
@@ -183,7 +198,9 @@ export default function RosterPanel({
             {showPartnerSelect ? (
               <span className="roster-header-cell">Partner</span>
             ) : null}
-            <span className="roster-header-cell">Actions</span>
+            {showRemoveButton ? (
+              <span className="roster-header-cell">Actions</span>
+            ) : null}
           </div>
           <div className="roster-grid">
             {players.map((player, index) => (
@@ -263,13 +280,15 @@ export default function RosterPanel({
                     onChange={(event) =>
                       onPartnerChange?.(player.id, event.target.value || null)
                     }
+                    disabled={disablePartnerSelect}
                   >
                     <option value="">Auto-pair</option>
                     {players
                       .filter((candidate) => candidate.id !== player.id)
                       .map((candidate) => {
-                        const candidatePartner =
-                          partnerLookup?.get(candidate.id);
+                        const candidatePartner = partnerLookup?.get(
+                          candidate.id,
+                        );
                         const isLockedElsewhere =
                           Boolean(candidatePartner) &&
                           candidatePartner !== player.id;
@@ -284,26 +303,30 @@ export default function RosterPanel({
                       })}
                   </select>
                 ) : null}
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => onRemovePlayer(index)}
-                  disabled={!canRemovePlayer}
-                >
-                  Remove
-                </button>
+                {showRemoveButton ? (
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => onRemovePlayer(index)}
+                    disabled={!canRemovePlayer}
+                  >
+                    Remove
+                  </button>
+                ) : null}
               </div>
             ))}
           </div>
           <div className="roster-actions">
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={onAddPlayer}
-              disabled={!canAddPlayer}
-            >
-              Add player
-            </button>
+            {!hideAddPlayer ? (
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={onAddPlayer}
+                disabled={!canAddPlayer}
+              >
+                Add player
+              </button>
+            ) : null}
             <span className="roster-note">{players.length} players</span>
           </div>
         </>
