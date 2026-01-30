@@ -1,0 +1,128 @@
+@layer components {
+  .manager-grid {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .manager-panel {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .manager-form {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .manager-form-row {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(220px, 1fr) auto;
+    align-items: end;
+  }
+
+  .manager-field {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .manager-field label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-faint);
+  }
+
+  .manager-field input[type="text"],
+  .manager-field select {
+    min-height: 44px;
+  }
+
+  .manager-field .color-input {
+    width: 64px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .manager-list {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .manager-card {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 20px;
+    background: var(--surface-card-soft);
+    border: 1px solid var(--border-default);
+  }
+
+  .manager-card-header {
+    display: grid;
+    gap: 0.75rem;
+    align-items: center;
+    grid-template-columns: minmax(220px, 1fr) auto auto;
+  }
+
+  .manager-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .manager-inline {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .manager-grid-fields {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(220px, 1fr) 64px minmax(160px, 1fr);
+    align-items: center;
+  }
+
+  .manager-checkbox-grid {
+    display: grid;
+    gap: 0.5rem 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .manager-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-subtle);
+  }
+
+  .manager-helper {
+    font-size: 0.85rem;
+    color: var(--text-faint);
+  }
+
+  .manager-error {
+    color: var(--danger-text);
+    font-size: 0.9rem;
+  }
+
+  .manager-empty {
+    text-align: center;
+    color: var(--text-faint);
+  }
+}
+
+@media (max-width: 900px) {
+  .manager-form-row,
+  .manager-card-header {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-grid-fields {
+    grid-template-columns: 1fr;
+  }
+}

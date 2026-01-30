@@ -7,6 +7,7 @@ export type MatchType =
 
 export type PlayerProfile = {
   id: string;
+  playerId?: string;
   name: string;
   color?: string;
   gender?: GenderOption;
