@@ -1,4 +1,10 @@
-import type { GenderOption, PlayerProfile } from "../../interfaces";
+import { useEffect, useState } from "react";
+import type {
+  GenderOption,
+  Player,
+  PlayerGroup,
+  PlayerProfile,
+} from "../../interfaces";
 import "./RosterPanel.css";
 
 export type RosterPanelProps = {
@@ -17,6 +23,15 @@ export type RosterPanelProps = {
   onAddPlayer: () => void;
   canRemovePlayer: boolean;
   canAddPlayer: boolean;
+  savedPlayers?: Player[];
+  savedGroups?: PlayerGroup[];
+  onAddSavedPlayer?: (playerId: string) => void;
+  onAddGroup?: (groupId: string) => void;
+  libraryMessage?: string;
+  hideAddArea?: boolean;
+  hideAddPlayer?: boolean;
+  hideRemoveActions?: boolean;
+  disablePartnerSelect?: boolean;
 };
 
 export default function RosterPanel({
@@ -35,9 +50,31 @@ export default function RosterPanel({
   onAddPlayer,
   canRemovePlayer,
   canAddPlayer,
+  savedPlayers = [],
+  savedGroups = [],
+  onAddSavedPlayer,
+  onAddGroup,
+  libraryMessage,
+  hideAddArea = false,
+  hideAddPlayer = false,
+  hideRemoveActions = false,
+  disablePartnerSelect = false,
 }: RosterPanelProps) {
+  const [selectedPlayerId, setSelectedPlayerId] = useState("");
+  const [selectedGroupId, setSelectedGroupId] = useState("");
   const getPartnerValue = (playerId: string) =>
     partnerLookup?.get(playerId) ?? "";
+  const hasLibrary =
+    (savedPlayers && savedPlayers.length > 0) ||
+    (savedGroups && savedGroups.length > 0);
+  const canAddSavedPlayer =
+    Boolean(onAddSavedPlayer) && savedPlayers.length > 0;
+  const canAddGroup = Boolean(onAddGroup) && savedGroups.length > 0;
+  const showAddArea = !hideAddArea && (hasLibrary || Boolean(libraryMessage));
+  const showRemoveButton = !hideRemoveActions;
+  const subtitle = showPartnerSelect
+    ? "Edit player names here. Optionally set a color or gender for each player. Lock partners to keep teams together."
+    : "Edit player names here. Optionally set a color or gender for each player.";
   const panelClassName = [
     "panel",
     "roster-panel",
@@ -46,6 +83,22 @@ export default function RosterPanel({
   ]
     .filter(Boolean)
     .join(" ");
+
+  useEffect(() => {
+    if (
+      selectedPlayerId &&
+      !savedPlayers.some((p) => p.id === selectedPlayerId)
+    ) {
+      setSelectedPlayerId("");
+    }
+  }, [savedPlayers, selectedPlayerId]);
+
+  useEffect(() => {
+    if (selectedGroupId && !savedGroups.some((g) => g.id === selectedGroupId)) {
+      setSelectedGroupId("");
+    }
+  }, [savedGroups, selectedGroupId]);
+
   return (
     <section className={panelClassName}>
       <div className="panel-header">
@@ -54,12 +107,7 @@ export default function RosterPanel({
           {isOpen ? "Collapse" : "Expand"}
         </button>
       </div>
-      <p className="panel-subtitle">
-        Edit player names here. Optionally set a color or gender for each player.
-        {showPartnerSelect
-          ? " Lock partners to keep teams together."
-          : ""}
-      </p>
+      <p className="panel-subtitle">{subtitle}</p>
       {warningText ? (
         <p className="roster-warning" role="alert">
           {warningText}
@@ -67,6 +115,79 @@ export default function RosterPanel({
       ) : null}
       {isOpen ? (
         <>
+          {showAddArea ? (
+            <div className="roster-library">
+              <div className="roster-library-control">
+                <label htmlFor="roster-library-player">Add player</label>
+                <div className="roster-library-input">
+                  <select
+                    id="roster-library-player"
+                    value={selectedPlayerId}
+                    onChange={(event) =>
+                      setSelectedPlayerId(event.target.value)
+                    }
+                    disabled={!canAddSavedPlayer}
+                  >
+                    <option value="">Select player</option>
+                    {savedPlayers.map((player) => (
+                      <option key={player.id} value={player.id}>
+                        {player.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => {
+                      if (!selectedPlayerId) {
+                        return;
+                      }
+                      onAddSavedPlayer?.(selectedPlayerId);
+                      setSelectedPlayerId("");
+                    }}
+                    disabled={!selectedPlayerId || !canAddSavedPlayer}
+                  >
+                    Add Player
+                  </button>
+                </div>
+              </div>
+              <div className="roster-library-control">
+                <label htmlFor="roster-library-group">Add group</label>
+                <div className="roster-library-input">
+                  <select
+                    id="roster-library-group"
+                    value={selectedGroupId}
+                    onChange={(event) => setSelectedGroupId(event.target.value)}
+                    disabled={!canAddGroup}
+                  >
+                    <option value="">Select group</option>
+                    {savedGroups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => {
+                      if (!selectedGroupId) {
+                        return;
+                      }
+                      onAddGroup?.(selectedGroupId);
+                      setSelectedGroupId("");
+                    }}
+                    disabled={!selectedGroupId || !canAddGroup}
+                  >
+                    Add Group
+                  </button>
+                </div>
+              </div>
+              {libraryMessage ? (
+                <p className="roster-library-note">{libraryMessage}</p>
+              ) : null}
+            </div>
+          ) : null}
           <div className="roster-header">
             <span className="roster-header-cell">Player</span>
             <span className="roster-header-cell">Name</span>
@@ -77,7 +198,9 @@ export default function RosterPanel({
             {showPartnerSelect ? (
               <span className="roster-header-cell">Partner</span>
             ) : null}
-            <span className="roster-header-cell">Actions</span>
+            {showRemoveButton ? (
+              <span className="roster-header-cell">Actions</span>
+            ) : null}
           </div>
           <div className="roster-grid">
             {players.map((player, index) => (
@@ -157,13 +280,15 @@ export default function RosterPanel({
                     onChange={(event) =>
                       onPartnerChange?.(player.id, event.target.value || null)
                     }
+                    disabled={disablePartnerSelect}
                   >
                     <option value="">Auto-pair</option>
                     {players
                       .filter((candidate) => candidate.id !== player.id)
                       .map((candidate) => {
-                        const candidatePartner =
-                          partnerLookup?.get(candidate.id);
+                        const candidatePartner = partnerLookup?.get(
+                          candidate.id,
+                        );
                         const isLockedElsewhere =
                           Boolean(candidatePartner) &&
                           candidatePartner !== player.id;
@@ -178,26 +303,30 @@ export default function RosterPanel({
                       })}
                   </select>
                 ) : null}
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => onRemovePlayer(index)}
-                  disabled={!canRemovePlayer}
-                >
-                  Remove
-                </button>
+                {showRemoveButton ? (
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => onRemovePlayer(index)}
+                    disabled={!canRemovePlayer}
+                  >
+                    Remove
+                  </button>
+                ) : null}
               </div>
             ))}
           </div>
           <div className="roster-actions">
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={onAddPlayer}
-              disabled={!canAddPlayer}
-            >
-              Add player
-            </button>
+            {!hideAddPlayer ? (
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={onAddPlayer}
+                disabled={!canAddPlayer}
+              >
+                Add player
+              </button>
+            ) : null}
             <span className="roster-note">{players.length} players</span>
           </div>
         </>

@@ -21,6 +21,7 @@ export class Match extends Document {
   @Prop({ type: [Object], default: [] })
   players: {
     id: string;
+    playerId?: string;
     name: string;
     color?: string;
     gender?: string;

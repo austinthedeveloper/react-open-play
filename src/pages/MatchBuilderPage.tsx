@@ -18,6 +18,8 @@ import type {
   PlayerProfile,
   MatchTeam,
   TeamMember,
+  Player,
+  PlayerGroup,
 } from "../interfaces";
 import {
   buildDefaultPlayers,
@@ -38,6 +40,9 @@ import {
   parseCourtNumbers,
 } from "../store/matchBuilderStorage";
 import { matchesService } from "../services/matchesService";
+import { authService } from "../services/authService";
+import { playersService } from "../services/playersService";
+import { groupsService } from "../services/groupsService";
 import ControlsPanel from "../components/matchBuilder/ControlsPanel";
 import FullscreenOverlay from "../components/matchBuilder/FullscreenOverlay";
 import MatchBuilderHero from "../components/matchBuilder/MatchBuilderHero";
@@ -48,6 +53,7 @@ import "./MatchBuilderPage.css";
 
 const resolveMatchTypeLabel = (type: MatchType) =>
   MATCH_TYPES.find((option) => option.value === type)?.label ?? "Open Play";
+const normalizePlayerName = (value: string) => value.trim().toLowerCase();
 
 export default function MatchBuilderPage() {
   const dispatch = useAppDispatch();
@@ -82,6 +88,11 @@ export default function MatchBuilderPage() {
   const matchHistory = useAppSelector(
     (state) => state.matchBuilder.matchHistory
   );
+  const [token, setToken] = useState(() => authService.getToken());
+  const [libraryPlayers, setLibraryPlayers] = useState<Player[]>([]);
+  const [libraryGroups, setLibraryGroups] = useState<PlayerGroup[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [libraryError, setLibraryError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRound, setActiveRound] = useState(0);
   const [pairingError, setPairingError] = useState<string | null>(null);
@@ -123,6 +134,51 @@ export default function MatchBuilderPage() {
     );
   }, [courtNumbers, dispatch, maxCourts]);
 
+  useEffect(() => {
+    return authService.onTokenChange(setToken);
+  }, []);
+
+  useEffect(() => {
+    if (!token) {
+      setLibraryPlayers([]);
+      setLibraryGroups([]);
+      setLibraryError(null);
+      setLibraryLoading(false);
+      return () => undefined;
+    }
+    let isActive = true;
+    setLibraryLoading(true);
+    setLibraryError(null);
+    Promise.all([playersService.list(), groupsService.list()])
+      .then(([players, groups]) => {
+        if (!isActive) {
+          return;
+        }
+        setLibraryPlayers(players);
+        setLibraryGroups(groups);
+      })
+      .catch((error) => {
+        if (!isActive) {
+          return;
+        }
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Unable to load player library";
+        setLibraryError(message);
+        setLibraryPlayers([]);
+        setLibraryGroups([]);
+      })
+      .finally(() => {
+        if (isActive) {
+          setLibraryLoading(false);
+        }
+      });
+    return () => {
+      isActive = false;
+    };
+  }, [token]);
+
   const matches = schedule?.matches ?? [];
   const resolvedMatches = useMemo(() => {
     if (!schedule) {
@@ -131,6 +187,7 @@ export default function MatchBuilderPage() {
     return resolveScheduleMatches(schedule, matchResults);
   }, [matchResults, schedule]);
   const isScheduleGenerated = matches.length > 0;
+  const isRosterLocked = isScheduleGenerated;
   const activeCourtNumbers = useMemo(() => {
     const fallback = Array.from(
       { length: Math.max(1, numCourts) },
@@ -147,14 +204,41 @@ export default function MatchBuilderPage() {
   const playerOrderLookup = useMemo(() => {
     return new Map(normalizedPlayers.map((player, index) => [player.id, index]));
   }, [normalizedPlayers]);
+  const lockedPartnerLookup = useMemo(() => {
+    if (!isRosterLocked || !schedule) {
+      return null;
+    }
+    const lookup = new Map<string, string>();
+    for (const match of schedule.matches) {
+      for (const team of match.teams) {
+        const [first, second] = team;
+        if (!first || !second) {
+          continue;
+        }
+        if (first === BYE_PLAYER_ID || second === BYE_PLAYER_ID) {
+          continue;
+        }
+        if (lookup.has(first) || lookup.has(second)) {
+          continue;
+        }
+        lookup.set(first, second);
+        lookup.set(second, first);
+      }
+    }
+    return lookup;
+  }, [isRosterLocked, schedule]);
+
   const partnerLookup = useMemo(() => {
+    if (lockedPartnerLookup) {
+      return lockedPartnerLookup;
+    }
     const lookup = new Map<string, string>();
     for (const [first, second] of partnerPairs) {
       lookup.set(first, second);
       lookup.set(second, first);
     }
     return lookup;
-  }, [partnerPairs]);
+  }, [lockedPartnerLookup, partnerPairs]);
   const matchLookup = useMemo(
     () => new Map(matches.map((match) => [match.id, match])),
     [matches]
@@ -607,6 +691,69 @@ export default function MatchBuilderPage() {
     );
   };
 
+  const addLibraryPlayers = useCallback(
+    (incoming: Player[]) => {
+      if (incoming.length === 0 || players.length >= MAX_PLAYERS) {
+        return;
+      }
+      const existingSourceIds = new Set(
+        players.map((player) => player.playerId).filter(Boolean)
+      );
+      const existingNames = new Set(
+        players.map((player) => normalizePlayerName(player.name))
+      );
+      const nextPlayers = [...players];
+      for (const candidate of incoming) {
+        if (nextPlayers.length >= MAX_PLAYERS) {
+          break;
+        }
+        const normalizedName = normalizePlayerName(candidate.name);
+        if (
+          existingSourceIds.has(candidate.id) ||
+          (normalizedName && existingNames.has(normalizedName))
+        ) {
+          continue;
+        }
+        const nextColor =
+          candidate.color ?? pickNextColor(nextPlayers, nextPlayers.length);
+        nextPlayers.push({
+          id: randomId(),
+          playerId: candidate.id,
+          name: candidate.name,
+          color: nextColor,
+          gender: (candidate.gender ?? "") as GenderOption,
+        });
+        existingSourceIds.add(candidate.id);
+        if (normalizedName) {
+          existingNames.add(normalizedName);
+        }
+      }
+      if (nextPlayers.length !== players.length) {
+        dispatch(matchBuilderActions.setPlayers(nextPlayers));
+      }
+    },
+    [dispatch, players]
+  );
+
+  const handleAddLibraryPlayer = (playerId: string) => {
+    const selected = libraryPlayers.find((player) => player.id === playerId);
+    if (!selected) {
+      return;
+    }
+    addLibraryPlayers([selected]);
+  };
+
+  const handleAddLibraryGroup = (groupId: string) => {
+    const group = libraryGroups.find((entry) => entry.id === groupId);
+    if (!group) {
+      return;
+    }
+    const playersForGroup = group.playerIds
+      .map((id) => libraryPlayers.find((player) => player.id === id))
+      .filter((player): player is Player => Boolean(player));
+    addLibraryPlayers(playersForGroup);
+  };
+
   const handlePartnerChange = (playerId: string, partnerId?: string | null) => {
     if (!playerId) {
       return;
@@ -765,8 +912,25 @@ export default function MatchBuilderPage() {
         onPartnerChange={handlePartnerChange}
         onRemovePlayer={removePlayer}
         onAddPlayer={addPlayer}
-        canRemovePlayer={players.length > 4}
-        canAddPlayer={players.length < MAX_PLAYERS}
+        canRemovePlayer={!isRosterLocked && players.length > 4}
+        canAddPlayer={!isRosterLocked && players.length < MAX_PLAYERS}
+        savedPlayers={libraryPlayers}
+        savedGroups={libraryGroups}
+        onAddSavedPlayer={handleAddLibraryPlayer}
+        onAddGroup={handleAddLibraryGroup}
+        libraryMessage={
+          !token
+            ? "Sign in to add saved players or groups."
+            : libraryLoading
+              ? "Loading saved players and groups..."
+              : libraryError
+                ? libraryError
+                : undefined
+        }
+        hideAddArea={isRosterLocked}
+        hideAddPlayer={isRosterLocked}
+        hideRemoveActions={isRosterLocked}
+        disablePartnerSelect={isRosterLocked}
       />
 
       {numPlayers < 4 ? (

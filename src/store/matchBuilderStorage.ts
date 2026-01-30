@@ -54,6 +54,7 @@ const normalizePlayers = (players?: PlayerProfile[]) => {
   }
   return players.map((player, index) => ({
     id: player.id || randomId(),
+    playerId: typeof player.playerId === "string" ? player.playerId : undefined,
     name: player.name || `Player ${index + 1}`,
     color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
     gender: (player.gender ?? "") as GenderOption,

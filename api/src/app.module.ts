@@ -8,6 +8,8 @@ import { AuthModule } from "./auth/auth.module";
 import { GoalsModule } from "./goals/goals.module";
 import { GoalSessionsModule } from "./goal-sessions/goal-sessions.module";
 import { MatchesModule } from "./matches/matches.module";
+import { PlayersModule } from "./players/players.module";
+import { GroupsModule } from "./groups/groups.module";
 
 @Module({
   imports: [
@@ -36,6 +38,8 @@ import { MatchesModule } from "./matches/matches.module";
     GoalsModule,
     GoalSessionsModule,
     MatchesModule,
+    PlayersModule,
+    GroupsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

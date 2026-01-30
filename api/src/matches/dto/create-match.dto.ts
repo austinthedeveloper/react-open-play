@@ -1,5 +1,6 @@
 export type PlayerProfile = {
   id: string;
+  playerId?: string;
   name: string;
   color?: string;
   gender?: string;

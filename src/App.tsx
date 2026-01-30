@@ -5,6 +5,8 @@ import GoalsSessionPage from "./pages/GoalsSessionPage";
 import MatchBuilderPage from "./pages/MatchBuilderPage";
 import MatchHistoryPage from "./pages/MatchHistoryPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
+import PlayersPage from "./pages/PlayersPage";
+import GroupsPage from "./pages/GroupsPage";
 import { authService, type AuthUser } from "./services/authService";
 
 export default function App() {
@@ -115,6 +117,22 @@ export default function App() {
             >
               Match History
             </NavLink>
+            <NavLink
+              to="/players"
+              className={({ isActive }) =>
+                `nav-link${isActive ? " is-active" : ""}`
+              }
+            >
+              Players
+            </NavLink>
+            <NavLink
+              to="/groups"
+              className={({ isActive }) =>
+                `nav-link${isActive ? " is-active" : ""}`
+              }
+            >
+              Groups
+            </NavLink>
           </div>
           {authReady
             ? user
@@ -151,6 +169,8 @@ export default function App() {
         <Route path="/match-builder" element={<MatchBuilderPage />} />
         <Route path="/match-builder/:id" element={<MatchBuilderPage />} />
         <Route path="/match-history" element={<MatchHistoryPage />} />
+        <Route path="/players" element={<PlayersPage />} />
+        <Route path="/groups" element={<GroupsPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
       </Routes>
     </div>
