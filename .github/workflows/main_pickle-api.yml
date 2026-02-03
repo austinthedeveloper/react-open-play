@@ -10,6 +10,13 @@ on:
     paths:
       - api/**
       - .github/workflows/main_pickle-api.yml
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+    paths:
+      - api/**
+      - .github/workflows/main_pickle-api.yml
   workflow_dispatch:
 
 jobs:
@@ -20,6 +27,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Use the merge commit when a PR is merged; fall back to the event SHA otherwise.
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
 
       - name: Set up Node.js version
         uses: actions/setup-node@v3
@@ -41,6 +51,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
